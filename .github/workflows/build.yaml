@@ -16,6 +16,7 @@ jobs:
         uses: actions/setup-java@v3
         with:
           java-version: '21' # Adjust the version to match your project
+          distribution: 'temurin' # Use 'temurin' for OpenJDK
 
       - name: Build and Test
         run: mvn clean verify
