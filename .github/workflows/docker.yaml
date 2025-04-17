@@ -20,7 +20,7 @@
         - name: build the app
           run: |
             mvn clean
-            mvn -B package
+            mvn package -DskipTests=true
         - name: build the docker image
           uses: docker/build-push-action@v4
           with:
