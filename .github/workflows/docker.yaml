@@ -28,7 +28,6 @@
             dockerfile: Dockerfile
             push: false
             tags: ${{ secrets.DOCKER_HUB_USERNAME }}/mosaico-repository:latest
-
         - name: login to docker hub
           uses: docker/login-action@v1
           with:
