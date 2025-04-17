@@ -1,0 +1,22 @@
+name: Build and Test Spring Boot Application
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: '21' # Adjust the version to match your project
+
+      - name: Build and Test
+        run: mvn clean verify
