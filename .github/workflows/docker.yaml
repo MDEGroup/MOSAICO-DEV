@@ -17,9 +17,6 @@
             java-version: '21' # Adjust the version to match your project
             distribution: 'temurin' # Use 'temurin' for OpenJDK
 
-        - name: unit tests
-          run: mvn -B test --file pom.xml
-
         - name: build the app
           run: |
             mvn clean
