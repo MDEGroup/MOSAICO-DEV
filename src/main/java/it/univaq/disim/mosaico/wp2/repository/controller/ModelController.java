@@ -24,9 +24,9 @@ import org.slf4j.LoggerFactory;
  * This class is the main controller for the repository
  * It handles HTTP requests and responses for the Model entity.
  */
-public class MainController {
+public class ModelController {
 
-    Logger logger = LoggerFactory.getLogger(MainController.class);
+    Logger logger = LoggerFactory.getLogger(ModelController.class);
 
     @Autowired
     /*
@@ -41,7 +41,7 @@ public class MainController {
      * 
      * @param modelRepository the ModelRepository bean to be injected
      */
-    public MainController(@Autowired ModelRepository modelRepository) {
+    public ModelController(@Autowired ModelRepository modelRepository) {
         this.repository = modelRepository;
     }
 
@@ -61,7 +61,7 @@ public class MainController {
      * @return the created model
      */
     @GetMapping("/model/{id}")
-    Model one(@PathVariable String id) {
+    public Model one(@PathVariable String id) {
     
     return repository.findById(id)
       .orElseThrow(() -> new EmployeeNotFoundException(id));
@@ -77,7 +77,7 @@ public class MainController {
     
     return repository.findById(id)
       .map(employee -> {
-        return repository.save(new Model("model", "", "", "", ""));
+        return repository.save(new Model("1", "model", "", "", "", ""));
       })
       .orElseGet(() -> {
         return repository.save(newEmployee);
