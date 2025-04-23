@@ -23,7 +23,6 @@ public class ModelRepositoryTest {
     @Test
     
     public void createModel() {
-        Model model = new Model("1", "Model Name", "Model Description", "1.0", "Author Name", "MIT");
         Model savedModel = repository.save(model);
         assertNotNull(savedModel);
         assertEquals("1", savedModel.id());
@@ -33,7 +32,7 @@ public class ModelRepositoryTest {
 
     @Test
     public void findModelById() {
-        
+        repository.save(model);
         Optional<Model> foundModel = repository.findById("1");
 
         assertTrue(foundModel.isPresent());
