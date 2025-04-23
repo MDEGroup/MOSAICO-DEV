@@ -9,23 +9,22 @@ import org.springframework.test.web.servlet.MockMvc;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 
-
-
 @SpringBootTest
 @AutoConfigureMockMvc
-class RepositoryApplicationTests {
+class ModelControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
+  @Autowired
+  private MockMvc mockMvc;
 
-    @Test
-    void all() throws Exception {
-		mockMvc.perform(get("/model"))
-			   .andExpect(status().isOk());
-    }
-	@Test
-    void all2() throws Exception {
-		mockMvc.perform(get("/models"))
-			   .andExpect(status().is4xxClientError());
-    }
+  @Test
+  void all() throws Exception {
+    mockMvc.perform(get("/model"))
+        .andExpect(status().isOk());
+  }
+
+  @Test
+  void all2() throws Exception {
+    mockMvc.perform(get("/models"))
+        .andExpect(status().is4xxClientError());
+  }
 }
