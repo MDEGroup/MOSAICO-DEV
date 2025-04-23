@@ -1,4 +1,4 @@
-name: Build and Test Spring Boot Application
+name: Test and Build the repository
 
 on:
   push:
