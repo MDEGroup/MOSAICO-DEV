@@ -30,11 +30,9 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-
-
 @SpringBootTest
 @AutoConfigureMockMvc
-class RepositoryApplicationTests {
+class ModelControllerTest {
 
     // @Autowired
     // private MockMvc mockMvc;
@@ -79,7 +77,6 @@ class RepositoryApplicationTests {
         verify(repository, times(1)).findAll();
     }
 
-	@Test
     void testGetModelById() throws Exception {
         // when(repository.findById("1")).thenReturn(Optional.of(
         //     new Model("1","1", "Model1", "Description1", "Type1", "Owner1")
@@ -134,4 +131,5 @@ class RepositoryApplicationTests {
 
         verify(repository, times(1)).deleteById("1");
     }
+
 }

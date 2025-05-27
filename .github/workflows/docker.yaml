@@ -1,4 +1,4 @@
-  name: build and deploy spring-api
+  name: Create a docker image and push it to docker hub
   on:
     push:
       branches:
