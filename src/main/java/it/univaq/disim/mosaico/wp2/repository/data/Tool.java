@@ -4,13 +4,17 @@ package it.univaq.disim.mosaico.wp2.repository.data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.util.Map;
-
+/**
+ * Tool class for MOSAICO taxonomy.
+ * Updated to align with PUML model.
+ */
 @Document(collection = "tools")
 public record Tool(
     @Id String id,
     String name,
     String description,
-    String apiEndpoint,
-    Map<String, Object> parameters
+    String authMethod,
+    String scopes,
+    String quotaLimit,
+    String rateLimitPolicy
 ) {}

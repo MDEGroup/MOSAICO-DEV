@@ -1,4 +1,4 @@
-package it.univaq.disim.mosaico.dto;
+package it.univaq.disim.mosaico.wp2.repository.dto;
 
 import java.util.List;
 import java.util.Map;
