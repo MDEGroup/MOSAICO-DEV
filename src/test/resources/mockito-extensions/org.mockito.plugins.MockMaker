@@ -1,0 +1,2 @@
+# Mockito configuration to suppress warnings
+mock-maker-inline

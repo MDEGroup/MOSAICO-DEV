@@ -13,11 +13,11 @@ import org.springframework.web.bind.annotation.RestController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import it.univaq.disim.mosaico.dto.Context;
 import it.univaq.disim.mosaico.wp2.repository.data.AgentDefinition;
 import it.univaq.disim.mosaico.wp2.repository.data.CommunicationProtocol;
 import it.univaq.disim.mosaico.wp2.repository.data.CoordinationPattern;
 import it.univaq.disim.mosaico.wp2.repository.data.Model;
+import it.univaq.disim.mosaico.wp2.repository.dto.Context;
 import it.univaq.disim.mosaico.wp2.repository.service.RecommendationService;
 
 /**

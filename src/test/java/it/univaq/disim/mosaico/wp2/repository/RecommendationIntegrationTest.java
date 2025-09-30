@@ -15,7 +15,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
 
-import it.univaq.disim.mosaico.dto.Context;
+import it.univaq.disim.mosaico.wp2.repository.dto.Context;
 import it.univaq.disim.mosaico.wp2.repository.data.AgentDefinition;
 import it.univaq.disim.mosaico.wp2.repository.data.CommunicationProtocol;
 import it.univaq.disim.mosaico.wp2.repository.data.CoordinationPattern;

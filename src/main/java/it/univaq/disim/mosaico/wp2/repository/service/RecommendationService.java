@@ -3,7 +3,7 @@ package it.univaq.disim.mosaico.wp2.repository.service;
 import java.util.List;
 import java.util.Map;
 
-import it.univaq.disim.mosaico.dto.Context;
+import it.univaq.disim.mosaico.wp2.repository.dto.Context;
 import it.univaq.disim.mosaico.wp2.repository.data.AgentDefinition;
 import it.univaq.disim.mosaico.wp2.repository.data.CommunicationProtocol;
 import it.univaq.disim.mosaico.wp2.repository.data.CoordinationPattern;

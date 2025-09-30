@@ -1,0 +1,25 @@
+package it.univaq.disim.mosaico.wp2.repository.data.enums;
+
+/**
+ * Enumeration for SWEBOK Knowledge Areas in MOSAICO taxonomy.
+ */
+public enum SwebokKAId {
+    REQUIREMENTS,
+    ARCHITECTURE,
+    DESIGN,
+    CONSTRUCTION,
+    TESTING,
+    OPERATION,
+    MAINTENANCE,
+    CONFIGURATION_MANAGEMENT,
+    ENGINEERING_MANAGEMENT,
+    PROCESS,
+    MODELS_AND_METHODS,
+    QUALITY,
+    SECURITY,
+    PROFESSIONAL_PRACTICE,
+    ECONOMICS,
+    COMPUTING_FOUNDATIONS,
+    MATHEMATICAL_FOUNDATIONS,
+    ENGINEERING_FOUNDATIONS
+}

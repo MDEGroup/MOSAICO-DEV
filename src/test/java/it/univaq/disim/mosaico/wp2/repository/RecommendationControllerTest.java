@@ -27,7 +27,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import it.univaq.disim.mosaico.dto.Context;
+import it.univaq.disim.mosaico.wp2.repository.dto.Context;
 import it.univaq.disim.mosaico.wp2.repository.controller.RecommendationController;
 import it.univaq.disim.mosaico.wp2.repository.data.AgentDefinition;
 import it.univaq.disim.mosaico.wp2.repository.data.CommunicationProtocol;

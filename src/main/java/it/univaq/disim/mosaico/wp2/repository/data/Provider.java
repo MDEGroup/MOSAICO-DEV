@@ -4,13 +4,13 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 /**
- * Metric class for MOSAICO taxonomy.
- * Updated to align with PUML model.
+ * Provider class for MOSAICO taxonomy.
+ * Represents a provider of agents, tools, or services.
  */
-@Document(collection = "metrics")
-public record Metric(
+@Document(collection = "providers")
+public record Provider(
     @Id String id,
     String name,
-    float value,
-    String unit
+    String description,
+    String contactUrl
 ) {}

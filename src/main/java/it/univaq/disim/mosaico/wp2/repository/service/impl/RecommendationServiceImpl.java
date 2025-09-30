@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import it.univaq.disim.mosaico.dto.Context;
+import it.univaq.disim.mosaico.wp2.repository.dto.Context;
 import it.univaq.disim.mosaico.wp2.repository.data.AgentDefinition;
 import it.univaq.disim.mosaico.wp2.repository.data.CommunicationProtocol;
 import it.univaq.disim.mosaico.wp2.repository.data.CoordinationPattern;

@@ -1,4 +1,3 @@
-rocco/development/MOSAICO/repository/src/main/java/it/univaq/disim/mosaico/wp2/repository/data/Environment.java
 package it.univaq.disim.mosaico.wp2.repository.data;
 
 import org.springframework.data.annotation.Id;
