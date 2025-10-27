@@ -1,0 +1,64 @@
+x-env: &default-env
+  env_file:
+    - .env.langfuse
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: langfuse-postgres
+    <<: *default-env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - langfuse_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - langfuse_net
+
+  langfuse:
+    image: langfuse/langfuse:2
+    container_name: langfuse-app
+    <<: *default-env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # Database
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+
+      # App bootstrap
+      NEXTAUTH_SECRET: ${LANGFUSE_SECRET_KEY:-changeme}
+      NEXTAUTH_URL: http://localhost:${LANGFUSE_PORT:-3000}
+      SALT: ${LANGFUSE_SECRET_KEY:-changeme}
+      LANGFUSE_INIT_USER_EMAIL: ${LANGFUSE_INIT_USER_EMAIL}
+      LANGFUSE_INIT_USER_PASSWORD: ${LANGFUSE_INIT_USER_PASSWORD}
+      # optional API keys
+      LANGFUSE_INIT_PROJECT_PUBLIC_KEY: ${LANGFUSE_PUBLIC_KEY}
+      LANGFUSE_INIT_PROJECT_SECRET_KEY: ${LANGFUSE_SECRET_KEY}
+
+    ports:
+      - "${LANGFUSE_PORT:-3000}:3000"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/api/public/health"]
+      start_period: ${HEALTHCHECK_START_PERIOD:-15s}
+      interval: 10s
+      timeout: 5s
+      retries: 30
+    networks:
+      - langfuse_net
+
+volumes:
+  langfuse_pg_data:
+
+networks:
+  langfuse_net:
+    driver: bridge
+
