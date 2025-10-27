@@ -90,6 +90,15 @@
 						--add-opens java.base/java.util=ALL-UNNAMED
 						--add-opens java.base/java.time=ALL-UNNAMED
 					</argLine>
+					<!--
+					 Exclude LangfuseServiceTest from default CI test runs because it may
+					 depend on a local Langfuse instance or private SDK artifacts not
+					 available in CI. To run it locally, execute the test class explicitly:
+					   ./mvnw -Dtest=it.univaq.disim.mosaico.wp2.repository.LangfuseServiceTest test
+					-->
+					<excludes>
+						<exclude>**/LangfuseServiceTest.java</exclude>
+					</excludes>
 				</configuration>
 			</plugin>
 		</plugins>
