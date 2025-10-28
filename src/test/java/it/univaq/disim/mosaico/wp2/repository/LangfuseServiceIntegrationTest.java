@@ -112,25 +112,6 @@ class LangfuseServiceIntegrationTest {
         }
     }
 
-    @Test
-    void testCreateProjectReturns405MethodNotAllowed() {
-        // Given
-        String projectName = "Test Project " + UUID.randomUUID().toString().substring(0, 8);
-        String description = "This test verifies that project creation is not supported via public API";
-        
-        logger.info("Attempting to create project (expecting API limitation): {}", projectName);
-        
-        // When
-        Map<String, Object> createdProject = langfuseService.createProject(projectName, description);
-        
-        // Then
-        // The Langfuse Public API does NOT support project creation
-        // This will return null due to 405 Method Not Allowed
-        assertNull(createdProject, "Project creation should fail (not supported by public API)");
-        
-        logger.info("✓ Confirmed: Project creation not supported via API (as expected)");
-        logger.info("ℹ️  Projects must be created manually in Langfuse UI");
-    }
 
     @Test
     void testGetProjectByIdWithValidId() {
@@ -147,7 +128,7 @@ class LangfuseServiceIntegrationTest {
         String projectId = (String) projects.get(0).getId();
         
         // When
-        Map<String, Object> project = langfuseService.getProjectById(projectId);
+        Project project = langfuseService.getProjectById(projectId);
         
         // Then
         // Note: Langfuse Public API may not support GET /projects/{id}
@@ -156,8 +137,8 @@ class LangfuseServiceIntegrationTest {
             logger.info("ℹ️  GET /api/public/projects/{{id}} not supported by Langfuse Public API (404)");
             assertTrue(true, "API limitation confirmed");
         } else {
-            assertEquals(projectId, project.get("id"), "Project ID should match");
-            logger.info("Retrieved project by ID: {}", project.get("name"));
+            assertEquals(projectId, project.getId(), "Project ID should match");
+            logger.info("Retrieved project by ID: {}", project.getName());
         }
     }
 
@@ -167,68 +148,15 @@ class LangfuseServiceIntegrationTest {
         String invalidId = "invalid-project-id-" + UUID.randomUUID();
         
         // When
-        Map<String, Object> project = langfuseService.getProjectById(invalidId);
+        Project project = langfuseService.getProjectById(invalidId);
         
         // Then
         assertNull(project, "Should return null for invalid project ID");
         logger.info("Correctly returned null for invalid project ID");
     }
 
-    @Test
-    void testGetProjectStats() {
-        // Given - Get a project
-        List<Project> projects = langfuseService.getProjects();
-        
-        if (projects.isEmpty()) {
-            logger.warn("⚠️  WARNING: No projects found. Skipping test. Create a project in Langfuse UI first.");
-            assertTrue(true, "Test skipped - no projects available");
-            return;
-        }
-        
-        String projectId = (String) projects.get(0).getId();
-        
-        // When
-        Map<String, Object> stats = langfuseService.getProjectStats(projectId);
-        
-        // Then
-        // Note: Stats endpoint may not be available in public API
-        if (stats == null) {
-            logger.info("ℹ️  Project stats endpoint not available in Langfuse Public API");
-            assertTrue(true, "API limitation confirmed");
-        } else {
-            logger.info("Project stats: {}", stats);
-            assertTrue(stats.isEmpty() || stats.containsKey("traceCount") || stats.size() > 0, 
-                       "Stats should be empty or contain trace information");
-        }
-    }
+    
 
-    @Test
-    void testGetProjectTraces() {
-        // Given - Get a project
-        List<Project> projects = langfuseService.getProjects();
-        
-        if (projects.isEmpty()) {
-            logger.warn("⚠️  WARNING: No projects found. Skipping test. Create a project in Langfuse UI first.");
-            assertTrue(true, "Test skipped - no projects available");
-            return;
-        }
-        
-        String projectId = projects.get(0).getId();
-        
-        // When
-        List<Map<String, Object>> traces = langfuseService.getProjectTraces(projectId, 10);
-        
-        // Then
-        // Note: Traces endpoint may not be available in public API
-        if (traces == null) {
-            logger.info("ℹ️  Project traces endpoint not available in Langfuse Public API");
-            assertTrue(true, "API limitation confirmed");
-        } else {
-            logger.info("Found {} traces for project", traces.size());
-            assertTrue(traces.isEmpty() || traces.get(0).containsKey("id"), 
-                       "Traces should be empty or contain trace data with id");
-        }
-    }
 
     @Test
     void testCreateProjectWithNullNameShouldFail() {
@@ -260,7 +188,7 @@ class LangfuseServiceIntegrationTest {
         String projectName = "No Description Project " + UUID.randomUUID().toString().substring(0, 8);
         
         // When
-        Map<String, Object> createdProject = langfuseService.createProject(projectName, null);
+        Project createdProject = langfuseService.createProject(projectName, null);
         
         // Then
         // API doesn't support project creation, so this will return null
@@ -288,47 +216,5 @@ class LangfuseServiceIntegrationTest {
             }
         }
     }
-
-    @Test
-    void testGetProjectApiKeysForValidProject() {
-        // Given - ensure at least one project exists
-        List<Project> projects = langfuseService.getProjects();
-        if (projects.isEmpty()) {
-            logger.warn("⚠️  WARNING: No projects found. Skipping API keys test. Create a project in Langfuse UI first.");
-            assertTrue(true, "Test skipped - no projects available");
-            return;
-        }
-
-        String projectId = (String) projects.get(0).getId();
-
-        // When
-        List<Map<String, Object>> apiKeys = langfuseService.getProjectApiKeys(projectId);
-
-        // Then
-        assertNotNull(apiKeys, "API keys list should not be null");
-        logger.info("Retrieved {} API keys for project {}", apiKeys.size(), projectId);
-        // API may return empty list if no keys or if endpoint is limited in self-hosted envs
-        if (!apiKeys.isEmpty()) {
-            Map<String, Object> first = apiKeys.get(0);
-            // Assert commonly expected fields when present
-            assertTrue(first.containsKey("id") || first.containsKey("name") || first.containsKey("createdAt"),
-                    "API key entry should contain at least an identifier or metadata");
-        } else {
-            logger.info("ℹ️  No API keys returned by Langfuse Public API for this project (possible limitation or no keys created)");
-        }
-    }
-
-    @Test
-    void testGetProjectApiKeysForInvalidProject() {
-        // Given
-        String invalidId = "invalid-project-id-" + UUID.randomUUID();
-
-        // When
-        List<Map<String, Object>> apiKeys = langfuseService.getProjectApiKeys(invalidId);
-
-        // Then
-        assertNotNull(apiKeys, "API keys list should not be null even for invalid project");
-        assertTrue(apiKeys.isEmpty(), "Should return empty list for invalid project ID");
-        logger.info("Correctly returned empty API keys list for invalid project ID");
-    }
+    
 }

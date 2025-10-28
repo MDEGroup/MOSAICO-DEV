@@ -78,38 +78,15 @@ class LangfuseServiceTest {
         langfuseService = new LangfuseService(properties);
         
         // When
-        Map<String, Object> project = langfuseService.getProjectById("test-id");
+        Project project = langfuseService.getProjectById("test-id");
         
         // Then
         assertNull(project);
     }
 
-    @Test
-    void testGetProjectStatsWhenDisabled() {
-        // Given
-        when(properties.isConfigured()).thenReturn(false);
-        langfuseService = new LangfuseService(properties);
-        
-        // When
-        Map<String, Object> stats = langfuseService.getProjectStats("test-id");
-        
-        // Then
-        assertNull(stats);
-    }
 
-    @Test
-    void testGetProjectTracesWhenDisabled() {
-        // Given
-        when(properties.isConfigured()).thenReturn(false);
-        langfuseService = new LangfuseService(properties);
-        
-        // When
-        List<Map<String, Object>> traces = langfuseService.getProjectTraces("test-id", 100);
-        
-        // Then
-        assertNotNull(traces);
-        assertTrue(traces.isEmpty());
-    }
+
+   
 
     @Test
     void testServiceInitializationWithValidConfig() {
@@ -152,19 +129,7 @@ class LangfuseServiceTest {
         assertEquals(0, result.size());
     }
 
-    @Test
-    void testGetProjectTracesWithLimitWhenDisabled() {
-        // Given
-        when(properties.isConfigured()).thenReturn(false);
-        langfuseService = new LangfuseService(properties);
-        
-        // When
-        List<Map<String, Object>> result = langfuseService.getProjectTraces("project-123", 50);
-        
-        // Then
-        assertNotNull(result);
-        assertTrue(result.isEmpty());
-    }
+
 
     @Test
     void testCreateProjectWhenDisabled() {
