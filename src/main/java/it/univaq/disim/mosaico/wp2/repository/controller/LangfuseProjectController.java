@@ -51,7 +51,7 @@ public class LangfuseProjectController {
      * GET /api/langfuse/projects/{projectId}
      */
     @GetMapping("/{projectId}")
-    public ResponseEntity<Map<String, Object>> getProjectById(@PathVariable String projectId) {
+    public ResponseEntity<Project> getProjectById(@PathVariable String projectId) {
         logger.info("GET /api/langfuse/projects/{}", projectId);
         
         if (!langfuseProjectService.isEnabled()) {
@@ -59,7 +59,7 @@ public class LangfuseProjectController {
             return ResponseEntity.notFound().build();
         }
 
-        Map<String, Object> project = langfuseProjectService.getProjectById(projectId);
+        Project project = langfuseProjectService.getProjectById(projectId);
         
         if (project == null) {
             return ResponseEntity.notFound().build();
@@ -68,46 +68,9 @@ public class LangfuseProjectController {
         return ResponseEntity.ok(project);
     }
 
-    /**
-     * Get project statistics.
-     * GET /api/langfuse/projects/{projectId}/stats
-     */
-    @GetMapping("/{projectId}/stats")
-    public ResponseEntity<Map<String, Object>> getProjectStats(@PathVariable String projectId) {
-        logger.info("GET /api/langfuse/projects/{}/stats", projectId);
-        
-        if (!langfuseProjectService.isEnabled()) {
-            logger.warn("Langfuse is not enabled");
-            return ResponseEntity.notFound().build();
-        }
 
-        Map<String, Object> stats = langfuseProjectService.getProjectStats(projectId);
-        
-        if (stats == null) {
-            return ResponseEntity.notFound().build();
-        }
-        
-        return ResponseEntity.ok(stats);
-    }
 
-    /**
-     * Get traces for a specific project.
-     * GET /api/langfuse/projects/{projectId}/traces?limit=100
-     */
-    @GetMapping("/{projectId}/traces")
-    public ResponseEntity<List<Map<String, Object>>> getProjectTraces(
-            @PathVariable String projectId,
-            @RequestParam(defaultValue = "100") int limit) {
-        logger.info("GET /api/langfuse/projects/{}/traces?limit={}", projectId, limit);
-        
-        if (!langfuseProjectService.isEnabled()) {
-            logger.warn("Langfuse is not enabled");
-            return ResponseEntity.ok(List.of());
-        }
-
-        List<Map<String, Object>> traces = langfuseProjectService.getProjectTraces(projectId, limit);
-        return ResponseEntity.ok(traces);
-    }
+   
 
     /**
      * Create a new project in Langfuse.
@@ -115,7 +78,7 @@ public class LangfuseProjectController {
      * Body: { "name": "Project Name", "description": "Optional description" }
      */
     @PostMapping
-    public ResponseEntity<Map<String, Object>> createProject(@RequestBody Map<String, String> requestBody) {
+    public ResponseEntity<Project> createProject(@RequestBody Map<String, String> requestBody) {
         String projectName = requestBody.get("name");
         String description = requestBody.get("description");
         
@@ -124,20 +87,20 @@ public class LangfuseProjectController {
         if (!langfuseProjectService.isEnabled()) {
             logger.warn("Langfuse is not enabled");
             return ResponseEntity.badRequest()
-                    .body(Map.of("error", "Langfuse is not enabled"));
+                    .body(null);
         }
 
         if (projectName == null || projectName.trim().isEmpty()) {
             logger.warn("Project name is required");
             return ResponseEntity.badRequest()
-                    .body(Map.of("error", "Project name is required"));
+                    .body(null);
         }
 
-        Map<String, Object> project = langfuseProjectService.createProject(projectName, description);
+        Project project = langfuseProjectService.createProject(projectName, description);
         
         if (project == null) {
             return ResponseEntity.internalServerError()
-                    .body(Map.of("error", "Failed to create project"));
+                    .body(null);
         }
         
         return ResponseEntity.status(201).body(project);
