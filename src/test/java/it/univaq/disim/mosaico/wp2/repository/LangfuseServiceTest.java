@@ -138,7 +138,7 @@ class LangfuseServiceTest {
         langfuseService = new LangfuseService(properties);
         
         // When
-        Map<String, Object> project = langfuseService.createProject("Test Project", "Test Description");
+        Project project = langfuseService.createProject("Test Project", "Test Description");
         
         // Then
         assertNull(project);
@@ -181,7 +181,7 @@ class LangfuseServiceTest {
         langfuseService = new LangfuseService(properties);
         
         // When
-        Map<String, Object> project = langfuseService.createProject("Test Project", null);
+        Project project = langfuseService.createProject("Test Project", null);
         
         // Then
         assertNull(project);
