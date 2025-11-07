@@ -3,7 +3,6 @@ package it.univaq.disim.mosaico.wp2.repository.controller;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,10 +24,10 @@ public class AgentController {
 
     Logger logger = LoggerFactory.getLogger(AgentController.class);
     
-    @Autowired
+    
     private final AgentService agentService;
     
-    public AgentController(@Autowired AgentService agentService) {
+    public AgentController(AgentService agentService) {
         this.agentService = agentService;
     }
     

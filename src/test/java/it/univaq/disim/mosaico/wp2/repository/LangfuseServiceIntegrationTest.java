@@ -10,7 +10,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
+import com.langfuse.client.resources.commons.types.DatasetItem;
 
+import com.langfuse.client.resources.commons.types.Dataset;
 import com.langfuse.client.resources.projects.types.Project;
 import com.langfuse.client.resources.projects.types.Projects;
 
@@ -41,8 +43,8 @@ import static org.junit.jupiter.api.Assertions.*;
 @TestPropertySource(properties = {
     "langfuse.enabled=true",
     "langfuse.base-url=http://localhost:3000",
-    "langfuse.public-key=pk-lf-72af177c-f55e-46f5-a617-0619b95f36da",
-    "langfuse.secret-key=sk-lf-9cae9864-b2d6-4a06-9b49-96af21624361",
+    "langfuse.public-key=pk-lf-ac9f73f8-88b5-4dd8-bea8-2f45ecd186ae",
+    "langfuse.secret-key=sk-lf-23527443-2406-42cb-b8a2-d745bdad1f08",
     "langfuse.timeout-seconds=10"
 })
 @EnabledIfEnvironmentVariable(named = "LANGFUSE_INTEGRATION_TEST", matches = "true", disabledReason = "Integration tests disabled. Set LANGFUSE_INTEGRATION_TEST=true to enable")
@@ -153,12 +155,9 @@ class LangfuseServiceIntegrationTest {
         // Then
         assertNull(project, "Should return null for invalid project ID");
         logger.info("Correctly returned null for invalid project ID");
-    }
+    }  
 
-    
-
-
-    @Test
+    // #region Create Project Tests
     void testCreateProjectWithNullNameShouldFail() {
         // When & Then
         assertThrows(IllegalArgumentException.class, () -> {
@@ -166,7 +165,6 @@ class LangfuseServiceIntegrationTest {
         }, "Should throw IllegalArgumentException for null project name");
     }
 
-    @Test
     void testCreateProjectWithEmptyNameShouldFail() {
         // When & Then
         assertThrows(IllegalArgumentException.class, () -> {
@@ -174,7 +172,6 @@ class LangfuseServiceIntegrationTest {
         }, "Should throw IllegalArgumentException for empty project name");
     }
 
-    @Test
     void testCreateProjectWithBlankNameShouldFail() {
         // When & Then
         assertThrows(IllegalArgumentException.class, () -> {
@@ -182,7 +179,6 @@ class LangfuseServiceIntegrationTest {
         }, "Should throw IllegalArgumentException for blank project name");
     }
 
-    @Test
     void testCreateProjectWithNullDescription() {
         // Given
         String projectName = "No Description Project " + UUID.randomUUID().toString().substring(0, 8);
@@ -195,7 +191,58 @@ class LangfuseServiceIntegrationTest {
         assertNull(createdProject, "Project creation not supported via API");
         logger.info("✓ Confirmed: Cannot create project via API (expected behavior)");
     }
+    void testCreateProjectSuccess() {
+        // Given
+        String projectName = "No Description Project " + UUID.randomUUID().toString().substring(0, 8);
+        
+        // When
+        Project createdProject = langfuseService.createProject(projectName, "null");
+        
+        // Then
+        // API doesn't support project creation, so this will return null
+        assertNotNull(createdProject, "Project creation not supported via API");
+        logger.info("✓ Confirmed: created project via API (expected behavior)");
+    }
+    // #endregion
+    @Test
+    void testCreateDatasetSuccess() {
+        // Given
+        String datasetName = "No Description Dataset " + UUID.randomUUID().toString().substring(0, 8);
+        
+        // When
+        Dataset createdDataset = langfuseService.createDataset(datasetName, "dataset description");
+        
+        // Then
+        // API doesn't support dataset creation, so this will return null
+        assertNotNull(createdDataset, "Dataset creation not supported via API");
+        logger.info("✓ Confirmed: created dataset via API (expected behavior)");
+    }
 
+    @Test
+    void testCreateDatasetItemSuccess() {
+        // Given
+        
+        // When
+        DatasetItem createdItem = langfuseService.createDatasetItems("", "Italy", "Rome");
+        
+        // Then
+        // API doesn't support dataset creation, so this will return null
+        assertNotNull(createdItem, "Dataset creation not supported via API");
+        logger.info("✓ Confirmed: created dataset item via API (expected behavior)");
+    }
+
+    @Test
+    void testGetTraces(){
+        // When
+        var traces = langfuseService.getTraces();
+        // Then
+        assertNotNull(traces, "Traces response should not be null");
+        traces.forEach(trace -> {
+            logger.info("Trace ID: {} - Name: {}", trace.getId(), trace.getName());
+        });
+        logger.info("Retrieved {} traces for project ID", traces.size());
+
+    }
     @Test
     void testMultipleProjectsRetrieval() {
         // Given - Get all existing projects

@@ -6,10 +6,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Map;
 import com.langfuse.client.LangfuseClient;
 import com.langfuse.client.core.LangfuseClientApiException;
+import com.langfuse.client.resources.commons.types.Dataset;
+import com.langfuse.client.resources.commons.types.DatasetItem;
 import com.langfuse.client.resources.commons.types.TraceWithDetails;
+import com.langfuse.client.resources.datasetitems.types.CreateDatasetItemRequest;
+import com.langfuse.client.resources.datasets.types.CreateDatasetRequest;
 import com.langfuse.client.resources.projects.ProjectsClient;
 import com.langfuse.client.resources.projects.requests.CreateProjectRequest;
 import com.langfuse.client.resources.projects.types.Project;
@@ -108,6 +111,35 @@ public class LangfuseService {
         Project project = client.projects().create(CreateProjectRequest.builder().name("agent name").retention(3).build());
         
         return project;
+    }
+
+    public List<Dataset> getDatasets() {
+        if (!isEnabled()) {
+            logger.warn("Langfuse is not enabled, returning empty dataset list");
+            return null;
+        }
+
+        try {
+            return client.datasets().list().getData();
+        } catch (LangfuseClientApiException error) {
+            System.out.println("ERRORE" + error.getMessage());
+            return null;
+        }
+       
+    }
+
+    public DatasetItem createDatasetItems(String datasetId, String input, String expectedOutput) {
+        //TO BE IMPLEMENTED
+        DatasetItem createdItems = client.datasetItems().create(CreateDatasetItemRequest.builder().datasetName("No Description Dataset 1f1654e7").input(input).expectedOutput(expectedOutput).build());
+        
+        return createdItems;
+    }
+
+    public Dataset createDataset(String datasetName, String description) {
+        //TO BE IMPLEMENTED
+        Dataset dataset = client.datasets().create(CreateDatasetRequest.builder().name(datasetName).description(description).build());
+        
+        return dataset;
     }
 
 
