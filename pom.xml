@@ -6,8 +6,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.4.10</version>
-		<relativePath /> <!-- lookup parent from repository -->
+		<version>3.5.6</version>
 	</parent>
 	<groupId>it.univaq.disim.mosaico.wp2</groupId>
 	<artifactId>repository</artifactId>
@@ -31,12 +30,9 @@
 	<properties>
 		<java.version>21</java.version>
 		<mockito.version>5.14.2</mockito.version>
+		<spring-ai.version>1.0.0-M2</spring-ai.version>
 	</properties>
 	<dependencies>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-data-mongodb</artifactId>
-		</dependency>
 		<!-- JPA / Postgres support for optional migration -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -46,18 +42,25 @@
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>
 		</dependency>
-		<!-- Flyway for database migrations -->
+		<!-- Spring AI Ollama (per generare embeddings) -->
 		<dependency>
-			<groupId>org.flywaydb</groupId>
-			<artifactId>flyway-core</artifactId>
+			<groupId>org.springframework.ai</groupId>
+			<artifactId>spring-ai-ollama-spring-boot-starter</artifactId>
 		</dependency>
-		<!-- pgvector JDBC support (optional helper for later) -->
+
+		<!-- Keep MongoDB starter temporarily to allow incremental migration (many classes still use @Document) -->
+		<!-- MongoDB starter removed: all entities and repositories migrated to JPA/Postgres -->
+		<!-- Spring Boot Docker Compose Support -->
 		<dependency>
-			<groupId>com.github.pgvector</groupId>
-			<artifactId>pgvector</artifactId>
-			<version>0.1.0</version>
-			<scope>runtime</scope>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-docker-compose</artifactId>
+			<version>3.1.1</version>
 		</dependency>
+		<dependency>
+			<groupId>org.springframework.ai</groupId>
+			<artifactId>spring-ai-pgvector-store-spring-boot-starter</artifactId>
+		</dependency>
+
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
@@ -104,7 +107,35 @@
 			<version>1.1.0</version>
 		</dependency>
 	</dependencies>
+		<repositories>
+		<repository>
+			<id>spring-milestones</id>
+			<name>Spring Milestones</name>
+			<url>https://repo.spring.io/milestone</url>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</repository>
+	</repositories>
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.springframework.ai</groupId>
+				<artifactId>spring-ai-bom</artifactId>
+				<version>${spring-ai.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
 
+			<dependency>
+				<groupId>io.opentelemetry.instrumentation</groupId>
+				<artifactId>opentelemetry-instrumentation-bom</artifactId>
+				<version>2.10.0</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 	<build>
 		<plugins>
 			<plugin>

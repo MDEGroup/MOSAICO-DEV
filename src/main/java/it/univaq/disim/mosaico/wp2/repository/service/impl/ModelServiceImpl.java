@@ -22,7 +22,7 @@ public class ModelServiceImpl implements ModelService {
     @Autowired
     /*
      * The modelRepository is used to perform CRUD operations on the Model entity. It is autowired by Spring.
-     * The ModelRepository interface extends the MongoRepository interface, which provides methods for CRUD operations.
+    * The ModelRepository interface extends the JpaRepository interface, which provides methods for CRUD operations.
      */
     private final ModelRepository modelRepository;
 

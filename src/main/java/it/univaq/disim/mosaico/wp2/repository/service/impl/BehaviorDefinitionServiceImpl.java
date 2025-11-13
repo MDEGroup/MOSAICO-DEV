@@ -21,7 +21,7 @@ public class BehaviorDefinitionServiceImpl implements BehaviorDefinitionService 
 
     /*
      * The behaviorDefinitionRepository is used to perform CRUD operations on the BehaviorDefinition entity. It is autowired by Spring.
-     * The BehaviorDefinitionRepository interface extends the MongoRepository interface, which provides methods for CRUD operations.
+    * The BehaviorDefinitionRepository interface extends the JpaRepository interface, which provides methods for CRUD operations.
      */
     private final BehaviorDefinitionRepository behaviorDefinitionRepository;
 

@@ -7,8 +7,8 @@ from ollama import Client
 # source code. Set the following environment variables in your shell before running:
 # LANGFUSE_PUBLIC_KEY and LANGFUSE_SECRET_KEY. Optionally set LANGFUSE_HOST.
 LANGFUSE_HOST = os.environ.get("LANGFUSE_HOST", "http://localhost:3000")
-LANGFUSE_PUBLIC_KEY = os.environ.get("LANGFUSE_PUBLIC_KEY")
-LANGFUSE_SECRET_KEY = os.environ.get("LANGFUSE_SECRET_KEY")
+LANGFUSE_PUBLIC_KEY = os.environ.get("LANGFUSE_PUBLIC_KEY", "pk-lf-dd5354d3-042c-409d-a452-99c4bec0b58e")
+LANGFUSE_SECRET_KEY = os.environ.get("LANGFUSE_SECRET_KEY", "sk-lf-f7d48695-bfa0-4305-9c59-ea2fda098eee")
 
 if not LANGFUSE_PUBLIC_KEY or not LANGFUSE_SECRET_KEY:
     raise RuntimeError(

@@ -1,6 +1,6 @@
 package it.univaq.disim.mosaico.wp2.repository.repository;
 
-import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import it.univaq.disim.mosaico.wp2.repository.data.Benchmark;
 
@@ -8,7 +8,7 @@ import it.univaq.disim.mosaico.wp2.repository.data.Benchmark;
  * Repository interface for Benchmark entities.
  */
 @Repository
-public interface BenchmarkRepository extends MongoRepository<Benchmark, String> {
+public interface BenchmarkRepository extends JpaRepository<Benchmark, String> {
     
     Benchmark findByDatasetRef(String datasetRef);
     Benchmark findByProtocolVersion(String protocolVersion);

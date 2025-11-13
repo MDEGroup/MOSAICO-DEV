@@ -21,7 +21,7 @@ public class MonitoringConfigServiceImpl implements MonitoringConfigService {
 
     /*
      * The monitoringConfigRepository is used to perform CRUD operations on the MonitoringConfig entity. It is autowired by Spring.
-     * The MonitoringConfigRepository interface extends the MongoRepository interface, which provides methods for CRUD operations.
+    * The MonitoringConfigRepository interface extends the JpaRepository interface, which provides methods for CRUD operations.
      */
     private final MonitoringConfigRepository monitoringConfigRepository;
 

@@ -21,7 +21,7 @@ public class MetricServiceImpl implements MetricService {
 
     /*
      * The metricRepository is used to perform CRUD operations on the Metric entity. It is autowired by Spring.
-     * The MetricRepository interface extends the MongoRepository interface, which provides methods for CRUD operations.
+    * The MetricRepository interface extends the JpaRepository interface, which provides methods for CRUD operations.
      */
     private final MetricRepository metricRepository;
 
