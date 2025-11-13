@@ -45,6 +45,7 @@ public class AgentServiceImpl implements AgentService {
     
     @Override
     public List<Agent> findByProvider(String providerId) {
+        // Use the repository method implemented for the migration pass
         return agentRepository.findByProvider_Id(providerId);
     }
     

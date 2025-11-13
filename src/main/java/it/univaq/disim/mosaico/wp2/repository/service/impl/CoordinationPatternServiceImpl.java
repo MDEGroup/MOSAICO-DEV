@@ -21,7 +21,7 @@ public class CoordinationPatternServiceImpl implements CoordinationPatternServic
 
     /*
      * The coordinationPatternRepository is used to perform CRUD operations on the CoordinationPattern entity. It is autowired by Spring.
-     * The CoordinationPatternRepository interface extends the MongoRepository interface, which provides methods for CRUD operations.
+    * The CoordinationPatternRepository interface extends the JpaRepository interface, which provides methods for CRUD operations.
      */
     private final CoordinationPatternRepository coordinationPatternRepository;
 

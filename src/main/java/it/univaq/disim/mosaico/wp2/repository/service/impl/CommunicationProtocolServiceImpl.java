@@ -21,7 +21,7 @@ public class CommunicationProtocolServiceImpl implements CommunicationProtocolSe
 
     /*
      * The communicationProtocolRepository is used to perform CRUD operations on the CommunicationProtocol entity. It is autowired by Spring.
-     * The CommunicationProtocolRepository interface extends the MongoRepository interface, which provides methods for CRUD operations.
+    * The CommunicationProtocolRepository interface extends the JpaRepository interface, which provides methods for CRUD operations.
      */
     private final CommunicationProtocolRepository communicationProtocolRepository;
 

@@ -21,7 +21,7 @@ public class ToolDefinitionServiceImpl implements ToolDefinitionService {
 
     /*
      * The toolDefinitionRepository is used to perform CRUD operations on the ToolDefinition entity. It is autowired by Spring.
-     * The ToolDefinitionRepository interface extends the MongoRepository interface, which provides methods for CRUD operations.
+    * The ToolDefinitionRepository interface extends the JpaRepository interface, which provides methods for CRUD operations.
      */
     private final ToolDefinitionRepository toolDefinitionRepository;
 

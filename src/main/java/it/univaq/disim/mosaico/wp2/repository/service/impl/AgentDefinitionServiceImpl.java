@@ -21,7 +21,7 @@ public class AgentDefinitionServiceImpl implements AgentDefinitionService {
 
     /*
      * The agentDefinitionRepository is used to perform CRUD operations on the AgentDefinition entity. It is autowired by Spring.
-     * The AgentDefinitionRepository interface extends the MongoRepository interface, which provides methods for CRUD operations.
+    * The AgentDefinitionRepository interface extends the JpaRepository interface, which provides methods for CRUD operations.
      */
     private final AgentDefinitionRepository agentDefinitionRepository;
 

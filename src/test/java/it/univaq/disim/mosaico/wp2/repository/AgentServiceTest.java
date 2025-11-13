@@ -122,13 +122,13 @@ public class AgentServiceTest {
     
     @Test
     void testFindByProvider() {
-        when(agentRepository.findByProvider_Id("provider1")).thenReturn(List.of(testAgent));
+    when(agentRepository.findByProvider_Id("provider1")).thenReturn(List.of(testAgent));
         
         List<Agent> providerAgents = agentService.findByProvider("provider1");
         
         assertEquals(1, providerAgents.size());
         assertEquals(testAgent.provider().id(), providerAgents.get(0).provider().id());
-        verify(agentRepository, times(1)).findByProvider_Id("provider1");
+    verify(agentRepository, times(1)).findByProvider_Id("provider1");
     }
     
     @Test
