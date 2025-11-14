@@ -1,12 +1,8 @@
 package it.univaq.disim.mosaico.wp2.repository.mcp;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 
 import org.springaicommunity.mcp.annotation.McpResource;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -29,63 +25,64 @@ import it.univaq.disim.mosaico.wp2.repository.service.AgentService;
 @Component
 public class AgentMCP {
 
-    @Autowired
-    private AgentService agentService;
-    @Autowired
-    private ObjectMapper objectMapper;
-    @McpResource(
-        name = "agents",
-        description = "MOSAICO Agents exposed via MCP",
-        uri = "document/agents"
-    )
+    private final AgentService agentService;
+    private final ObjectMapper objectMapper;
+
+    // Constructor injection makes the class easier to test (we can pass a mock
+    // AgentService)
+    public AgentMCP(AgentService agentService, ObjectMapper objectMapper) {
+        this.agentService = agentService;
+        this.objectMapper = objectMapper;
+    }
+
+    @McpResource(name = "agents", description = "MOSAICO Agents exposed via MCP", uri = "document/agents")
     public ReadResourceResult listAllAgents() {
 
         // 2. Li serializzi in JSON
-        //List<Agent> agents = agentService.findAll();
-        Provider testProvider =testProvider = new Provider(
-            "provider1",
-            "OpenAI",
-            "AI company providing language models",
-            "https://openai.com"
-        );
+        // List<Agent> agents = agentService.findAll();
+        Provider testProvider = testProvider = new Provider(
+                "provider1",
+                "OpenAI",
+                "AI company providing language models",
+                "https://openai.com");
         List<Agent> agents = List.of(new Agent(
-            "agent1",
-            "Code Review Agent",
-            "AI agent specialized in code review",
-            "v1.0",
-            testProvider,
-            "MIT",
-            "Code quality beliefs",
-            "Review code efficiently",
-            "Deliver high-quality reviews",
-            "Specialist",
-            "Code Review",
-            List.of(IOModality.TEXT),
-            "Background in software engineering",
-            List.of(), // skills
-            List.of(), // tools  
-            List.of(), // memory
-            List.of(), // interactionProtocols
-            List.of()  // agentConsumption
+                "agent1",
+                "Code Review Agent",
+                "AI agent specialized in code review",
+                "v1.0",
+                testProvider,
+                "MIT",
+                "Code quality beliefs",
+                "Review code efficiently",
+                "Deliver high-quality reviews",
+                "Specialist",
+                "Code Review",
+                List.of(IOModality.TEXT),
+                "Background in software engineering",
+                List.of(), // skills
+                List.of(), // tools
+                List.of(), // memory
+                List.of(), // interactionProtocols
+                List.of() // agentConsumption
         ), new Agent(
-            "agent2",
-            "Code Summarization",
-            "AI agent specialized in code summarization",
-            "v1.0",
-            testProvider,
-            "MIT",
-            "Code quality beliefs",
-            "Review code efficiently",
-            "Deliver high-quality reviews",
-            "Specialist",
-            "Code Review",
-            List.of(IOModality.TEXT),
-            "Background in software engineering",
-            List.of(), // skills
-            List.of(), // tools  
-            List.of(), // memory
-            List.of(), // interactionProtocols
-            List.of()  // agentConsumption
+                "agent2",
+                "Code Summarization",
+                "AI agent specialized in code summarization",
+                "v1.0",
+                testProvider,
+                "MIT",
+                "Code quality beliefs",
+                "Review code efficiently",
+                "Deliver high-quality reviews",
+                "Specialist",
+                "Code Review",
+                List.of(IOModality.TEXT),
+                "Background in software engineering",
+                List.of(), // skills
+                List.of(), // tools
+                List.of(), // memory
+                List.of(), // interactionProtocols
+                List.of() // agentConsumption
         ));
         String json;
         try {
@@ -96,47 +93,42 @@ public class AgentMCP {
 
         // 3. Costruisci il TextResourceContents (che implementa ResourceContents)
         TextResourceContents contents = new TextResourceContents(
-            "document://agents",      // uri del contenuto
-            "application/json",       // mime type
-            json                      // payload testuale
+                "document://agents", // uri del contenuto
+                "application/json", // mime type
+                json // payload testuale
         );
 
         // 4. Ritorni il ReadResourceResult con la lista di contents
         return new ReadResourceResult(List.of(contents));
     }
 
-    @McpResource(
-        name = "agent",
-        description = "MOSAICO Agent exposed via MCP",
-        uri = "document/agents/{id}"
-    )
+    @McpResource(name = "agent", description = "MOSAICO Agent exposed via MCP", uri = "document/agents/{id}")
     public ReadResourceResult getAgent(String id) {
-        //Agent agent = agentService.findById(id).orElse(null);
-        Provider testProvider =testProvider = new Provider(
-            "provider1",
-            "OpenAI",
-            "AI company providing language models",
-            "https://openai.com"
-        );
+        // Agent agent = agentService.findById(id).orElse(null);
+        Provider testProvider = testProvider = new Provider(
+                "provider1",
+                "OpenAI",
+                "AI company providing language models",
+                "https://openai.com");
         Agent agent = new Agent(
-            "agent1",
-            "Code Review Agent",
-            "AI agent specialized in code review",
-            "v1.0",
-            testProvider,
-            "MIT",
-            "Code quality beliefs",
-            "Review code efficiently",
-            "Deliver high-quality reviews",
-            "Specialist",
-            "Code Review",
-            List.of(IOModality.TEXT),
-            "Background in software engineering",
-            List.of(), // skills
-            List.of(), // tools  
-            List.of(), // memory
-            List.of(), // interactionProtocols
-            List.of()  // agentConsumption
+                "agent1",
+                "Code Review Agent",
+                "AI agent specialized in code review",
+                "v1.0",
+                testProvider,
+                "MIT",
+                "Code quality beliefs",
+                "Review code efficiently",
+                "Deliver high-quality reviews",
+                "Specialist",
+                "Code Review",
+                List.of(IOModality.TEXT),
+                "Background in software engineering",
+                List.of(), // skills
+                List.of(), // tools
+                List.of(), // memory
+                List.of(), // interactionProtocols
+                List.of() // agentConsumption
         );
         String json;
         try {
@@ -145,11 +137,11 @@ public class AgentMCP {
             json = "[]"; // Fallback a lista vuota in caso di errore
         }
         TextResourceContents contents = new TextResourceContents(
-            "document://agent/{id}",      // uri del contenuto
-            "application/json",       // mime type
-            json                      // payload testuale
+                "document://agent/{id}", // uri del contenuto
+                "application/json", // mime type
+                json // payload testuale
         );
         return new ReadResourceResult(List.of(contents));
-        
+
     }
 }
