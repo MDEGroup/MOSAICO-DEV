@@ -1,0 +1,147 @@
+package it.univaq.disim.mosaico.wp2.repository.mcp;
+
+import java.util.List;
+
+import org.springaicommunity.mcp.annotation.McpResource;
+import org.springframework.stereotype.Component;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import io.modelcontextprotocol.spec.McpSchema.ReadResourceResult;
+import io.modelcontextprotocol.spec.McpSchema.TextResourceContents;
+import it.univaq.disim.mosaico.wp2.repository.data.Agent;
+import it.univaq.disim.mosaico.wp2.repository.data.Provider;
+import it.univaq.disim.mosaico.wp2.repository.data.enums.IOModality;
+import it.univaq.disim.mosaico.wp2.repository.service.AgentService;
+
+/**
+ * AgentMCP provides a lightweight, non-invasive MCP-compatible adapter for
+ * exposing Agent resources. This class intentionally does not depend on the
+ * optional `spring-ai-starter-mcp-server-webmvc` at compile time; instead it
+ * offers programmatic access to Agent resources and a simple metadata
+ * descriptor that can be used by an MCP server when the starter is enabled.
+ */
+@Component
+public class AgentMCP {
+
+    private final AgentService agentService;
+    private final ObjectMapper objectMapper;
+
+    // Constructor injection makes the class easier to test (we can pass a mock
+    // AgentService)
+    public AgentMCP(AgentService agentService, ObjectMapper objectMapper) {
+        this.agentService = agentService;
+        this.objectMapper = objectMapper;
+    }
+
+    @McpResource(name = "agents", description = "MOSAICO Agents exposed via MCP", uri = "document/agents")
+    public ReadResourceResult listAllAgents() {
+
+        // 2. Li serializzi in JSON
+        // List<Agent> agents = agentService.findAll();
+        Provider testProvider = testProvider = new Provider(
+                "provider1",
+                "OpenAI",
+                "AI company providing language models",
+                "https://openai.com");
+        List<Agent> agents = List.of(new Agent(
+                "agent1",
+                "Code Review Agent",
+                "AI agent specialized in code review",
+                "v1.0",
+                testProvider,
+                "MIT",
+                "Code quality beliefs",
+                "Review code efficiently",
+                "Deliver high-quality reviews",
+                "Specialist",
+                "Code Review",
+                List.of(IOModality.TEXT),
+                "Background in software engineering",
+                List.of(), // skills
+                List.of(), // tools
+                List.of(), // memory
+                List.of(), // interactionProtocols
+                List.of() // agentConsumption
+        ), new Agent(
+                "agent2",
+                "Code Summarization",
+                "AI agent specialized in code summarization",
+                "v1.0",
+                testProvider,
+                "MIT",
+                "Code quality beliefs",
+                "Review code efficiently",
+                "Deliver high-quality reviews",
+                "Specialist",
+                "Code Review",
+                List.of(IOModality.TEXT),
+                "Background in software engineering",
+                List.of(), // skills
+                List.of(), // tools
+                List.of(), // memory
+                List.of(), // interactionProtocols
+                List.of() // agentConsumption
+        ));
+        String json;
+        try {
+            json = objectMapper.writeValueAsString(agents);
+        } catch (JsonProcessingException e) {
+            json = "[]"; // Fallback a lista vuota in caso di errore
+        }
+
+        // 3. Costruisci il TextResourceContents (che implementa ResourceContents)
+        TextResourceContents contents = new TextResourceContents(
+                "document://agents", // uri del contenuto
+                "application/json", // mime type
+                json // payload testuale
+        );
+
+        // 4. Ritorni il ReadResourceResult con la lista di contents
+        return new ReadResourceResult(List.of(contents));
+    }
+
+    @McpResource(name = "agent", description = "MOSAICO Agent exposed via MCP", uri = "document/agents/{id}")
+    public ReadResourceResult getAgent(String id) {
+        // Agent agent = agentService.findById(id).orElse(null);
+        Provider testProvider = testProvider = new Provider(
+                "provider1",
+                "OpenAI",
+                "AI company providing language models",
+                "https://openai.com");
+        Agent agent = new Agent(
+                "agent1",
+                "Code Review Agent",
+                "AI agent specialized in code review",
+                "v1.0",
+                testProvider,
+                "MIT",
+                "Code quality beliefs",
+                "Review code efficiently",
+                "Deliver high-quality reviews",
+                "Specialist",
+                "Code Review",
+                List.of(IOModality.TEXT),
+                "Background in software engineering",
+                List.of(), // skills
+                List.of(), // tools
+                List.of(), // memory
+                List.of(), // interactionProtocols
+                List.of() // agentConsumption
+        );
+        String json;
+        try {
+            json = objectMapper.writeValueAsString(agent);
+        } catch (JsonProcessingException e) {
+            json = "[]"; // Fallback a lista vuota in caso di errore
+        }
+        TextResourceContents contents = new TextResourceContents(
+                "document://agent/{id}", // uri del contenuto
+                "application/json", // mime type
+                json // payload testuale
+        );
+        return new ReadResourceResult(List.of(contents));
+
+    }
+}
