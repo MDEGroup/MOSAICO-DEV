@@ -15,6 +15,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.modelcontextprotocol.spec.McpSchema.ReadResourceResult;
 import io.modelcontextprotocol.spec.McpSchema.TextResourceContents;
 import it.univaq.disim.mosaico.wp2.repository.data.Agent;
+import it.univaq.disim.mosaico.wp2.repository.data.Provider;
+import it.univaq.disim.mosaico.wp2.repository.data.enums.IOModality;
 import it.univaq.disim.mosaico.wp2.repository.service.AgentService;
 
 /**
@@ -39,7 +41,52 @@ public class AgentMCP {
     public ReadResourceResult listAllAgents() {
 
         // 2. Li serializzi in JSON
-        List<Agent> agents = agentService.findAll();
+        //List<Agent> agents = agentService.findAll();
+        Provider testProvider =testProvider = new Provider(
+            "provider1",
+            "OpenAI",
+            "AI company providing language models",
+            "https://openai.com"
+        );
+        List<Agent> agents = List.of(new Agent(
+            "agent1",
+            "Code Review Agent",
+            "AI agent specialized in code review",
+            "v1.0",
+            testProvider,
+            "MIT",
+            "Code quality beliefs",
+            "Review code efficiently",
+            "Deliver high-quality reviews",
+            "Specialist",
+            "Code Review",
+            List.of(IOModality.TEXT),
+            "Background in software engineering",
+            List.of(), // skills
+            List.of(), // tools  
+            List.of(), // memory
+            List.of(), // interactionProtocols
+            List.of()  // agentConsumption
+        ), new Agent(
+            "agent2",
+            "Code Summarization",
+            "AI agent specialized in code summarization",
+            "v1.0",
+            testProvider,
+            "MIT",
+            "Code quality beliefs",
+            "Review code efficiently",
+            "Deliver high-quality reviews",
+            "Specialist",
+            "Code Review",
+            List.of(IOModality.TEXT),
+            "Background in software engineering",
+            List.of(), // skills
+            List.of(), // tools  
+            List.of(), // memory
+            List.of(), // interactionProtocols
+            List.of()  // agentConsumption
+        ));
         String json;
         try {
             json = objectMapper.writeValueAsString(agents);
@@ -64,7 +111,33 @@ public class AgentMCP {
         uri = "document/agents/{id}"
     )
     public ReadResourceResult getAgent(String id) {
-        Agent agent = agentService.findById(id).orElse(null);
+        //Agent agent = agentService.findById(id).orElse(null);
+        Provider testProvider =testProvider = new Provider(
+            "provider1",
+            "OpenAI",
+            "AI company providing language models",
+            "https://openai.com"
+        );
+        Agent agent = new Agent(
+            "agent1",
+            "Code Review Agent",
+            "AI agent specialized in code review",
+            "v1.0",
+            testProvider,
+            "MIT",
+            "Code quality beliefs",
+            "Review code efficiently",
+            "Deliver high-quality reviews",
+            "Specialist",
+            "Code Review",
+            List.of(IOModality.TEXT),
+            "Background in software engineering",
+            List.of(), // skills
+            List.of(), // tools  
+            List.of(), // memory
+            List.of(), // interactionProtocols
+            List.of()  // agentConsumption
+        );
         String json;
         try {
             json = objectMapper.writeValueAsString(agent);
