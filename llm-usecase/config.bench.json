@@ -1,0 +1,74 @@
+{
+    "langfuse": {
+      "host": "https://cloud.langfuse.com",
+      "public_key": "pk-lf-753e55be-62b3-424d-aaa7-f747257c5c4c",
+      "secret_key": "sk-lf-ace78b79-da6c-450e-84ab-368353261969"
+    },
+  
+    "trace": {
+      "name": "agentse.app.summarization",
+      "tags": ["bench", "summarization"]
+    },
+  
+    "model": {
+      "provider": "ollama",
+      "name": "llama3.2:3b",
+      "ollama": {
+        "host": "http://localhost:11434",
+        "options": {
+          "temperature": 0,
+          "top_p": 1,
+          "num_ctx": 4096,
+          "num_predict": 512
+        }
+      }
+    },
+  
+    "prompt": {
+      "template": "You are a senior software engineer. Read the input product description and write a concise summary for a technical audience that captures purpose, key features, and unique value. Use 3 to 6 sentences.\n\nDESCRIPTION:\n{{DESCRIPTION}}\n\nWrite the summary now."
+    },
+  
+    "datasets": {
+      "train": {
+        "dataset_name": "ause_train",
+        "csv_path": "train_data.csv",
+        "input_col": "description_html_clean",
+        "gold_col": "description_short",
+        "create_dataset": true,
+        "limit": 0,
+        "start": 0
+      },
+      "test": {
+        "dataset_name": "ause_test",
+        "csv_path": "test_data.csv",
+        "input_col": "description_html_clean",
+        "gold_col": "description_short",
+        "create_dataset": true,
+        "limit": 0,
+        "start": 0
+      }
+    },
+  
+    "metrics": {
+      "score_configs": [
+        {"name": "rouge1_f", "type": "numeric", "description": "ROUGE-1 F", "higherIsBetter": true},
+        {"name": "rougeL_f", "type": "numeric", "description": "ROUGE-L F", "higherIsBetter": true},
+        {"name": "cosine_pred_gold", "type": "numeric", "description": "TF-IDF cosine pred vs gold", "higherIsBetter": true},
+        {"name": "cosine_pred_source", "type": "numeric", "description": "TF-IDF cosine pred vs source", "higherIsBetter": true},
+        {"name": "len_ratio", "type": "numeric", "description": "Length ratio pred/gold", "higherIsBetter": false},
+        {"name": "exact_contains", "type": "boolean", "description": "Gold substring in pred", "higherIsBetter": true}
+      ],
+      "compute": [
+        {"kind": "rouge", "params": {"use_stemmer": true, "pairs": [["pred", "gold"]]}},
+        {"kind": "cosine", "params": {"pairs": [["pred", "gold"], ["pred", "source"]]}},
+        {"kind": "length_ratio", "params": {"num": "pred", "den": "gold", "out": "len_ratio"}},
+        {"kind": "substring", "params": {"needle": "gold", "haystack": "pred", "out": "exact_contains"}}
+      ]
+    },
+  
+    "eval": {
+      "export_csv_train": "eval_report_train.csv",
+      "export_csv_test": "eval_report_test.csv",
+      "page_sleep_sec": 0.4
+    }
+  }
