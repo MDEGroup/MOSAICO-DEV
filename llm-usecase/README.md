@@ -1,4 +1,5 @@
-# MOSAICO- UmarUeCase- agentSEBench
+# MOSAICO- UmarUseCase 
+# agentSEBench
 
 This repository contains a **config-driven benchmarking framework** (`agentSEBench`) that integrates **Langfuse Cloud** and **Ollama** to evaluate LLM-based agents.  
 It enables running any agent configuration (prompt, dataset, metrics, and model) entirely from a single JSON file — no code modification required.
