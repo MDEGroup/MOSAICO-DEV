@@ -1,0 +1,232 @@
+{
+    "Agent": {
+      "id": 101,
+      "name": "agentSEBench Summarizer",
+      "description": "Config-driven LLM agent that generates concise technical summaries from app-store descriptions and logs all runs to Langfuse. Designed to be model- and metric-agnostic and to support reproducible benchmarking.",
+      "version": "0.2.0",
+      "provider": {
+        "id": 11,
+        "name": "MDEGroup / NOVATERRA",
+        "description": "Research group maintaining the MOSAICO-DEV LLM benchmarking agents and datasets.",
+        "contactUrl": "https://github.com/MDEGroup/MOSAICO-DEV/tree/master/llm-usecase/agentSEBench"
+      },
+      "license": "Apache-2.0",
+      "keywords": "summarization, evaluation, benchmarking, langfuse, ollama, rouge, cosine",
+      "intentions": "Produce faithful, concise technical summaries for evaluation.",
+      "beliefs": "Gold references represent desired content; cosine and ROUGE are reasonable proxies of quality.",
+      "desires": "High ROUGE-L, high cosine(pred,gold), low length ratio drift, stable latency.",
+      "role": "SolutionAgent",
+      "scope": "Single-document summarization with offline local inference.",
+      "modalities": ["TEXT"],
+      "backstory": "Born from MOSAICO-DEV effort to standardize agent benchmarking with declarative JSON configs.",
+  
+      "supports": [
+        {
+          "InteractionProtocol": {
+            "id": 51,
+            "name": "Ollama REST",
+            "version": "v1",
+            "specUrl": "http://localhost:11434/api/generate",
+            "description": "Simple HTTP POST with prompt, model, and options."
+          }
+        }
+      ],
+      "has": [
+        {
+          "Memory": {
+            "id": 71,
+            "type": "SHORT_TERM",
+            "scope": "AGENT",
+            "persistence": "ephemeral",
+            "description": "Per-run in-memory variables; no cross-run retention."
+          }
+        }
+      ],
+      "skills": [
+        {
+          "SoftEngTask": {
+            "id": 301,
+            "name": "Text Summarization",
+            "description": "Condense product descriptions into 3–6 sentence technical summaries.",
+            "supported_languages": ["en"]
+          }
+        }
+      ],
+      "exploits": [
+        {
+          "Tool": {
+            "id": 41,
+            "name": "Ollama",
+            "description": "Local inference runtime for open LLMs.",
+            "swVersion": "0.3.x",
+            "scope": "runtime",
+            "endpoint": "http://localhost:11434",
+            "apiFamily": "HTTP",
+            "apiKey_string": ""
+          }
+        },
+        {
+          "Tool": {
+            "id": 42,
+            "name": "Langfuse Cloud",
+            "description": "Telemetry and tracing platform for LLM runs and evaluations.",
+            "swVersion": "2.x",
+            "scope": "telemetry",
+            "endpoint": "https://cloud.langfuse.com",
+            "apiFamily": "HTTP",
+            "apiKey_string": "env:LANGFUSE_PUBLIC_KEY, env:LANGFUSE_SECRET_KEY"
+          }
+        },
+        {
+          "Tool": {
+            "id": 43,
+            "name": "metrics_lib.py",
+            "description": "Python metrics library implementing ROUGE, TF-IDF cosine, length ratio, and substring checks.",
+            "swVersion": "0.1.0",
+            "scope": "evaluation",
+            "endpoint": "",
+            "apiFamily": "python",
+            "apiKey_string": ""
+          }
+        }
+      ],
+      "includes": [
+        {
+          "Metric": { "id": 501, "name": "rouge1_f", "description": "ROUGE-1 F", "value": 0.0, "unit": "" }
+        },
+        {
+          "Metric": { "id": 502, "name": "rougeL_f", "description": "ROUGE-L F", "value": 0.0, "unit": "" }
+        },
+        {
+          "Metric": { "id": 503, "name": "cosine_pred_gold", "description": "TF-IDF cosine similarity between prediction and gold", "value": 0.0, "unit": "" }
+        },
+        {
+          "Metric": { "id": 504, "name": "cosine_pred_source", "description": "TF-IDF cosine similarity between prediction and source", "value": 0.0, "unit": "" }
+        },
+        {
+          "Metric": { "id": 505, "name": "len_ratio", "description": "Length ratio pred/gold", "value": 0.0, "unit": "" }
+        },
+        {
+          "Metric": { "id": 506, "name": "exact_contains", "description": "Gold substring present in prediction", "value": 0.0, "unit": "bool" }
+        },
+        {
+          "Metric": { "id": 507, "name": "latency_sec", "description": "Generation latency per item", "value": 0.0, "unit": "s" }
+        },
+        {
+          "Metric": { "id": 508, "name": "success", "description": "Model call success flag", "value": 0.0, "unit": "bool" }
+        }
+      ],
+      "evaluates": [
+        {
+          "Benchmark": {
+            "id": 201,
+            "metadata": "agentSEBench v0.2.0",
+            "featureSet": "AUSE summarization",
+            "datasetSet": "ause_train, ause_test",
+            "protoVersion": "1.0",
+            "measures": [
+              {
+                "PerformanceKPI": {
+                  "id": 601,
+                  "name": "Summary Quality",
+                  "description": "Primary quality indicators: ROUGE-L F, cosine(pred,gold); secondary drift controls: cosine(pred,source), len_ratio, substring."
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "exposes": [
+        {
+          "Service": {
+            "id": 901,
+            "name": "agentSEBench CLI",
+            "version": "0.2.0",
+            "description": "runner.py and evaluator.py entrypoints",
+            "endpoint": "cli://runner.py,evaluator.py",
+            "provider": "MDEGroup",
+            "SLA": "best-effort"
+          }
+        }
+      ],
+      "outputStructures": [
+        {
+          "DeployableArtifact": {
+            "id": 801,
+            "name": "agentSEBench Source Package",
+            "version": "0.2.0",
+            "description": "Python project folder with config.bench.json, datasets, runner, evaluator, metrics_lib.",
+            "containerImage": "",
+            "docReference": "README.md",
+            "hardwareRequirement": "CPU; optional GPU for larger models"
+          }
+        }
+      ],
+      "inputParameters": [
+        { "KeyValue": { "name": "model.name", "value": "llama3.2:3b" } },
+        { "KeyValue": { "name": "ollama.host", "value": "http://localhost:11434" } },
+        { "KeyValue": { "name": "prompt.template", "value": "3–6 sentence technical summary" } },
+        { "KeyValue": { "name": "dataset.csv_path", "value": "train_data.csv" } },
+        { "KeyValue": { "name": "dataset.input_col", "value": "description_html_clean" } },
+        { "KeyValue": { "name": "dataset.gold_col", "value": "description_short" } }
+      ],
+      "consumptions": [
+        {
+          "AgentConsumption": {
+            "id": 951,
+            "hyperparameter_string": "{\"temperature\":0,\"top_p\":1,\"num_ctx\":4096,\"num_predict\":512}",
+            "InputParameters": [ "model.name", "ollama.host", "prompt.template", "dataset.csv_path" ],
+            "OutputStructure": [ "gold_summary", "pred_summary", "metrics" ]
+          }
+        }
+      ],
+      "collects": [
+        {
+          "TelemetryTool": {
+            "id": 3011,
+            "name": "Langfuse",
+            "description": "Cloud tracing, datasets, scores",
+            "format": "JSON"
+          }
+        }
+      ],
+      "produces": [
+        {
+          "TelemetryRecord": {
+            "id": 70001,
+            "kind": "TRACE",
+            "payload": "{\"trace_name\":\"agentse.app.summarization\",\"scores\":{\"rougeL_f\":0.41}}",
+            "timestamp": "2025-11-18T09:00:00Z"
+          }
+        }
+      ],
+      "feedback": [
+        {
+          "HumanFeedback": {
+            "id": 401,
+            "kind": "POSITIVE",
+            "source": "manual_review",
+            "rationale": "Predictions are concise and usually faithful for short descriptions."
+          }
+        }
+      ],
+      "usage": [
+        {
+          "AgentUsage": {
+            "id": 1201,
+            "timestamp": "2025-11-18T08:58:00Z",
+            "input_size": 1800,
+            "output_size": 520,
+            "duration_s": 3.2,
+            "cost": 0.0
+          }
+        }
+      ],
+      "hardwareProfile": {
+        "gpuModel": "optional",
+        "gpuVRAM_GB": 0,
+        "cpuCores": 10,
+        "ramGB": 32
+      }
+    }
+  }
