@@ -2,6 +2,7 @@ package it.univaq.disim.mosaico.wp2.repository;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import it.univaq.disim.mosaico.wp2.repository.data.Model;
 import it.univaq.disim.mosaico.wp2.repository.repository.ModelRepository;
@@ -14,7 +15,7 @@ import java.util.Optional;
 
 
 
-
+@DataJpaTest
 @SpringBootTest
 public class ModelRepositoryTest {
 

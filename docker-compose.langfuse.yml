@@ -56,6 +56,24 @@ services:
       retries: 30
     networks:
       - langfuse_net
+  
+  # pgAdmin - web UI to manage PostgreSQL (similar role to phpMyAdmin)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin
+    <<: *default-env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-admin@local}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    networks:
+      - langfuse_net
   ollama:
     image: ollama/ollama:latest
     container_name: ollama-service
@@ -101,6 +119,7 @@ services:
 volumes:
   langfuse_pg_data:
   ollama_data:
+  pgadmin_data:
 
 networks:
   langfuse_net:

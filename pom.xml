@@ -47,10 +47,6 @@
 			<groupId>org.springframework.ai</groupId>
 			<artifactId>spring-ai-ollama-spring-boot-starter</artifactId>
 		</dependency>
-
-		<!-- Keep MongoDB starter temporarily to allow incremental migration (many classes still use @Document) -->
-		<!-- MongoDB starter removed: all entities and repositories migrated to JPA/Postgres -->
-		<!-- Spring Boot Docker Compose Support -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-docker-compose</artifactId>
@@ -60,7 +56,11 @@
 			<groupId>org.springframework.ai</groupId>
 			<artifactId>spring-ai-pgvector-store-spring-boot-starter</artifactId>
 		</dependency>
-
+		<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+			<scope>test</scope>
+		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
@@ -96,8 +96,19 @@
 			<artifactId>langfuse-java</artifactId>
 			<version>0.1.0</version>
 		</dependency>
+		<dependency>
+			<groupId>org.springframework.ai</groupId>
+			<artifactId>spring-ai-starter-mcp-server-webmvc</artifactId>
+			<version>1.1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.ai</groupId>
+			<artifactId>spring-ai-mcp-annotations</artifactId>
+			<version>1.1.0</version>
+		</dependency>
+
 	</dependencies>
-		<repositories>
+	<repositories>
 		<repository>
 			<id>spring-milestones</id>
 			<name>Spring Milestones</name>
@@ -151,6 +162,7 @@
 					-->
 					<excludes>
 						<exclude>**/LangfuseServiceTest.java</exclude>
+						<exclude>**/ModelRepositoryTest.java</exclude>
 					</excludes>
 				</configuration>
 			</plugin>

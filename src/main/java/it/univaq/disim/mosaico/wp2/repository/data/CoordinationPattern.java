@@ -77,6 +77,20 @@ public class CoordinationPattern {
     public String communicationProtocol() { return communicationProtocol; }
     public List<String> domains() { return domains; }
 
+    // Standard JavaBean getters for frameworks/Jackson
+    public String getName() { return name; }
+    public String getDescription() { return description; }
+    public String getPatternType() { return patternType; }
+    public List<String> getParticipatingAgents() { return participatingAgents; }
+    public Map<String, Object> getRoles() { return roles; }
+    public String getFlowDefinition() { return flowDefinition; }
+    public List<String> getRules() { return rules; }
+    public int getComplexityLevel() { return complexityLevel; }
+    public List<String> getSupportedAgentTypes() { return supportedAgentTypes; }
+    public List<String> getSupportedTools() { return supportedTools; }
+    public String getCommunicationProtocol() { return communicationProtocol; }
+    public List<String> getDomains() { return domains; }
+
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
 }

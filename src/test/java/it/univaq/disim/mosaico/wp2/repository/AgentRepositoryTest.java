@@ -1,15 +1,17 @@
 package it.univaq.disim.mosaico.wp2.repository;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.context.ActiveProfiles;
 
 import it.univaq.disim.mosaico.wp2.repository.data.Agent;
 import it.univaq.disim.mosaico.wp2.repository.data.Provider;
 import it.univaq.disim.mosaico.wp2.repository.data.enums.IOModality;
 import it.univaq.disim.mosaico.wp2.repository.repository.AgentRepository;
+import it.univaq.disim.mosaico.wp2.repository.repository.ProviderRepository;
 
 import java.util.List;
 import java.util.Arrays;
@@ -20,22 +22,27 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Test class for AgentRepository.
  */
-@DataMongoTest
+@DataJpaTest
 @ActiveProfiles("test")
 public class AgentRepositoryTest {
 
     @Autowired
     private AgentRepository agentRepository;
-    
+    @Autowired
+    private ProviderRepository providerRepository;
     private Agent testAgent;
     private Provider testProvider;
-    
+    @AfterAll
+    static void tearDown(@Autowired AgentRepository agentRepository, @Autowired ProviderRepository providerRepository) {
+        agentRepository.deleteAll();
+        providerRepository.deleteAll();
+    }
     @BeforeEach
     void setUp() {
         agentRepository.deleteAll();
         
         testProvider = new Provider("provider1", "Test Provider", "Test provider description", "http://test.com");
-        
+        testProvider = providerRepository.save(testProvider);
         testAgent = new Agent(
             "agent1",
             "Test Agent",
