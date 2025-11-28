@@ -3,6 +3,25 @@ x-env: &default-env
     - .env.langfuse
 
 services:
+  pgvector:
+    image: pgvector/pgvector:pg16
+    container_name: postgres-vectordb
+    environment:
+      POSTGRES_USER: ${PGVECTOR_USER:-mosaico}
+      POSTGRES_PASSWORD: ${PGVECTOR_PASSWORD:-mosaico}
+      POSTGRES_DB: ${PGVECTOR_DB:-mosaico_db}
+    ports:
+      - "5431:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/pgvector-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - langfuse_net
   postgres:
     image: postgres:16-alpine
     container_name: langfuse-postgres
@@ -15,8 +34,6 @@ services:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - langfuse_pg_data:/var/lib/postgresql/data
-      # Mount initialization scripts (only executed on first database init)
-      - ./docker/postgres-init:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
       interval: 5s
@@ -56,9 +73,29 @@ services:
       retries: 30
     networks:
       - langfuse_net
+  
+  # pgAdmin - web UI to manage PostgreSQL (similar role to phpMyAdmin)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin
+    <<: *default-env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-test@test.it}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    networks:
+      - langfuse_net
   ollama:
-    image: ollama/ollama:latest
     container_name: ollama-service
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.ollama
     ports:
       - "11434:11434"
     volumes:
@@ -72,18 +109,16 @@ services:
       dockerfile: Dockerfile
     <<: *default-env
     depends_on:
-      postgres:
+      pgvector:
         condition: service_healthy
       ollama:
         condition: service_started
     environment:
-      # By default the app will use APP_DB if provided in .env.langfuse, otherwise
-      # it falls back to 'mosaico_db'. If you prefer to reuse the compose POSTGRES_DB
-      # set APP_DB to ${POSTGRES_DB} in your .env.langfuse.
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${APP_DB:-mosaico_db}
-      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
-      # Disable Flyway migrations by default for the app (DB is empty, migrations not needed)
+      # Use pgvector service instead of postgres (pgvector has vector extension)
+      SPRING_DATASOURCE_URL: jdbc:postgresql://pgvector:5432/${PGVECTOR_DB:-mosaico_db}
+      SPRING_DATASOURCE_USERNAME: ${PGVECTOR_USER:-mosaico}
+      SPRING_DATASOURCE_PASSWORD: ${PGVECTOR_PASSWORD:-mosaico}
+      # Disable Flyway - let Spring AI create the vector_store table with correct dimensions
       SPRING_FLYWAY_ENABLED: "false"
       # Activate dev profile inside the container by default (reads application-dev.properties)
       SPRING_PROFILES_ACTIVE: dev
@@ -99,6 +134,7 @@ services:
       - langfuse_net
 
 volumes:
+  postgres_data:
   langfuse_pg_data:
   ollama_data:
 
