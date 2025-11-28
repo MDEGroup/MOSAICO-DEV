@@ -5,6 +5,8 @@ import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
@@ -12,7 +14,6 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.JoinColumn;
 import it.univaq.disim.mosaico.wp2.repository.data.enums.IOModality;
 import java.util.List;
-import java.util.UUID;
 
 
 @Entity
@@ -20,6 +21,7 @@ import java.util.UUID;
 public class Agent {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id", nullable = false)
     private String id;
 
@@ -69,7 +71,6 @@ public class Agent {
 
     public Agent() {
         // JPA
-        this.id = UUID.randomUUID().toString();
     }
 
     public Agent(String id,
@@ -90,7 +91,7 @@ public class Agent {
                  List<Memory> has,
                  List<InteractionProtocol> supports,
                  List<AgentConsumption> consumptions) {
-        this.id = (id == null) ? UUID.randomUUID().toString() : id;
+            this.id = id;
         this.name = name;
         this.description = description;
         this.version = version;
