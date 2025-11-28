@@ -1,0 +1,8 @@
+FROM ollama/ollama:latest
+
+# Copy initialization script
+COPY docker/ollama-init.sh /usr/local/bin/ollama-init.sh
+RUN chmod +x /usr/local/bin/ollama-init.sh
+
+# Override entrypoint to run ollama serve and init script in parallel
+ENTRYPOINT ["/bin/bash", "-c", "ollama serve & sleep 10 && /usr/local/bin/ollama-init.sh; wait"]

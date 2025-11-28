@@ -1,6 +1,5 @@
 package it.univaq.disim.mosaico.wp2.repository.service;
 
-import it.univaq.disim.mosaico.wp2.repository.controller.AgentController;
 import it.univaq.disim.mosaico.wp2.repository.data.Agent;
 import it.univaq.disim.mosaico.wp2.repository.data.Provider;
 import it.univaq.disim.mosaico.wp2.repository.repository.AgentRepository;

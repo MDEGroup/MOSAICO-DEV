@@ -14,11 +14,7 @@ import it.univaq.disim.mosaico.wp2.repository.data.enums.IOModality;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * JPA Entity representation of Agent.
- * Converted from MongoDB record to a JPA entity. Related referenced objects are kept transient
- * to avoid a large cascade conversion in a single commit — they can be converted later.
- */
+
 @Entity
 @Table(name = "agents")
 public class Agent {
@@ -73,6 +69,7 @@ public class Agent {
 
     public Agent() {
         // JPA
+        this.id = UUID.randomUUID().toString();
     }
 
     public Agent(String id,

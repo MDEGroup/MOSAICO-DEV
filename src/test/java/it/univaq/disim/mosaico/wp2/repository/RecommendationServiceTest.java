@@ -246,7 +246,7 @@ public class RecommendationServiceTest {
         assertNotNull(protocols);
         verify(communicationProtocolRepository, times(1)).findAll();
         // Il primo protocollo dovrebbe essere distribuito
-        assertTrue(protocols.get(0).distributed());
+        assertTrue(protocols.get(0).isDistributed());
     }
     
     @Test
