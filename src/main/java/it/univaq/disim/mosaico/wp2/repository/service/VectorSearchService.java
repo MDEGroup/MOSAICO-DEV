@@ -14,6 +14,8 @@ import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -24,7 +26,8 @@ public class VectorSearchService {
     private final AgentRepository agentRepository;
     private final ProviderRepository providerRepository;
 
-    public VectorSearchService(VectorStore vectorStore, AgentRepository agentRepository, ProviderRepository providerRepository) {
+    public VectorSearchService(VectorStore vectorStore, AgentRepository agentRepository,
+            ProviderRepository providerRepository) {
         this.vectorStore = vectorStore;
         this.agentRepository = agentRepository;
         this.providerRepository = providerRepository;
@@ -34,7 +37,8 @@ public class VectorSearchService {
      * Save an agent and index its textual representation in the vector store.
      */
     public Agent saveAndIndex(Agent agent) {
-        // Ensure the provider relationship is managed: resolve existing provider or persist new one.
+        // Ensure the provider relationship is managed: resolve existing provider or
+        // persist new one.
         Provider p = agent.getProvider();
         if (p != null) {
             if (p.getId() != null) {
@@ -42,7 +46,8 @@ public class VectorSearchService {
                 if (existing.isPresent()) {
                     agent.setProvider(existing.get());
                 } else if (p.getName() != null || p.getContactUrl() != null) {
-                    // Persist provider if it contains useful metadata. Ensure id is assigned (no @GeneratedValue).
+                    // Persist provider if it contains useful metadata. Ensure id is assigned (no
+                    // @GeneratedValue).
                     if (p.getId() == null) {
                         p.setId(UUID.randomUUID().toString());
                     }
@@ -50,7 +55,9 @@ public class VectorSearchService {
                     agent.setProvider(savedProvider);
                 } else {
                     // No usable provider data; null the relation to avoid FK problems
-                    logger.warn("Provider with id {} not found and payload has no metadata — nulling provider on agent save", p.getId());
+                    logger.warn(
+                            "Provider with id {} not found and payload has no metadata — nulling provider on agent save",
+                            p.getId());
                     agent.setProvider(null);
                 }
             } else {
@@ -70,34 +77,74 @@ public class VectorSearchService {
         Agent saved = agentRepository.save(agent);
         logger.info("Indexing agent with id: {}", saved.getId());
         String content = buildAgentText(saved);
-        Document doc = new Document(content);
-        // Optionally attach metadata like id
-        doc.getMetadata().put("entityId", saved.getId());
+        Map<String, Object> metadata = new java.util.HashMap<>();
+        metadata.put("entityType", "Agent");
+        metadata.put("entityId", saved.getId());
+        Document doc = new Document(content, metadata);
 
         try {
             vectorStore.add(List.of(doc));
         } catch (Exception ex) {
-            // Embedding/vector store may be unavailable (dev environment). Log and continue.
-            logger.warn("Vector store add failed (agent indexed locally but not indexed in vector store): {}", ex.getMessage());
+            // Embedding/vector store may be unavailable (dev environment). Log and
+            // continue.
+            logger.warn("Vector store add failed (agent indexed locally but not indexed in vector store): {}",
+                    ex.getMessage());
         }
         return saved;
     }
 
+    private String buildFilterExpression(Map<String, Object> filters) {
+        if (filters == null || filters.isEmpty()) {
+            return null;
+        }
+
+        return filters.entrySet().stream()
+                .map(e -> {
+                    String key = e.getKey();
+                    String value = e.getValue().toString();
+                    // escape apici singoli nel valore, per sicurezza
+                    String escapedValue = value.replace("'", "''");
+                    return key + " == '" + escapedValue + "'";
+                })
+                .collect(Collectors.joining(" AND "));
+    }
+
     /**
-     * Perform a semantic similarity search and return the matched document contents.
+     * Perform a semantic similarity search and return the matched document
+     * contents.
      */
-    public List<String> semanticSearch(String query, int topK) {
+    public List<String> semanticSearch(String query, Map<String, Object> filters, int topK) {
         List<Document> docs = vectorStore.similaritySearch(
-                SearchRequest.query(query).withTopK(topK)
-        );
-        return docs.stream().map(Document::getContent).collect(Collectors.toList());
+            SearchRequest.query(query).withTopK(topK).withFilterExpression(buildFilterExpression(filters)));
+
+        return docs.stream()
+                .filter(doc -> matchesFilters(doc, filters))
+                .map(Document::getContent)
+                .collect(Collectors.toList());
+    }
+
+    private boolean matchesFilters(Document document, Map<String, Object> filters) {
+        if (filters == null || filters.isEmpty()) {
+            return true;
+        }
+
+        Map<String, Object> metadata = document.getMetadata();
+        if (metadata == null || metadata.isEmpty()) {
+            return false;
+        }
+
+        return filters.entrySet().stream()
+                .allMatch(entry -> Objects.equals(metadata.get(entry.getKey()), entry.getValue()));
     }
 
     private String buildAgentText(Agent a) {
         StringBuilder sb = new StringBuilder();
-        if (a.getName() != null) sb.append(a.getName()).append(" ");
-        if (a.getDescription() != null) sb.append(a.getDescription()).append(" ");
-        if (a.getRole() != null) sb.append(a.getRole()).append(" ");
+        if (a.getName() != null)
+            sb.append(a.getName()).append(" ");
+        if (a.getDescription() != null)
+            sb.append(a.getDescription()).append(" ");
+        if (a.getRole() != null)
+            sb.append(a.getRole()).append(" ");
         // add other fields you consider relevant
         return sb.toString().trim();
     }

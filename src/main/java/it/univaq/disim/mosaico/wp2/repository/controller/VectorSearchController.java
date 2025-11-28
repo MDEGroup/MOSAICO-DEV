@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/vector/agents")
@@ -24,9 +25,12 @@ public class VectorSearchController {
     }
 
     @PostMapping("/search")
-    public ResponseEntity<List<String>> semanticSearch(@RequestBody String query,
-                                                       @RequestParam(defaultValue = "5") int topK) {
-        List<String> results = vectorSearchService.semanticSearch(query, topK);
+    public ResponseEntity<List<String>> semanticSearch(@RequestBody SemanticSearchRequest request) {
+        String query = request.getQuery();
+        int topK = request.getTopK() == null ? 5 : request.getTopK();
+        Map<String, Object> filters = request.getFilters() == null ? Map.of() : request.getFilters();
+
+        List<String> results = vectorSearchService.semanticSearch(query, filters, topK);
         return ResponseEntity.ok(results);
     }
 }
