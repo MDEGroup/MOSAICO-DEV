@@ -82,8 +82,8 @@ public class AgentDefinitionServiceImpl implements AgentDefinitionService {
      * @throws AgentDefinitionNotFoundException - if the agent definition does not exist
      */
     public AgentDefinition update(AgentDefinition agentDefinition) {
-        if (!agentDefinitionRepository.existsById(agentDefinition.id())) {
-            throw new AgentDefinitionNotFoundException(agentDefinition.id());
+        if (!agentDefinitionRepository.existsById(agentDefinition.getId())) {
+            throw new AgentDefinitionNotFoundException(agentDefinition.getId());
         }
         // Update the agent definition in the repository
         return agentDefinitionRepository.save(agentDefinition); 

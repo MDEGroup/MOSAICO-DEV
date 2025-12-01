@@ -34,17 +34,15 @@ public class AgentRepositoryTest {
     private Provider testProvider;
     @AfterAll
     static void tearDown(@Autowired AgentRepository agentRepository, @Autowired ProviderRepository providerRepository) {
-        agentRepository.deleteAll();
-        providerRepository.deleteAll();
+        //agentRepository.deleteAll();
+        //providerRepository.deleteAll();
     }
     @BeforeEach
     void setUp() {
-        agentRepository.deleteAll();
-        
+        // agentRepository.deleteAll();
         testProvider = new Provider("provider1", "Test Provider", "Test provider description", "http://test.com");
         testProvider = providerRepository.save(testProvider);
         testAgent = new Agent(
-            "agent1",
             "Test Agent",
             "Test agent description",
             "1.0.0",

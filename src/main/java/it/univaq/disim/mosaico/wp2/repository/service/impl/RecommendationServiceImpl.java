@@ -575,16 +575,16 @@ public class RecommendationServiceImpl implements RecommendationService {
         double score = 0.0;
         
         // Match based on complexity
-        if (agent.complexityLevel() == context.getComplexity()) {
+        if (agent.getComplexityLevel() == context.getComplexity()) {
             score += 0.3;
         } else {
-            score += 0.3 - (0.1 * Math.abs(agent.complexityLevel() - context.getComplexity()));
+            score += 0.3 - (0.1 * Math.abs(agent.getComplexityLevel() - context.getComplexity()));
         }
         
         // Match based on required capabilities
-        if (context.getRequiredCapabilities() != null && agent.capabilities() != null) {
+        if (context.getRequiredCapabilities() != null && agent.getCapabilities() != null) {
             for (String capability : context.getRequiredCapabilities()) {
-                if (agent.capabilities().contains(capability)) {
+                if (agent.getCapabilities().contains(capability)) {
                     score += 0.2;
                 }
             }

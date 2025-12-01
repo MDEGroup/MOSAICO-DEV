@@ -45,8 +45,7 @@ public class AgentMCP {
                 "OpenAI",
                 "AI company providing language models",
                 "https://openai.com");
-        List<Agent> agents = List.of(new Agent(
-                "agent1",
+        Agent codeReviewAgent = new Agent(
                 "Code Review Agent",
                 "AI agent specialized in code review",
                 "v1.0",
@@ -64,8 +63,10 @@ public class AgentMCP {
                 List.of(), // memory
                 List.of(), // interactionProtocols
                 List.of() // agentConsumption
-        ), new Agent(
-                "agent2",
+            );
+            codeReviewAgent.setId("agent1");
+
+            Agent summaryAgent = new Agent(
                 "Code Summarization",
                 "AI agent specialized in code summarization",
                 "v1.0",
@@ -83,7 +84,10 @@ public class AgentMCP {
                 List.of(), // memory
                 List.of(), // interactionProtocols
                 List.of() // agentConsumption
-        ));
+            );
+            summaryAgent.setId("agent2");
+
+            List<Agent> agents = List.of(codeReviewAgent, summaryAgent);
         String json;
         try {
             json = objectMapper.writeValueAsString(agents);
@@ -111,7 +115,6 @@ public class AgentMCP {
                 "AI company providing language models",
                 "https://openai.com");
         Agent agent = new Agent(
-                "agent1",
                 "Code Review Agent",
                 "AI agent specialized in code review",
                 "v1.0",
@@ -129,7 +132,8 @@ public class AgentMCP {
                 List.of(), // memory
                 List.of(), // interactionProtocols
                 List.of() // agentConsumption
-        );
+            );
+            agent.setId(id);
         String json;
         try {
             json = objectMapper.writeValueAsString(agent);

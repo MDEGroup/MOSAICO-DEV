@@ -287,7 +287,7 @@ public class RecommendationServiceTest {
         assertNotNull(agents);
         verify(agentDefinitionRepository, times(1)).findAll();
         // Il primo agente dovrebbe avere il tag healthcare
-        assertTrue(agents.get(0).capabilities().contains("healthcare"));
+        assertTrue(agents.get(0).getCapabilities().contains("healthcare"));
     }
     
     @Test

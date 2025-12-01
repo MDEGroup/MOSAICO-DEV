@@ -134,7 +134,6 @@ class VectorSearchServiceTest {
 
     private Agent buildAgent(Provider provider) {
         return new Agent(
-                UUID.randomUUID().toString(),
                 agentName,
                 agentDescription,
                 "v1",
