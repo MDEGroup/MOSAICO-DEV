@@ -2,12 +2,30 @@
   on:
     push:
       branches:
-        - master
+        - postgres-pgvector-semsearch
 
   jobs:
     build-deploy:
       name: build and deploy spring-api
       runs-on: ubuntu-latest
+      services:
+        postgres:
+          image: ankane/pgvector:latest
+          ports:
+            - 5432:5432
+          env:
+            POSTGRES_DB: repository
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: postgres
+          options: >-
+            --health-cmd "pg_isready -U postgres -d repository"
+            --health-interval=10s
+            --health-timeout=5s
+            --health-retries=10
+      env:
+        SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/repository
+        SPRING_DATASOURCE_USERNAME: postgres
+        SPRING_DATASOURCE_PASSWORD: postgres
       steps:
         - name: checkout code
           uses: actions/checkout@v3

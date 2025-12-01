@@ -9,15 +9,23 @@ jobs:
   build:
     runs-on: ubuntu-latest
     services:
-      mongo:
-        image: mongo:6.0
+      postgres:
+        image: ankane/pgvector:latest
         ports:
-          -  27017:27017
+          - 5432:5432
+        env:
+          POSTGRES_DB: repository
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
         options: >-
-          --health-cmd "echo 'db.runCommand({ ping: 1 })' | mongosh localhost/test --quiet"
+          --health-cmd "pg_isready -U postgres -d repository"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=10
+    env:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/repository
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
 
     steps:
       - name: Checkout code
