@@ -92,8 +92,6 @@ public class SkillRepositoryTest {
     void testFindByLevelGreaterThanEqual() {
         skillRepository.save(testSkill1);
         skillRepository.save(testSkill2);
-        
-        // This test verifies the method exists, MongoDB enum comparison might not work as expected
         List<Skill> advancedSkills = skillRepository.findByLevelGreaterThanEqual(ProficiencyLevel.AWARENESS);
         
         // Should include both since AWARENESS <= both AWARENESS and EXPERT
