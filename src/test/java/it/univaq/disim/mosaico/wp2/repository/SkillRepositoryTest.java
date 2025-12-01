@@ -3,7 +3,7 @@ package it.univaq.disim.mosaico.wp2.repository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.context.ActiveProfiles;
 
 import it.univaq.disim.mosaico.wp2.repository.data.Skill;
@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Test class for SkillRepository.
  */
-@DataMongoTest
+@DataJpaTest
 @ActiveProfiles("test")
 public class SkillRepositoryTest {
 
@@ -92,8 +92,6 @@ public class SkillRepositoryTest {
     void testFindByLevelGreaterThanEqual() {
         skillRepository.save(testSkill1);
         skillRepository.save(testSkill2);
-        
-        // This test verifies the method exists, MongoDB enum comparison might not work as expected
         List<Skill> advancedSkills = skillRepository.findByLevelGreaterThanEqual(ProficiencyLevel.AWARENESS);
         
         // Should include both since AWARENESS <= both AWARENESS and EXPERT

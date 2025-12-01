@@ -2,13 +2,13 @@ package it.univaq.disim.mosaico.wp2.repository.repository;
 
 import java.util.List;
 
-import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import it.univaq.disim.mosaico.wp2.repository.data.Tool;
 
 @Repository
-public interface ToolRepository extends MongoRepository<Tool, String> {
-    
+public interface ToolRepository extends JpaRepository<Tool, String> {
+
     List<Tool> findByName(String name);
 }

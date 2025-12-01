@@ -246,7 +246,7 @@ public class RecommendationServiceTest {
         assertNotNull(protocols);
         verify(communicationProtocolRepository, times(1)).findAll();
         // Il primo protocollo dovrebbe essere distribuito
-        assertTrue(protocols.get(0).distributed());
+        assertTrue(protocols.get(0).isDistributed());
     }
     
     @Test
@@ -287,7 +287,7 @@ public class RecommendationServiceTest {
         assertNotNull(agents);
         verify(agentDefinitionRepository, times(1)).findAll();
         // Il primo agente dovrebbe avere il tag healthcare
-        assertTrue(agents.get(0).capabilities().contains("healthcare"));
+        assertTrue(agents.get(0).getCapabilities().contains("healthcare"));
     }
     
     @Test

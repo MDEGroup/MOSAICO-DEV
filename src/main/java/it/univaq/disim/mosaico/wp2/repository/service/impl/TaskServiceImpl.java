@@ -21,7 +21,7 @@ public class TaskServiceImpl implements TaskService {
 
     /*
      * The taskRepository is used to perform CRUD operations on the Task entity. It is autowired by Spring.
-     * The TaskRepository interface extends the MongoRepository interface, which provides methods for CRUD operations.
+    * The TaskRepository interface extends the JpaRepository interface, which provides methods for CRUD operations.
      */
     private final TaskRepository taskRepository;
 

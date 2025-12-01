@@ -21,7 +21,7 @@ public class MetricServiceImpl implements MetricService {
 
     /*
      * The metricRepository is used to perform CRUD operations on the Metric entity. It is autowired by Spring.
-     * The MetricRepository interface extends the MongoRepository interface, which provides methods for CRUD operations.
+    * The MetricRepository interface extends the JpaRepository interface, which provides methods for CRUD operations.
      */
     private final MetricRepository metricRepository;
 
@@ -82,8 +82,8 @@ public class MetricServiceImpl implements MetricService {
      * @throws MetricNotFoundException - if the metric does not exist
      */
     public Metric update(Metric metric) {
-        if (!metricRepository.existsById(metric.id())) {
-            throw new MetricNotFoundException(metric.id());
+        if (!metricRepository.existsById(metric.getId())) {
+            throw new MetricNotFoundException(metric.getId());
         }
         // Update the metric in the repository
         return metricRepository.save(metric); 

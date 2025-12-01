@@ -6,8 +6,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.4.10</version>
-		<relativePath /> <!-- lookup parent from repository -->
+		<version>3.5.6</version>
 	</parent>
 	<groupId>it.univaq.disim.mosaico.wp2</groupId>
 	<artifactId>repository</artifactId>
@@ -31,11 +30,35 @@
 	<properties>
 		<java.version>21</java.version>
 		<mockito.version>5.14.2</mockito.version>
+		<spring-ai.version>1.0.0-M2</spring-ai.version>
 	</properties>
 	<dependencies>
+		<!-- JPA / Postgres support for optional migration -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-data-mongodb</artifactId>
+			<artifactId>spring-boot-starter-data-jpa</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+		</dependency>
+		<!-- Spring AI Ollama (per generare embeddings) -->
+		<dependency>
+			<groupId>org.springframework.ai</groupId>
+			<artifactId>spring-ai-ollama-spring-boot-starter</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-docker-compose</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.ai</groupId>
+			<artifactId>spring-ai-pgvector-store-spring-boot-starter</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -82,8 +105,37 @@
 			<artifactId>spring-ai-mcp-annotations</artifactId>
 			<version>1.1.0</version>
 		</dependency>
-	</dependencies>
 
+	</dependencies>
+	<repositories>
+		<repository>
+			<id>spring-milestones</id>
+			<name>Spring Milestones</name>
+			<url>https://repo.spring.io/milestone</url>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</repository>
+	</repositories>
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.springframework.ai</groupId>
+				<artifactId>spring-ai-bom</artifactId>
+				<version>${spring-ai.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+
+			<dependency>
+				<groupId>io.opentelemetry.instrumentation</groupId>
+				<artifactId>opentelemetry-instrumentation-bom</artifactId>
+				<version>2.10.0</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 	<build>
 		<plugins>
 			<plugin>
@@ -109,6 +161,7 @@
 					-->
 					<excludes>
 						<exclude>**/LangfuseServiceTest.java</exclude>
+						<exclude>**/ModelRepositoryTest.java</exclude>
 					</excludes>
 				</configuration>
 			</plugin>

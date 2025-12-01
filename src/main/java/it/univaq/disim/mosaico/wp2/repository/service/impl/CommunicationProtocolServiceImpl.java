@@ -21,7 +21,7 @@ public class CommunicationProtocolServiceImpl implements CommunicationProtocolSe
 
     /*
      * The communicationProtocolRepository is used to perform CRUD operations on the CommunicationProtocol entity. It is autowired by Spring.
-     * The CommunicationProtocolRepository interface extends the MongoRepository interface, which provides methods for CRUD operations.
+    * The CommunicationProtocolRepository interface extends the JpaRepository interface, which provides methods for CRUD operations.
      */
     private final CommunicationProtocolRepository communicationProtocolRepository;
 
@@ -82,8 +82,8 @@ public class CommunicationProtocolServiceImpl implements CommunicationProtocolSe
      * @throws CommunicationProtocolNotFoundException - if the communication protocol does not exist
      */
     public CommunicationProtocol update(CommunicationProtocol communicationProtocol) {
-        if (!communicationProtocolRepository.existsById(communicationProtocol.id())) {
-            throw new CommunicationProtocolNotFoundException(communicationProtocol.id());
+        if (!communicationProtocolRepository.existsById(communicationProtocol.getId())) {
+            throw new CommunicationProtocolNotFoundException(communicationProtocol.getId());
         }
         // Update the communication protocol in the repository
         return communicationProtocolRepository.save(communicationProtocol); 

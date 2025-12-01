@@ -21,7 +21,7 @@ public class ToolServiceImpl implements ToolService {
 
     /*
      * The toolRepository is used to perform CRUD operations on the Tool entity. It is autowired by Spring.
-     * The ToolRepository interface extends the MongoRepository interface, which provides methods for CRUD operations.
+    * The ToolRepository interface extends the JpaRepository interface, which provides methods for CRUD operations.
      */
     private final ToolRepository toolRepository;
 

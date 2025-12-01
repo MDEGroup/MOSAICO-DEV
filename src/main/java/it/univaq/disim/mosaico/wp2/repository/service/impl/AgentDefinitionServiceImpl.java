@@ -21,7 +21,7 @@ public class AgentDefinitionServiceImpl implements AgentDefinitionService {
 
     /*
      * The agentDefinitionRepository is used to perform CRUD operations on the AgentDefinition entity. It is autowired by Spring.
-     * The AgentDefinitionRepository interface extends the MongoRepository interface, which provides methods for CRUD operations.
+    * The AgentDefinitionRepository interface extends the JpaRepository interface, which provides methods for CRUD operations.
      */
     private final AgentDefinitionRepository agentDefinitionRepository;
 
@@ -82,8 +82,8 @@ public class AgentDefinitionServiceImpl implements AgentDefinitionService {
      * @throws AgentDefinitionNotFoundException - if the agent definition does not exist
      */
     public AgentDefinition update(AgentDefinition agentDefinition) {
-        if (!agentDefinitionRepository.existsById(agentDefinition.id())) {
-            throw new AgentDefinitionNotFoundException(agentDefinition.id());
+        if (!agentDefinitionRepository.existsById(agentDefinition.getId())) {
+            throw new AgentDefinitionNotFoundException(agentDefinition.getId());
         }
         // Update the agent definition in the repository
         return agentDefinitionRepository.save(agentDefinition); 

@@ -1,0 +1,52 @@
+# GitLab CI pipeline translated from .github/workflows
+
+stages:
+  - build
+  - docker
+
+variables:
+  MAVEN_CLI_OPTS: "-B -ntp"
+  MAVEN_OPTS: "-Xmx1024m"
+  DOCKER_DRIVER: overlay2
+
+cache:
+  paths:
+    - .m2/repository
+
+build:
+  stage: build
+  image: maven:3.10.1-jdk-21
+  services:
+    - name: mongo:6.0
+      alias: mongo
+  script:
+    - echo "Running mvn clean verify"
+    - mvn $MAVEN_CLI_OPTS clean verify
+  only:
+    - master
+
+docker-build:
+  stage: docker
+  image: docker:24.0.5
+  services:
+    - name: docker:dind
+      alias: dind
+  variables:
+    # Required for Docker-in-Docker
+    DOCKER_TLS_CERTDIR: ""
+  before_script:
+    - docker info
+  script:
+    - echo "Building jar without tests"
+    - mvn $MAVEN_CLI_OPTS clean package -DskipTests=true
+    - echo "Building docker image"
+    - docker build -t ${DOCKER_HUB_USERNAME:-$CI_REGISTRY_USER}/mosaico-repository:latest .
+    - echo "Logging in to Docker Hub"
+    - echo "$DOCKER_HUB_ACCESS_TOKEN" | docker login --username "$DOCKER_HUB_USERNAME" --password-stdin
+    - docker push ${DOCKER_HUB_USERNAME:-$CI_REGISTRY_USER}/mosaico-repository:latest
+  only:
+    - master
+  tags: []
+  when: on_success
+  # Docker-in-Docker requires privileged runners
+  permissions: {}
