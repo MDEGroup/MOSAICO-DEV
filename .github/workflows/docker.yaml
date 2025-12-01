@@ -2,7 +2,7 @@
   on:
     push:
       branches:
-        - postgres-pgvector-semsearch
+        - master
 
   jobs:
     build-deploy:

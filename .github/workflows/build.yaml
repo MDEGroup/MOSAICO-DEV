@@ -3,7 +3,7 @@ name: Test and Build the repository
 on:
   push:
     branches:
-      - postgres-pgvector-semsearch
+      - master
 
 jobs:
   build:
