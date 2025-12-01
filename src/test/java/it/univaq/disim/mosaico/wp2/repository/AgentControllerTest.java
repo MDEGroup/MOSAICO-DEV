@@ -5,6 +5,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -52,7 +53,6 @@ public class AgentControllerTest {
         );
         
         testAgent = new Agent(
-            "agent1",
             "Code Review Agent",
             "AI agent specialized in code review",
             "v1.0",
@@ -71,6 +71,7 @@ public class AgentControllerTest {
             List.of(), // interactionProtocols
             List.of()  // agentConsumption
         );
+        ReflectionTestUtils.setField(testAgent, "id", "agent1");
     }
     
     @Test

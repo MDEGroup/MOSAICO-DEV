@@ -54,16 +54,7 @@ public class AgentDefinition {
         this.complexityLevel = complexityLevel;
     }
 
-    public String id() { return id; }
-    public String name() { return name; }
-    public String description() { return description; }
-    public String type() { return type; }
-    public Map<String,Object> config() { return config; }
-    public List<String> capabilities() { return capabilities; }
-    public Map<String,Object> parameters() { return parameters; }
-    public List<String> requiredTools() { return requiredTools; }
-    public String initializationScript() { return initializationScript; }
-    public int complexityLevel() { return complexityLevel; }
+
 
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }

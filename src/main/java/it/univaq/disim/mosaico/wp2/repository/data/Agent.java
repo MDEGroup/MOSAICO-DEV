@@ -73,8 +73,7 @@ public class Agent {
         // JPA
     }
 
-    public Agent(String id,
-                 String name,
+    public Agent(String name,
                  String description,
                  String version,
                  Provider provider,

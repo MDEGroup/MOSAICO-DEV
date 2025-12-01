@@ -82,8 +82,8 @@ public class MetricServiceImpl implements MetricService {
      * @throws MetricNotFoundException - if the metric does not exist
      */
     public Metric update(Metric metric) {
-        if (!metricRepository.existsById(metric.id())) {
-            throw new MetricNotFoundException(metric.id());
+        if (!metricRepository.existsById(metric.getId())) {
+            throw new MetricNotFoundException(metric.getId());
         }
         // Update the metric in the repository
         return metricRepository.save(metric); 

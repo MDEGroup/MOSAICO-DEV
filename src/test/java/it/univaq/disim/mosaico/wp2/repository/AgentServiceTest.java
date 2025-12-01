@@ -44,7 +44,6 @@ public class AgentServiceTest {
         );
         
         testAgent = new Agent(
-            "agent1",
             "Code Review Agent",
             "AI agent specialized in code review",
             "v1.0",

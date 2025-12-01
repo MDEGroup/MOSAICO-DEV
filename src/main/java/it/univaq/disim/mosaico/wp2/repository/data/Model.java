@@ -1,13 +1,19 @@
 package it.univaq.disim.mosaico.wp2.repository.data;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.MapKeyColumn;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
-import jakarta.persistence.Convert;
-import it.univaq.disim.mosaico.wp2.repository.converter.JsonAttributeConverter;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -30,9 +36,11 @@ public class Model {
     private String modelType;              // es. "text-generation", "image-classification", "multi-agent-system"
     @Transient
     private List<String> tags;             // es. ["collaborative", "reinforcement-learning", "autonomous"]
-    @Convert(converter = JsonAttributeConverter.class)
-    @Column(columnDefinition = "jsonb")
-    private Map<String, Object> config;    // configurazione principale del modello
+    @ElementCollection
+    @CollectionTable(name = "model_config_entries", joinColumns = @JoinColumn(name = "model_id"))
+    @MapKeyColumn(name = "config_key")
+    @Column(name = "config_value")
+    private Map<String, String> config = new HashMap<>();    // configurazione principale del modello
 
     // Architettura
     private String architecture;           // descrizione dell'architettura (simile a "modelArchitecture" in HF)
@@ -52,9 +60,11 @@ public class Model {
     private MonitoringConfig monitoringConfig;
 
     // Comportamento (simile al concetto di "task" e "usage" in HF)
-    @Convert(converter = JsonAttributeConverter.class)
-    @Column(columnDefinition = "jsonb")
-    private Map<String, BehaviorDefinition> behaviors;
+        @ManyToMany
+        @JoinTable(name = "model_behaviors",
+            joinColumns = @JoinColumn(name = "model_id"),
+            inverseJoinColumns = @JoinColumn(name = "behavior_id"))
+    private List<BehaviorDefinition> behaviors = new ArrayList<>();
 
     // Metriche di performance (simile a "metrics" in HF)
     @Transient
@@ -76,7 +86,7 @@ public class Model {
 
     public Model() {}
 
-    public Model(String id, String name, String description, String version, String author, String license, String modelType, List<String> tags, Map<String, Object> config, String architecture, List<AgentDefinition> agents, List<ToolDefinition> tools, List<CoordinationPattern> coordinationPatterns, List<CommunicationProtocol> communicationProtocols, MonitoringConfig monitoringConfig, Map<String, BehaviorDefinition> behaviors, List<Metric> metrics, String trainingFramework, String trainingCompute, List<String> limitations, List<String> useCases, long downloadCount, String repositoryUrl, Instant lastUpdated, Instant createdAt) {
+    public Model(String id, String name, String description, String version, String author, String license, String modelType, List<String> tags, Map<String, ?> config, String architecture, List<AgentDefinition> agents, List<ToolDefinition> tools, List<CoordinationPattern> coordinationPatterns, List<CommunicationProtocol> communicationProtocols, MonitoringConfig monitoringConfig, List<BehaviorDefinition> behaviors, List<Metric> metrics, String trainingFramework, String trainingCompute, List<String> limitations, List<String> useCases, long downloadCount, String repositoryUrl, Instant lastUpdated, Instant createdAt) {
         this.id = (id == null) ? UUID.randomUUID().toString() : id;
         this.name = name;
         this.description = description;
@@ -85,14 +95,18 @@ public class Model {
         this.license = license;
         this.modelType = modelType;
         this.tags = tags;
-        this.config = config;
+        if (config != null) {
+            config.forEach((key, value) -> this.config.put(key, value == null ? null : value.toString()));
+        }
         this.architecture = architecture;
         this.agents = agents;
         this.tools = tools;
         this.coordinationPatterns = coordinationPatterns;
         this.communicationProtocols = communicationProtocols;
         this.monitoringConfig = monitoringConfig;
-        this.behaviors = behaviors;
+        if (behaviors != null) {
+            this.behaviors.addAll(behaviors);
+        }
         this.metrics = metrics;
         this.trainingFramework = trainingFramework;
         this.trainingCompute = trainingCompute;
@@ -112,14 +126,14 @@ public class Model {
     public String license() { return license; }
     public String modelType() { return modelType; }
     public List<String> tags() { return tags; }
-    public Map<String, Object> config() { return config; }
+    public Map<String, String> config() { return config; }
     public String architecture() { return architecture; }
     public List<AgentDefinition> agents() { return agents; }
     public List<ToolDefinition> tools() { return tools; }
     public List<CoordinationPattern> coordinationPatterns() { return coordinationPatterns; }
     public List<CommunicationProtocol> communicationProtocols() { return communicationProtocols; }
     public MonitoringConfig monitoringConfig() { return monitoringConfig; }
-    public Map<String, BehaviorDefinition> behaviors() { return behaviors; }
+    public List<BehaviorDefinition> behaviors() { return behaviors; }
     public List<Metric> metrics() { return metrics; }
     public String trainingFramework() { return trainingFramework; }
     public String trainingCompute() { return trainingCompute; }

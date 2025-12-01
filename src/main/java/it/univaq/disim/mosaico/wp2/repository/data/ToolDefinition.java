@@ -1,11 +1,15 @@
 package it.univaq.disim.mosaico.wp2.repository.data;
 
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.MapKeyColumn;
 import jakarta.persistence.Table;
-import jakarta.persistence.Convert;
-import it.univaq.disim.mosaico.wp2.repository.converter.JsonAttributeConverter;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -28,27 +32,34 @@ public class ToolDefinition {
     
     private String apiSchema;                // schema dell'API, in formato JSON o YAML
 
-    @Convert(converter = JsonAttributeConverter.class)
-    @Column(columnDefinition = "jsonb")
-    private Map<String,Object> config;
+    @ElementCollection
+    @CollectionTable(name = "tool_config_entries", joinColumns = @JoinColumn(name = "tool_definition_id"))
+    @MapKeyColumn(name = "config_key")
+    @Column(name = "config_value")
+    private Map<String,String> config = new HashMap<>();
 
-    @Convert(converter = JsonAttributeConverter.class)
-    @Column(columnDefinition = "jsonb")
-    private List<Map<String, Object>> examples; // esempi di utilizzo
+    @ElementCollection
+    @CollectionTable(name = "tool_examples", joinColumns = @JoinColumn(name = "tool_definition_id"))
+    @Column(name = "example_payload")
+    private List<String> examples = new ArrayList<>(); // esempi di utilizzo
 
     private String authenticationMethod;      // metodo di autenticazione richiesto
 
     public ToolDefinition() {}
 
-    public ToolDefinition(String id, String name, String description, String version, String category, String apiSchema, Map<String,Object> config, List<Map<String, Object>> examples, String authenticationMethod) {
+    public ToolDefinition(String id, String name, String description, String version, String category, String apiSchema, Map<String,?> config, List<String> examples, String authenticationMethod) {
         this.id = (id == null) ? UUID.randomUUID().toString() : id;
         this.name = name;
         this.description = description;
         this.version = version;
         this.category = category;
         this.apiSchema = apiSchema;
-        this.config = config;
-        this.examples = examples;
+        if (config != null) {
+            config.forEach((key, value) -> this.config.put(key, value == null ? null : value.toString()));
+        }
+        if (examples != null) {
+            this.examples.addAll(examples);
+        }
         this.authenticationMethod = authenticationMethod;
     }
 
@@ -58,8 +69,8 @@ public class ToolDefinition {
     public String version() { return version; }
     public String category() { return category; }
     public String apiSchema() { return apiSchema; }
-    public Map<String,Object> config() { return config; }
-    public List<Map<String, Object>> examples() { return examples; }
+    public Map<String,String> config() { return config; }
+    public List<String> examples() { return examples; }
     public String authenticationMethod() { return authenticationMethod; }
 
     public String getId() { return id; }
@@ -74,10 +85,20 @@ public class ToolDefinition {
     public void setCategory(String category) { this.category = category; }
     public String getApiSchema() { return apiSchema; }
     public void setApiSchema(String apiSchema) { this.apiSchema = apiSchema; }
-    public Map<String,Object> getConfig() { return config; }
-    public void setConfig(Map<String,Object> config) { this.config = config; }
-    public List<Map<String, Object>> getExamples() { return examples; }
-    public void setExamples(List<Map<String, Object>> examples) { this.examples = examples; }
+    public Map<String,String> getConfig() { return config; }
+    public void setConfig(Map<String,?> config) {
+        this.config.clear();
+        if (config != null) {
+            config.forEach((key, value) -> this.config.put(key, value == null ? null : value.toString()));
+        }
+    }
+    public List<String> getExamples() { return examples; }
+    public void setExamples(List<String> examples) {
+        this.examples.clear();
+        if (examples != null) {
+            this.examples.addAll(examples);
+        }
+    }
     public String getAuthenticationMethod() { return authenticationMethod; }
     public void setAuthenticationMethod(String authenticationMethod) { this.authenticationMethod = authenticationMethod; }
 }

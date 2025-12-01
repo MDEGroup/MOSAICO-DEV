@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
+
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -34,7 +35,6 @@ class AgentMcpTest {
             "provider1", "OpenAI", "AI company providing language models", "https://openai.com"
         );
         Agent a1 = new it.univaq.disim.mosaico.wp2.repository.data.Agent(
-            "agent1",
             "Code Review Agent",
             "AI agent specialized in code review",
             "v1.0",
@@ -49,6 +49,7 @@ class AgentMcpTest {
             "Background",
             List.of(), List.of(), List.of(), List.of(), List.of()
         );
+        a1.setId("agent1");
         when(agentService.findAll()).thenReturn(List.of(a1));
 
         AgentMCP agentMCP = new AgentMCP(agentService, mapper);
@@ -72,7 +73,6 @@ class AgentMcpTest {
             "provider1", "OpenAI", "AI company providing language models", "https://openai.com"
         );
         it.univaq.disim.mosaico.wp2.repository.data.Agent a1 = new it.univaq.disim.mosaico.wp2.repository.data.Agent(
-            "agent1",
             "Code Review Agent",
             "AI agent specialized in code review",
             "v1.0",
@@ -87,6 +87,7 @@ class AgentMcpTest {
             "Background",
             List.of(), List.of(), List.of(), List.of(), List.of()
         );
+        a1.setId("agent1");
         when(agentService.findById("agent1")).thenReturn(java.util.Optional.of(a1));
 
         AgentMCP agentMCP = new AgentMCP(agentService, mapper);
