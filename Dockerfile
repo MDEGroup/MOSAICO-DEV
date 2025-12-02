@@ -12,6 +12,6 @@ FROM eclipse-temurin:21-jre
 
 WORKDIR /app
 # Copy the jar produced in the builder stage
-COPY --from=builder /workspace/target/repository-0.0.1-SNAPSHOT.jar /app/repository-0.0.1-SNAPSHOT.jar
+COPY --from=builder /workspace/target/repository-0.3.0-SNAPSHOT.jar /app/repository-0.3.0-SNAPSHOT.jar
 
-ENTRYPOINT ["java", "-jar", "repository-0.0.1-SNAPSHOT.jar"]
+ENTRYPOINT ["java", "-jar", "repository-0.3.0-SNAPSHOT.jar"]
