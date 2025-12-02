@@ -3,7 +3,7 @@
 ## ✅ Componenti Implementati
 
 ### 1. Infrastructure (Docker)
-- **docker-compose.langfuse.yml**: Stack Langfuse v2 con PostgreSQL (semplificato)
+- **docker-compose.langfuse.yml**: Stack Langfuse v3 con PostgreSQL + ClickHouse + Redis + MinIO + Langfuse worker
 - **.env.langfuse**: File di configurazione con credenziali
 - **start-langfuse.sh**: Script per avviare lo stack
 - **HELP_LANGFUSE.md**: Guida rapida all'uso
@@ -28,6 +28,8 @@
 ```bash
 ./start-langfuse.sh
 ```
+
+> ℹ️ Langfuse v3 richiede PostgreSQL (configurazione), ClickHouse (analytics), Redis (cache) e uno storage compatibile S3. Lo stack compose avvia automaticamente tutti questi servizi insieme al worker.
 
 ### 2. Accedi all'UI
 - URL: http://localhost:3000
@@ -117,7 +119,7 @@ docker compose -f docker-compose.langfuse.yml down -v
 
 ```
 repository/
-├── docker-compose.langfuse.yml     # Stack Langfuse v2 (PostgreSQL + Langfuse)
+├── docker-compose.langfuse.yml     # Stack Langfuse v3 (PostgreSQL + ClickHouse + Langfuse)
 ├── .env.langfuse                   # Configurazione Docker
 ├── start-langfuse.sh               # Script startup
 ├── HELP_LANGFUSE.md               # Guida generale
@@ -160,6 +162,10 @@ repository/
 - Email: `admin@mosaico.local`
 - Password: `mosaico2025`
 
+### Worker & Cache
+- Redis host: `localhost:6379`
+- Password: valore di `REDIS_PASSWORD` (default `changeme`, da personalizzare)
+
 ### API Keys
 - Public Key: `pk-mosaico-local`
 - Secret Key: `sk-mosaico-secret`
@@ -169,6 +175,12 @@ repository/
 - Password: `langfuse`
 - Database: `langfuse`
 - Port: `5432`
+
+### Storage S3 (MinIO locale)
+- Console: http://localhost:9091 (utente `minio`, password `miniosecret` di default)
+- Endpoint interno: `http://langfuse-minio:9000`
+- Buckets generati: `langfuse-events`, `langfuse-media`, `langfuse-exports`
+- Variabili richieste: `MINIO_ROOT_USER`, `MINIO_ROOT_PASSWORD`, `LANGFUSE_ENCRYPTION_KEY`
 
 ## 📚 Documentazione
 
