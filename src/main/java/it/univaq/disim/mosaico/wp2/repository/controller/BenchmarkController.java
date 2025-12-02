@@ -57,7 +57,7 @@ public class BenchmarkController {
      */
     @PostMapping
     public ResponseEntity<Benchmark> createBenchmark(@RequestBody Benchmark benchmark) {
-        logger.info("POST /api/benchmarks for benchmark with datasetRef: {}", benchmark.datasetRef());
+        logger.info("POST /api/benchmarks for benchmark with datasetRef: {}", benchmark.getDatasetRef());
         Benchmark savedBenchmark = benchmarkService.save(benchmark);
         return ResponseEntity.ok(savedBenchmark);
     }

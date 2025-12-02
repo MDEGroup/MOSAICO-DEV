@@ -31,40 +31,42 @@ public class BenchmarkRepositoryTest {
     void setUp() {
         benchmarkRepository.deleteAll();
         
-        testBenchmark1 = new Benchmark(
-            "benchmark1",
+        testBenchmark1 = createBenchmark(
             "Metadata for code review benchmark",
             "Features for evaluating code quality analysis",
             "dataset-codeql-001",
             "Evaluate agent performance on code review tasks",
-            "v1.0",
-            List.of(), // Empty lists for DocumentReference fields
-            List.of(),
-            List.of()
+            "v1.0"
         );
         
-        testBenchmark2 = new Benchmark(
-            "benchmark2",
+        testBenchmark2 = createBenchmark(
             "Metadata for testing benchmark", 
             "Features for unit test generation evaluation",
             "dataset-junit-002",
             "Evaluate agent performance on test generation",
-            "v2.0",
-            List.of(),
-            List.of(),
-            List.of()
+            "v2.0"
         );
+    }
+
+    private Benchmark createBenchmark(String metadata, String features, String datasetRef, String taskDef, String protocolVersion) {
+        Benchmark benchmark = new Benchmark();
+        benchmark.setMetadata(metadata);
+        benchmark.setFeatures(features);
+        benchmark.setDatasetRef(datasetRef);
+        benchmark.setTaskDef(taskDef);
+        benchmark.setProtocolVersion(protocolVersion);
+        return benchmark;
     }
     
     @Test
     void testSaveAndFindById() {
         Benchmark savedBenchmark = benchmarkRepository.save(testBenchmark1);
         
-        Optional<Benchmark> foundBenchmark = benchmarkRepository.findById(savedBenchmark.id());
+        Optional<Benchmark> foundBenchmark = benchmarkRepository.findById(savedBenchmark.getId());
         
         assertTrue(foundBenchmark.isPresent());
-        assertEquals(testBenchmark1.metadata(), foundBenchmark.get().metadata());
-        assertEquals(testBenchmark1.datasetRef(), foundBenchmark.get().datasetRef());
+        assertEquals(testBenchmark1.getMetadata(), foundBenchmark.get().getMetadata());
+        assertEquals(testBenchmark1.getDatasetRef(), foundBenchmark.get().getDatasetRef());
     }
     
     @Test
@@ -74,8 +76,8 @@ public class BenchmarkRepositoryTest {
         Benchmark foundBenchmark = benchmarkRepository.findByDatasetRef("dataset-codeql-001");
         
         assertNotNull(foundBenchmark);
-        assertEquals(testBenchmark1.metadata(), foundBenchmark.metadata());
-        assertEquals("Evaluate agent performance on code review tasks", foundBenchmark.taskDef());
+        assertEquals(testBenchmark1.getMetadata(), foundBenchmark.getMetadata());
+        assertEquals("Evaluate agent performance on code review tasks", foundBenchmark.getTaskDef());
     }
     
     @Test
@@ -88,8 +90,8 @@ public class BenchmarkRepositoryTest {
         
         assertNotNull(v1Benchmark);
         assertNotNull(v2Benchmark);
-        assertEquals("dataset-codeql-001", v1Benchmark.datasetRef());
-        assertEquals("dataset-junit-002", v2Benchmark.datasetRef());
+        assertEquals("dataset-codeql-001", v1Benchmark.getDatasetRef());
+        assertEquals("dataset-junit-002", v2Benchmark.getDatasetRef());
     }
     
     @Test
@@ -105,9 +107,9 @@ public class BenchmarkRepositoryTest {
     void testDeleteById() {
         Benchmark savedBenchmark = benchmarkRepository.save(testBenchmark1);
         
-        benchmarkRepository.deleteById(savedBenchmark.id());
+        benchmarkRepository.deleteById(savedBenchmark.getId());
         
-        Optional<Benchmark> foundBenchmark = benchmarkRepository.findById(savedBenchmark.id());
+        Optional<Benchmark> foundBenchmark = benchmarkRepository.findById(savedBenchmark.getId());
         assertFalse(foundBenchmark.isPresent());
     }
     
@@ -119,7 +121,7 @@ public class BenchmarkRepositoryTest {
         List<Benchmark> allBenchmarks = benchmarkRepository.findAll();
         
         assertEquals(2, allBenchmarks.size());
-        assertTrue(allBenchmarks.stream().anyMatch(b -> b.datasetRef().equals("dataset-codeql-001")));
-        assertTrue(allBenchmarks.stream().anyMatch(b -> b.datasetRef().equals("dataset-junit-002")));
+        assertTrue(allBenchmarks.stream().anyMatch(b -> b.getDatasetRef().equals("dataset-codeql-001")));
+        assertTrue(allBenchmarks.stream().anyMatch(b -> b.getDatasetRef().equals("dataset-junit-002")));
     }
 }

@@ -6,12 +6,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.context.ActiveProfiles;
 
 import it.univaq.disim.mosaico.wp2.repository.data.Agent;
 import it.univaq.disim.mosaico.wp2.repository.data.Provider;
 import it.univaq.disim.mosaico.wp2.repository.data.enums.IOModality;
 import it.univaq.disim.mosaico.wp2.repository.repository.AgentRepository;
 import it.univaq.disim.mosaico.wp2.repository.service.impl.AgentServiceImpl;
+import it.univaq.disim.mosaico.wp2.repository.service.VectorSearchService;
 
 import java.util.List;
 import java.util.Optional;
@@ -23,11 +25,15 @@ import static org.mockito.Mockito.*;
  * Test class for AgentService.
  */
 @ExtendWith(MockitoExtension.class)
+@ActiveProfiles("test")
 public class AgentServiceTest {
 
     @Mock
     private AgentRepository agentRepository;
     
+    @Mock
+    private VectorSearchService vectorSearchService;
+
     @InjectMocks
     private AgentServiceImpl agentService;
     
@@ -62,16 +68,18 @@ public class AgentServiceTest {
             List.of(), // interactionProtocols
             List.of()  // agentConsumption
         );
+
     }
     
     @Test
     void testSaveAgent() {
+        when(vectorSearchService.indexAgent(any(Agent.class))).thenAnswer(inv -> inv.getArgument(0));
         when(agentRepository.save(testAgent)).thenReturn(testAgent);
         
         Agent savedAgent = agentService.save(testAgent);
         
         assertNotNull(savedAgent);
-        assertEquals(testAgent.name(), savedAgent.name());
+        assertEquals(testAgent.getName(), savedAgent.getName());
         verify(agentRepository, times(1)).save(testAgent);
     }
     
@@ -82,7 +90,7 @@ public class AgentServiceTest {
         Optional<Agent> foundAgent = agentService.findById("agent1");
         
         assertTrue(foundAgent.isPresent());
-        assertEquals(testAgent.name(), foundAgent.get().name());
+        assertEquals(testAgent.getName(), foundAgent.get().getName());
         verify(agentRepository, times(1)).findById("agent1");
     }
     
@@ -104,7 +112,7 @@ public class AgentServiceTest {
         List<Agent> foundAgents = agentService.findAll();
         
         assertEquals(1, foundAgents.size());
-        assertEquals(testAgent.name(), foundAgents.get(0).name());
+        assertEquals(testAgent.getName(), foundAgents.get(0).getName());
         verify(agentRepository, times(1)).findAll();
     }
     
@@ -115,7 +123,7 @@ public class AgentServiceTest {
         List<Agent> specialists = agentService.findByRole("Specialist");
         
         assertEquals(1, specialists.size());
-        assertEquals(testAgent.role(), specialists.get(0).role());
+        assertEquals(testAgent.getRole(), specialists.get(0).getRole());
         verify(agentRepository, times(1)).findByRole("Specialist");
     }
     
@@ -126,7 +134,7 @@ public class AgentServiceTest {
         List<Agent> providerAgents = agentService.findByProvider("provider1");
         
         assertEquals(1, providerAgents.size());
-        assertEquals(testAgent.provider().id(), providerAgents.get(0).provider().id());
+        assertEquals(testAgent.getProvider().getId(), providerAgents.get(0).getProvider().getId());
     verify(agentRepository, times(1)).findByProvider_Id("provider1");
     }
     
@@ -137,7 +145,7 @@ public class AgentServiceTest {
         List<Agent> textAgents = agentService.findByIOModality(IOModality.TEXT);
         
         assertEquals(1, textAgents.size());
-        assertTrue(textAgents.get(0).ioModalities().contains(IOModality.TEXT));
+        assertTrue(textAgents.get(0).getIoModalities().contains(IOModality.TEXT));
         verify(agentRepository, times(1)).findAll();
     }
     
