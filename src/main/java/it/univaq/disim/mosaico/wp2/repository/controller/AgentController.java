@@ -1,6 +1,7 @@
 package it.univaq.disim.mosaico.wp2.repository.controller;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.http.ResponseEntity;
@@ -57,7 +58,7 @@ public class AgentController {
      */
     @PostMapping
     public ResponseEntity<Agent> createAgent(@RequestBody Agent agent) {
-        logger.info("POST /api/agents for agent: {}", agent.name());
+        logger.info("POST /api/agents for agent: {}", agent.getName());
         Agent savedAgent = agentService.save(agent);
         return ResponseEntity.ok(savedAgent);
     }
@@ -114,5 +115,14 @@ public class AgentController {
         logger.info("GET /api/agents/search/io-modality?ioModality={}", ioModality);
         List<Agent> agents = agentService.findByIOModality(ioModality);
         return ResponseEntity.ok(agents);
+    }
+    @PostMapping("/search")
+    public ResponseEntity<List<Agent>> semanticSearch(@RequestBody SemanticSearchRequest request) {
+        String query = request.getQuery();
+        int topK = request.getTopK() == null ? 5 : request.getTopK();
+        Map<String, Object> filters = request.getFilters() == null ? Map.of() : request.getFilters();
+
+        List<Agent> results = agentService.semanticSearch(query, filters, topK);
+        return ResponseEntity.ok(results);
     }
 }

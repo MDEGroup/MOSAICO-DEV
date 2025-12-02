@@ -1,6 +1,7 @@
 package it.univaq.disim.mosaico.wp2.repository.service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import it.univaq.disim.mosaico.wp2.repository.data.Agent;
 import it.univaq.disim.mosaico.wp2.repository.data.enums.IOModality;
@@ -19,4 +20,6 @@ public interface AgentService {
     List<Agent> findByProvider(String providerId);
     List<Agent> findByRole(String role);
     List<Agent> findByIOModality(IOModality ioModality);
+    List<Agent> semanticSearc(String version);
+    List<Agent> semanticSearch(String query, Map<String,Object> filters, int topK);
 }

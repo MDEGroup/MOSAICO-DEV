@@ -27,31 +27,36 @@ public class Agent {
 
     private String name;
 
+    @Column(columnDefinition = "text")
     private String description;
-
     private String version;
-
     /** Link to Provider entity. */
     @ManyToOne
     @JoinColumn(name = "provider_id")
     private Provider provider;
-
     private String license;
-
+    @Column(columnDefinition = "text")
     private String beliefs;
-
+    @Column(columnDefinition = "text")
     private String intentions;
-
+    @Column(columnDefinition = "text")
     private String desires;
-
     private String role;
-
+    @Column(columnDefinition = "text") 
     private String objective;
+    private String llangfuseSecretKey;
+    private String llangfuseUrl;
+    private String llangfusePublicKey;
+    private String llangfuseProjectName;
+    public String getLlangfuseUrl() {
+        return llangfuseUrl;
+    }
 
     @ElementCollection
     @Enumerated(EnumType.STRING)
     private List<IOModality> ioModalities;
-
+    
+    @Column(columnDefinition = "text")
     private String backStory;
 
     @Transient
@@ -90,11 +95,10 @@ public class Agent {
                  List<Memory> has,
                  List<InteractionProtocol> supports,
                  List<AgentConsumption> consumptions) {
-            this.id = id;
         this.name = name;
         this.description = description;
         this.version = version;
-    this.provider = provider;
+        this.provider = provider;
         this.license = license;
         this.beliefs = beliefs;
         this.intentions = intentions;
@@ -110,25 +114,6 @@ public class Agent {
         this.consumptions = consumptions;
     }
 
-    // Keep record-like accessor methods so existing code that calls agent.name() keeps working.
-    public String id() { return id; }
-    public String name() { return name; }
-    public String description() { return description; }
-    public String version() { return version; }
-    public Provider provider() { return provider; }
-    public String license() { return license; }
-    public String beliefs() { return beliefs; }
-    public String intentions() { return intentions; }
-    public String desires() { return desires; }
-    public String role() { return role; }
-    public String objective() { return objective; }
-    public List<IOModality> ioModalities() { return ioModalities; }
-    public String backStory() { return backStory; }
-    public List<Skill> skills() { return skills; }
-    public List<Tool> exploits() { return exploits; }
-    public List<Memory> has() { return has; }
-    public List<InteractionProtocol> supports() { return supports; }
-    public List<AgentConsumption> consumptions() { return consumptions; }
 
     // Standard getters/setters for frameworks and JPA
     public String getId() { return id; }
@@ -167,4 +152,11 @@ public class Agent {
     public void setSupports(List<InteractionProtocol> supports) { this.supports = supports; }
     public List<AgentConsumption> getConsumptions() { return consumptions; }
     public void setConsumptions(List<AgentConsumption> consumptions) { this.consumptions = consumptions; }
+    public void setLlangfuseUrl(String llangfuseUrl) {this.llangfuseUrl = llangfuseUrl;}    
+    public String getLlangfuseProjectName() {return llangfuseProjectName;}
+    public void setLlangfuseProjectName(String llangfuseProjectName) {this.llangfuseProjectName = llangfuseProjectName;    }
+    public String getLlangfusePublicKey() {return llangfusePublicKey;  }
+    public void setLlangfusePublicKey(String llangfusePublicKey) {this.llangfusePublicKey = llangfusePublicKey;}
+    public String getLlangfuseSecretKey() {return llangfuseSecretKey;}
+    public void setLlangfuseSecretKey(String llangfuseSecretKey) {this.llangfuseSecretKey = llangfuseSecretKey;}
 }

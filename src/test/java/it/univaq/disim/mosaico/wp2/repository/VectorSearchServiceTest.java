@@ -5,7 +5,7 @@ import it.univaq.disim.mosaico.wp2.repository.data.Provider;
 import it.univaq.disim.mosaico.wp2.repository.data.enums.IOModality;
 import it.univaq.disim.mosaico.wp2.repository.repository.AgentRepository;
 import it.univaq.disim.mosaico.wp2.repository.repository.ProviderRepository;
-import it.univaq.disim.mosaico.wp2.repository.service.VectorSearchService;
+import it.univaq.disim.mosaico.wp2.repository.service.impl.VectorSearchServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -37,7 +37,7 @@ class VectorSearchServiceTest {
     private ProviderRepository providerRepository;
 
     @InjectMocks
-    private VectorSearchService vectorSearchService;
+    private VectorSearchServiceImpl vectorSearchService;
 
     private String agentName;
     private String agentDescription;
@@ -60,7 +60,7 @@ class VectorSearchServiceTest {
         when(providerRepository.findById("provider-existing")).thenReturn(Optional.of(existingProvider));
         when(agentRepository.save(any(Agent.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        vectorSearchService.saveAndIndex(agent);
+        vectorSearchService.indexAgent(agent);
 
         verify(providerRepository, never()).save(any(Provider.class));
 
@@ -89,7 +89,7 @@ class VectorSearchServiceTest {
         when(providerRepository.save(any(Provider.class))).thenReturn(persistedProvider);
         when(agentRepository.save(any(Agent.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        vectorSearchService.saveAndIndex(agent);
+        vectorSearchService.indexAgent(agent);
 
         verify(providerRepository).save(any(Provider.class));
 
@@ -105,7 +105,7 @@ class VectorSearchServiceTest {
         when(agentRepository.save(any(Agent.class))).thenAnswer(inv -> inv.getArgument(0));
         doThrow(new RuntimeException("boom")).when(vectorStore).add(anyList());
 
-        assertDoesNotThrow(() -> vectorSearchService.saveAndIndex(agent));
+        assertDoesNotThrow(() -> vectorSearchService.indexAgent(agent));
     }
 
     @Test
