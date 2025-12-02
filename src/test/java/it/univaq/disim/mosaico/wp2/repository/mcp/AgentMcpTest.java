@@ -31,8 +31,7 @@ class AgentMcpTest {
         ObjectMapper mapper = new ObjectMapper();
 
         // prepare test data
-        Provider testProvider = new it.univaq.disim.mosaico.wp2.repository.data.Provider(
-            "provider1", "OpenAI", "AI company providing language models", "https://openai.com"
+        Provider testProvider = new it.univaq.disim.mosaico.wp2.repository.data.Provider("OpenAI", "AI company providing language models", "https://openai.com"
         );
         Agent a1 = new it.univaq.disim.mosaico.wp2.repository.data.Agent(
             "Code Review Agent",
@@ -69,8 +68,7 @@ class AgentMcpTest {
     void getAgent_returnsReadResourceResultWithAgentJson() throws Exception {
         var agentService = mock(it.univaq.disim.mosaico.wp2.repository.service.AgentService.class);
         ObjectMapper mapper = new ObjectMapper();
-        it.univaq.disim.mosaico.wp2.repository.data.Provider testProvider = new it.univaq.disim.mosaico.wp2.repository.data.Provider(
-            "provider1", "OpenAI", "AI company providing language models", "https://openai.com"
+        it.univaq.disim.mosaico.wp2.repository.data.Provider testProvider = new it.univaq.disim.mosaico.wp2.repository.data.Provider("OpenAI", "AI company providing language models", "https://openai.com"
         );
         it.univaq.disim.mosaico.wp2.repository.data.Agent a1 = new it.univaq.disim.mosaico.wp2.repository.data.Agent(
             "Code Review Agent",

@@ -41,7 +41,6 @@ public class AgentMCP {
         // 2. Li serializzi in JSON
         // List<Agent> agents = agentService.findAll();
         Provider testProvider = testProvider = new Provider(
-                "provider1",
                 "OpenAI",
                 "AI company providing language models",
                 "https://openai.com");
@@ -110,7 +109,6 @@ public class AgentMCP {
     public ReadResourceResult getAgent(String id) {
         // Agent agent = agentService.findById(id).orElse(null);
         Provider testProvider = testProvider = new Provider(
-                "provider1",
                 "OpenAI",
                 "AI company providing language models",
                 "https://openai.com");

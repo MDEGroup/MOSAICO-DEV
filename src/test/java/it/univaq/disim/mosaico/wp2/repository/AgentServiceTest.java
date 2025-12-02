@@ -12,6 +12,7 @@ import it.univaq.disim.mosaico.wp2.repository.data.Agent;
 import it.univaq.disim.mosaico.wp2.repository.data.Provider;
 import it.univaq.disim.mosaico.wp2.repository.data.enums.IOModality;
 import it.univaq.disim.mosaico.wp2.repository.repository.AgentRepository;
+import it.univaq.disim.mosaico.wp2.repository.repository.ProviderRepository;
 import it.univaq.disim.mosaico.wp2.repository.service.impl.AgentServiceImpl;
 import it.univaq.disim.mosaico.wp2.repository.service.VectorSearchService;
 
@@ -34,6 +35,9 @@ public class AgentServiceTest {
     @Mock
     private VectorSearchService vectorSearchService;
 
+    @Mock
+    private ProviderRepository providerRepository;
+
     @InjectMocks
     private AgentServiceImpl agentService;
     
@@ -43,7 +47,6 @@ public class AgentServiceTest {
     @BeforeEach
     void setUp() {
         testProvider = new Provider(
-            "provider1",
             "OpenAI",
             "AI company providing language models",
             "https://openai.com"
@@ -73,6 +76,13 @@ public class AgentServiceTest {
     
     @Test
     void testSaveAgent() {
+        when(providerRepository.save(any(Provider.class))).thenAnswer(invocation -> {
+            Provider provider = invocation.getArgument(0);
+            if (provider.getId() == null) {
+                provider.setId("provider-test-id");
+            }
+            return provider;
+        });
         when(vectorSearchService.indexAgent(any(Agent.class))).thenAnswer(inv -> inv.getArgument(0));
         when(agentRepository.save(testAgent)).thenReturn(testAgent);
         

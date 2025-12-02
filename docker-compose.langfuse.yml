@@ -243,6 +243,8 @@ services:
       # Point the app's Ollama client to the Ollama service running in the same compose network
       # Spring property used by the app is `spring.ai.ollama.base-url` -> env var `SPRING_AI_OLLAMA_BASE_URL`
       SPRING_AI_OLLAMA_BASE_URL: "http://ollama:11434/"
+      # Override Langfuse base URL to reach the langfuse container instead of localhost
+      LANGFUSE_BASE_URL: "http://langfuse-app:3000"
     ports:
       - "8080:8080"
     restart: on-failure

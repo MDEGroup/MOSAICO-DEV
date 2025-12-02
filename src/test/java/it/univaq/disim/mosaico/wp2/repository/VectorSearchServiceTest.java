@@ -50,7 +50,7 @@ class VectorSearchServiceTest {
 
     @Test
     void saveAndIndexReusesExistingProvider() {
-        Provider existingProvider = new Provider("provider-existing", "Existing", "desc", "contact");
+        Provider existingProvider = new Provider("Existing", "desc", "contact");
         Provider payloadProvider = new Provider();
         payloadProvider.setId("provider-existing");
         payloadProvider.setName("Incoming");
@@ -85,7 +85,7 @@ class VectorSearchServiceTest {
 
         Agent agent = buildAgent(providerWithoutId);
 
-        Provider persistedProvider = new Provider("generated-id", "New Provider", providerWithoutId.getDescription(), providerWithoutId.getContactUrl());
+        Provider persistedProvider = new Provider("New Provider", providerWithoutId.getDescription(), providerWithoutId.getContactUrl());
         when(providerRepository.save(any(Provider.class))).thenReturn(persistedProvider);
         when(agentRepository.save(any(Agent.class))).thenAnswer(inv -> inv.getArgument(0));
 

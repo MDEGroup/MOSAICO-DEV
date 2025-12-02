@@ -2,6 +2,8 @@ package it.univaq.disim.mosaico.wp2.repository.data;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.util.UUID;
@@ -14,6 +16,7 @@ import java.util.UUID;
 public class Provider {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id", nullable = false)
     private String id;
 
@@ -27,8 +30,7 @@ public class Provider {
         // JPA
     }
 
-    public Provider(String id, String name, String description, String contactUrl) {
-        this.id = (id == null) ? UUID.randomUUID().toString() : id;
+    public Provider(String name, String description, String contactUrl) {
         this.name = name;
         this.description = description;
         this.contactUrl = contactUrl;
