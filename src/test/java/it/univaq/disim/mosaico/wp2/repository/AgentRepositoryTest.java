@@ -71,8 +71,9 @@ public class AgentRepositoryTest {
     }
     @BeforeEach
     void setUp() {
-        // agentRepository.deleteAll();
-        testProvider = new Provider("provider1", "Test Provider", "Test provider description", "http://test.com");
+        agentRepository.deleteAll();
+        providerRepository.deleteAll();
+        testProvider = new Provider("Test Provider", "Test provider description", "http://test.com");
         testProvider = providerRepository.save(testProvider);
 
         exampleSkills = List.of(

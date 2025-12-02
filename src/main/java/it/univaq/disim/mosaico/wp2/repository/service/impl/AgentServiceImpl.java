@@ -7,8 +7,10 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import it.univaq.disim.mosaico.wp2.repository.data.Agent;
+import it.univaq.disim.mosaico.wp2.repository.data.Provider;
 import it.univaq.disim.mosaico.wp2.repository.data.enums.IOModality;
 import it.univaq.disim.mosaico.wp2.repository.repository.AgentRepository;
+import it.univaq.disim.mosaico.wp2.repository.repository.ProviderRepository;
 import it.univaq.disim.mosaico.wp2.repository.service.AgentService;
 import it.univaq.disim.mosaico.wp2.repository.service.VectorSearchService;
 
@@ -22,6 +24,8 @@ public class AgentServiceImpl implements AgentService {
     private AgentRepository agentRepository;
     @Autowired
     private VectorSearchService vectorSearchService;
+    @Autowired
+    private ProviderRepository providerRepository;
     @Override
     public List<Agent> findAll() {
         return agentRepository.findAll();
@@ -34,9 +38,28 @@ public class AgentServiceImpl implements AgentService {
     
     @Override
     public Agent save(Agent agent) {
+        handleProviderLifecycle(agent);
         Agent savedAgent = agentRepository.save(agent);
         vectorSearchService.indexAgent(savedAgent);
         return savedAgent;
+    }
+
+    private void handleProviderLifecycle(Agent agent) {
+        Provider provider = agent.getProvider();
+        if (provider == null) {
+            return;
+        }
+
+        String providerId = provider.getId();
+        if (providerId != null && providerRepository.existsById(providerId)) {
+            // Ensure we attach the managed entity to avoid transient state
+            providerRepository.findById(providerId)
+                    .ifPresent(agent::setProvider);
+            return;
+        }
+
+        Provider persisted = providerRepository.save(provider);
+        agent.setProvider(persisted);
     }
     
     @Override

@@ -42,11 +42,11 @@ public class ProviderControllerTest {
     @BeforeEach
     void setUp() {
         testProvider = new Provider(
-            "provider1",
             "OpenAI",
             "AI company providing language models",
             "https://openai.com"
         );
+        testProvider.setId("provider1");
     }
     
     @Test

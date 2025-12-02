@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.http.MediaType;
@@ -29,6 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Test class for AgentController.
  */
 @WebMvcTest(AgentController.class)
+@ActiveProfiles("test")
 public class AgentControllerTest {
 
     @Autowired
@@ -46,7 +48,6 @@ public class AgentControllerTest {
     @BeforeEach
     void setUp() {
         testProvider = new Provider(
-            "provider1",
             "OpenAI",
             "AI company providing language models",
             "https://openai.com"

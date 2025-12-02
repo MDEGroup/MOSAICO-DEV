@@ -35,14 +35,12 @@ public class ProviderServiceTest {
     @BeforeEach
     void setUp() {
         testProvider1 = new Provider(
-            "provider1",
             "OpenAI",
             "AI company providing language models",
             "https://openai.com"
         );
         
         testProvider2 = new Provider(
-            "provider2",
             "Google",
             "Technology company with AI services",
             "https://google.com"
@@ -117,7 +115,6 @@ public class ProviderServiceTest {
     @Test
     void testUpdateProvider() {
         Provider updatedProvider = new Provider(
-            "provider1",
             "OpenAI Updated",
             "Updated AI company description",
             "https://openai.com/updated"

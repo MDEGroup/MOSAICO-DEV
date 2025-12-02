@@ -31,7 +31,6 @@ public class ProviderRepositoryTest {
         providerRepository.deleteAll();
         
         testProvider = new Provider(
-            "provider1",
             "OpenAI",
             "AI services provider",
             "https://openai.com"
