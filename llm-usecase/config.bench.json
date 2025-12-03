@@ -1,10 +1,10 @@
 {
     "langfuse": {
-      "host": "https://cloud.langfuse.com",
-      "public_key": "pk-lf-753e55be-62b3-424d-aaa7-f747257c5c4c",
-      "secret_key": "sk-lf-ace78b79-da6c-450e-84ab-368353261969"
+      "host": "http://localhost:3000",
+      "public_key": "pk-lf-41f76ff4-f423-4b8c-a3b7-87c5b3012015",
+      "secret_key": "sk-lf-bd30b103-9a1b-43a0-88f3-742fbe657dee",
+      "ignore_env": true
     },
-  
     "trace": {
       "name": "agentse.app.summarization",
       "tags": ["bench", "summarization"]
