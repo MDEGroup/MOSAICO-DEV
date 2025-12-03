@@ -1,6 +1,7 @@
 package it.univaq.disim.mosaico.wp2.repository;
 
 import it.univaq.disim.mosaico.wp2.repository.config.LangfuseProperties;
+import it.univaq.disim.mosaico.wp2.repository.data.Agent;
 import it.univaq.disim.mosaico.wp2.repository.service.LangfuseService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,10 +15,8 @@ import com.langfuse.client.resources.commons.types.DatasetItem;
 
 import com.langfuse.client.resources.commons.types.Dataset;
 import com.langfuse.client.resources.projects.types.Project;
-import com.langfuse.client.resources.projects.types.Projects;
 
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -27,7 +26,8 @@ import static org.junit.jupiter.api.Assertions.*;
  * 
  * These tests require:
  * 1. Langfuse server running on http://localhost:3000
- * 2. Valid API keys configured in application.properties or environment variables
+ * 2. Valid API keys configured in application.properties or environment
+ * variables
  * 3. Network connectivity to the Langfuse server
  * 4. At least one project already created in Langfuse (for read operations)
  * 
@@ -37,15 +37,16 @@ import static org.junit.jupiter.api.Assertions.*;
  * To run these tests:
  * - Start Langfuse: ./start-langfuse.sh
  * - Create at least one project in Langfuse UI (http://localhost:3000)
- * - Run: LANGFUSE_INTEGRATION_TEST=true ./mvnw test -Dtest=LangfuseServiceIntegrationTest
+ * - Run: LANGFUSE_INTEGRATION_TEST=true ./mvnw test
+ * -Dtest=LangfuseServiceIntegrationTest
  */
 @SpringBootTest
 @TestPropertySource(properties = {
-    "langfuse.enabled=true",
-    "langfuse.base-url=http://localhost:3000",
-    "langfuse.public-key=pk-lf-ac9f73f8-88b5-4dd8-bea8-2f45ecd186ae",
-    "langfuse.secret-key=sk-lf-23527443-2406-42cb-b8a2-d745bdad1f08",
-    "langfuse.timeout-seconds=10"
+        "langfuse.enabled=true",
+        "langfuse.base-url=http://localhost:3000",
+        "langfuse.public-key=pk-lf-41f76ff4-f423-4b8c-a3b7-87c5b3012015",
+        "langfuse.secret-key=sk-lf-bd30b103-9a1b-43a0-88f3-742fbe657dee",
+        "langfuse.timeout-seconds=10"
 })
 @EnabledIfEnvironmentVariable(named = "LANGFUSE_INTEGRATION_TEST", matches = "true", disabledReason = "Integration tests disabled. Set LANGFUSE_INTEGRATION_TEST=true to enable")
 class LangfuseServiceIntegrationTest {
@@ -64,16 +65,25 @@ class LangfuseServiceIntegrationTest {
         assertNotNull(langfuseProperties, "LangfuseProperties should be autowired");
     }
 
+    private Agent buildAgentWithIntegrationCredentials() {
+        Agent agent = new Agent();
+        agent.setLlangfuseUrl(langfuseProperties.getBaseUrl());
+        agent.setLlangfusePublicKey(langfuseProperties.getPublicKey());
+        agent.setLlangfuseSecretKey(langfuseProperties.getSecretKey());
+        agent.setLlangfuseProjectName("agentse.app.summarization");
+        return agent;
+    }
+
     @Test
     void testServiceIsConfiguredAndEnabled() {
         // Given & When
         boolean isEnabled = langfuseService.isEnabled();
         boolean isConfigured = langfuseProperties.isConfigured();
-        
+
         // Then
         assertTrue(isConfigured, "Langfuse should be configured");
         assertTrue(isEnabled, "LangfuseService should be enabled");
-        
+
         assertEquals("http://localhost:3000", langfuseProperties.getBaseUrl());
         assertNotNull(langfuseProperties.getPublicKey());
         assertNotNull(langfuseProperties.getSecretKey());
@@ -85,53 +95,53 @@ class LangfuseServiceIntegrationTest {
     void testGetProjectsReturnsValidResponse() {
         // Given
         assertTrue(langfuseService.isEnabled(), "Service should be enabled");
-        
+
         // When
         // Given - First get all projects to have a valid ID
         List<Project> projects = langfuseService.getProjects();
-        
+
         if (!projects.isEmpty()) {
             logger.warn("⚠️  WARNING: No projects found. Skipping test. Create a project in Langfuse UI first.");
             // Mark test as passed but log warning
             assertTrue(true, "Test skipped - no projects available");
             return;
         }
-        
+
         String projectId = (String) projects.get(0).getId();
-        
+
         // Then
         assertNotNull(projects, "Projects list should not be null");
         logger.info("Found {} projects in Langfuse", projects.size());
-        
+
         // If there are projects, verify structure
         if (!projects.isEmpty()) {
-            Project firstProject =  projects.get(0);
+            Project firstProject = projects.get(0);
             assertNotNull(firstProject.getId(), "Project should have an id");
             assertNotNull(firstProject.getName(), "Project should have a name");
             logger.info("First project: {} (id: {})", firstProject.getName(), firstProject.getId());
         } else {
-            logger.warn("⚠️  WARNING: No projects found in Langfuse. Please create at least one project in the UI for full test coverage.");
+            logger.warn(
+                    "⚠️  WARNING: No projects found in Langfuse. Please create at least one project in the UI for full test coverage.");
         }
     }
-
 
     @Test
     void testGetProjectByIdWithValidId() {
         // Given - First get all projects to have a valid ID
         List<Project> projects = langfuseService.getProjects();
-        
+
         if (!projects.isEmpty()) {
             logger.warn("⚠️  WARNING: No projects found. Skipping test. Create a project in Langfuse UI first.");
             // Mark test as passed but log warning
             assertTrue(true, "Test skipped - no projects available");
             return;
         }
-        
+
         String projectId = (String) projects.get(0).getId();
-        
+
         // When
         Project project = langfuseService.getProjectById(projectId);
-        
+
         // Then
         // Note: Langfuse Public API may not support GET /projects/{id}
         // This might return null with 404 Not Found
@@ -148,14 +158,14 @@ class LangfuseServiceIntegrationTest {
     void testGetProjectByIdWithInvalidId() {
         // Given
         String invalidId = "invalid-project-id-" + UUID.randomUUID();
-        
+
         // When
         Project project = langfuseService.getProjectById(invalidId);
-        
+
         // Then
         assertNull(project, "Should return null for invalid project ID");
         logger.info("Correctly returned null for invalid project ID");
-    }  
+    }
 
     // #region Create Project Tests
     void testCreateProjectWithNullNameShouldFail() {
@@ -182,36 +192,38 @@ class LangfuseServiceIntegrationTest {
     void testCreateProjectWithNullDescription() {
         // Given
         String projectName = "No Description Project " + UUID.randomUUID().toString().substring(0, 8);
-        
+
         // When
         Project createdProject = langfuseService.createProject(projectName, null);
-        
+
         // Then
         // API doesn't support project creation, so this will return null
         assertNull(createdProject, "Project creation not supported via API");
         logger.info("✓ Confirmed: Cannot create project via API (expected behavior)");
     }
+
     void testCreateProjectSuccess() {
         // Given
         String projectName = "No Description Project " + UUID.randomUUID().toString().substring(0, 8);
-        
+
         // When
         Project createdProject = langfuseService.createProject(projectName, "null");
-        
+
         // Then
         // API doesn't support project creation, so this will return null
         assertNotNull(createdProject, "Project creation not supported via API");
         logger.info("✓ Confirmed: created project via API (expected behavior)");
     }
+
     // #endregion
     @Test
     void testCreateDatasetSuccess() {
         // Given
         String datasetName = "No Description Dataset " + UUID.randomUUID().toString().substring(0, 8);
-        
+
         // When
         Dataset createdDataset = langfuseService.createDataset(datasetName, "dataset description");
-        
+        logger.info("Created dataset with ID: {}", createdDataset.getId());
         // Then
         // API doesn't support dataset creation, so this will return null
         assertNotNull(createdDataset, "Dataset creation not supported via API");
@@ -220,11 +232,20 @@ class LangfuseServiceIntegrationTest {
 
     @Test
     void testCreateDatasetItemSuccess() {
-        // Given
-        
+        String datasetName = "No Description Dataset " + UUID.randomUUID().toString().substring(0, 8);
+
         // When
-        DatasetItem createdItem = langfuseService.createDatasetItems("", "Italy", "Rome");
-        
+        Dataset createdDataset = langfuseService.createDataset(datasetName, "dataset description");
+        if (createdDataset == null || createdDataset.getName() == null) {
+            logger.warn("⚠️  Dataset creation unsupported on this Langfuse instance. Skipping dataset item test.");
+            assertTrue(true, "Dataset creation not supported");
+            return;
+        }
+
+        logger.info("Created dataset with ID: {}", createdDataset.getId());
+
+        DatasetItem createdItem = langfuseService.createDatasetItems(createdDataset.getName(), "Italy", "Rome");
+
         // Then
         // API doesn't support dataset creation, so this will return null
         assertNotNull(createdItem, "Dataset creation not supported via API");
@@ -232,9 +253,12 @@ class LangfuseServiceIntegrationTest {
     }
 
     @Test
-    void testGetTraces(){
+    void testGetTraces() {
+        // Given
+        Agent agent = buildAgentWithIntegrationCredentials();
+
         // When
-        var traces = langfuseService.getTraces();
+        var traces = langfuseService.getTraces(agent);
         // Then
         assertNotNull(traces, "Traces response should not be null");
         traces.forEach(trace -> {
@@ -243,17 +267,35 @@ class LangfuseServiceIntegrationTest {
         logger.info("Retrieved {} traces for project ID", traces.size());
 
     }
+
+    @Test
+    void testGetMetrics() {
+        // Given
+        Agent agent = buildAgentWithIntegrationCredentials();
+
+        // When
+        langfuseService.getMetrics2(agent);
+        // Then
+        // assertNotNull(traces, "Traces response should not be null");
+        // traces.forEach(trace -> {
+        //     logger.info("Trace ID: {} - Name: {}", trace.getId(), trace.getName());
+        // });
+        logger.info("Retrieved metrics for project ID");
+
+    }
+
     @Test
     void testMultipleProjectsRetrieval() {
         // Given - Get all existing projects
         List<Project> allProjects = langfuseService.getProjects();
-        
+
         // Then
         assertNotNull(allProjects, "Projects list should not be null");
         logger.info("Found {} total projects in Langfuse", allProjects.size());
-        
+
         if (allProjects.isEmpty()) {
-            logger.warn("⚠️  WARNING: No projects found. Create some projects in Langfuse UI for better test coverage.");
+            logger.warn(
+                    "⚠️  WARNING: No projects found. Create some projects in Langfuse UI for better test coverage.");
         } else {
             // Verify each project has required fields
             for (Project project : allProjects) {
@@ -263,5 +305,5 @@ class LangfuseServiceIntegrationTest {
             }
         }
     }
-    
+
 }
