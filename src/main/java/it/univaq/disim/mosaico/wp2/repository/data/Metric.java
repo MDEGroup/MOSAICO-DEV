@@ -6,7 +6,11 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+
+import java.util.Optional;
 import java.util.UUID;
+
+import it.univaq.disim.mosaico.wp2.repository.data.enums.MetricType;
 
 /**
  * Metric class for MOSAICO taxonomy.
@@ -20,18 +24,26 @@ public class Metric {
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id", nullable = false)
     private String id;
+    private MetricType type;
+   
 
     private String name;
-    private float metric_value;
+    private Float floatValue;
+    private Boolean booleanValue;
+    private String stringValue;
+    // private Optional<> floatValue;
     private String unit;
+
 
     public Metric() {
     }
 
-    public Metric(String id, String name, float value, String unit) {
+    public Metric(String id, String name, Float floatValue, Boolean booleanValue, String stringValue, String unit) {
         this.id = (id == null) ? UUID.randomUUID().toString() : id;
         this.name = name;
-        this.metric_value = value;
+        this.floatValue = floatValue;
+        this.booleanValue = booleanValue;
+        this.stringValue = stringValue;
         this.unit = unit;
     }
 
@@ -43,13 +55,7 @@ public class Metric {
         this.name = name;
     }
 
-    public float getMetric_value() {
-        return metric_value;
-    }
-
-    public void setMetric_value(float metric_value) {
-        this.metric_value = metric_value;
-    }
+   
 
     public String getUnit() {
         return unit;
@@ -65,5 +71,35 @@ public class Metric {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public Optional<Float> getFloatValue() {
+        return Optional.ofNullable(floatValue);
+    }
+
+    public void setFloatValue(Float floatValue) {
+        this.floatValue = floatValue;
+    }
+
+    public Optional<Boolean> getBooleanValue() {
+        return Optional.ofNullable(booleanValue);
+    }
+
+    public void setBooleanValue(Boolean booleanValue) {
+        this.booleanValue = booleanValue;
+    }
+
+    public Optional<String> getStringValue() {
+        return Optional.ofNullable(stringValue);
+    }
+
+    public void setStringValue(String stringValue) {
+        this.stringValue = stringValue;
+    }
+     public MetricType getType() {
+        return type;
+    }
+    public void setType(MetricType type) {
+        this.type = type;
     }
 }

@@ -4,16 +4,26 @@ import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import com.langfuse.client.resources.commons.types.TraceWithFullDetails;
+
+import it.univaq.disim.mosaico.wp2.repository.data.Agent;
 import it.univaq.disim.mosaico.wp2.repository.data.Benchmark;
 import it.univaq.disim.mosaico.wp2.repository.repository.BenchmarkRepository;
 import it.univaq.disim.mosaico.wp2.repository.service.BenchmarkService;
+import it.univaq.disim.mosaico.wp2.repository.service.LangfuseService;
+import it.univaq.disim.mosaico.wp2.repository.service.MetricService;
 
 /**
  * Implementation of BenchmarkService.
  */
 @Service
 public class BenchmarkServiceImpl implements BenchmarkService {
-    
+    @Autowired
+    private LangfuseService langfuseService;
+
+    @Autowired
+    private MetricService metricService;
     @Autowired
     private BenchmarkRepository benchmarkRepository;
     
@@ -45,5 +55,23 @@ public class BenchmarkServiceImpl implements BenchmarkService {
     @Override
     public Benchmark findByProtocolVersion(String protocolVersion) {
         return benchmarkRepository.findByProtocolVersion(protocolVersion);
+    }
+
+    @Override
+    public List<Benchmark> findByEvaluates_Id(String agentId) {
+        return benchmarkRepository.findByEvaluates_Id(agentId);
+    }
+
+    @Override
+    public void computeBenchmarkMetrics(Benchmark benchmark, Agent agent) {
+        List<Benchmark> benchmarks = findByEvaluates_Id(agent.getId());
+        for (Benchmark bm : benchmarks) {
+            List<TraceWithFullDetails> traces = langfuseService.getRunBenchmarkTraces(agent, bm.getDatasetRef(), bm.getRunName());
+            
+            for (TraceWithFullDetails trace : traces) {
+                metricService.computeBleuScoreMetric(trace.getAdditionalProperties().get("expected").toString(), trace.getOutput().orElse("").toString());
+            }
+        }
+
     }
 }

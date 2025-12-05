@@ -12,7 +12,7 @@ httpx==0.28.1
 idna==3.11
 importlib_metadata==8.7.0
 jiter==0.11.1
-langfuse==2.60.10
+langfuse==3.10.5
 ollama==0.6.0
 openai==2.7.1
 opentelemetry-api==1.38.0
