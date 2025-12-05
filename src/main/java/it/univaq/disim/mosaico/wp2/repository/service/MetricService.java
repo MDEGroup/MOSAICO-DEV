@@ -45,4 +45,8 @@ public interface MetricService {
      * @throws MetricNotFoundException - if the metric does not exist
      */
     public Metric update(Metric metric);
+
+    public Metric computeRougeScoreMetric(String referenceText, String generatedText);
+
+    public Metric computeBleuScoreMetric(String referenceText, String generatedText);
 }

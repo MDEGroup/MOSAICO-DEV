@@ -6,7 +6,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
 import org.springframework.test.context.ActiveProfiles;
 
+import it.univaq.disim.mosaico.wp2.repository.data.Agent;
 import it.univaq.disim.mosaico.wp2.repository.data.Benchmark;
+import it.univaq.disim.mosaico.wp2.repository.repository.AgentRepository;
 import it.univaq.disim.mosaico.wp2.repository.repository.BenchmarkRepository;
 
 import java.util.List;
@@ -23,6 +25,9 @@ public class BenchmarkRepositoryTest {
 
     @Autowired
     private BenchmarkRepository benchmarkRepository;
+
+    @Autowired
+    private AgentRepository agentRepository;
     
     private Benchmark testBenchmark1;
     private Benchmark testBenchmark2;
@@ -30,6 +35,7 @@ public class BenchmarkRepositoryTest {
     @BeforeEach
     void setUp() {
         benchmarkRepository.deleteAll();
+        agentRepository.deleteAll();
         
         testBenchmark1 = createBenchmark(
             "Metadata for code review benchmark",
@@ -56,6 +62,12 @@ public class BenchmarkRepositoryTest {
         benchmark.setTaskDef(taskDef);
         benchmark.setProtocolVersion(protocolVersion);
         return benchmark;
+    }
+
+    private Agent createAgent(String name) {
+        Agent agent = new Agent();
+        agent.setName(name);
+        return agentRepository.save(agent);
     }
     
     @Test
@@ -123,5 +135,24 @@ public class BenchmarkRepositoryTest {
         assertEquals(2, allBenchmarks.size());
         assertTrue(allBenchmarks.stream().anyMatch(b -> b.getDatasetRef().equals("dataset-codeql-001")));
         assertTrue(allBenchmarks.stream().anyMatch(b -> b.getDatasetRef().equals("dataset-junit-002")));
+    }
+
+    @Test
+    void testFindByEvaluatesId() {
+        Agent alpha = createAgent("Alpha");
+        Agent beta = createAgent("Beta");
+
+        testBenchmark1.setEvaluates(List.of(alpha));
+        testBenchmark2.setEvaluates(List.of(beta));
+        benchmarkRepository.save(testBenchmark1);
+        benchmarkRepository.save(testBenchmark2);
+
+        List<Benchmark> alphaBenchmarks = benchmarkRepository.findByEvaluates_Id(alpha.getId());
+        List<Benchmark> betaBenchmarks = benchmarkRepository.findByEvaluates_Id(beta.getId());
+
+        assertEquals(1, alphaBenchmarks.size());
+        assertEquals("dataset-codeql-001", alphaBenchmarks.get(0).getDatasetRef());
+        assertEquals(1, betaBenchmarks.size());
+        assertEquals("dataset-junit-002", betaBenchmarks.get(0).getDatasetRef());
     }
 }

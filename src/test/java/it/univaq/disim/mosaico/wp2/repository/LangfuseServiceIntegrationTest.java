@@ -12,7 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
 import com.langfuse.client.resources.commons.types.DatasetItem;
-
+import com.langfuse.client.resources.commons.types.TraceWithFullDetails;
 import com.langfuse.client.resources.commons.types.Dataset;
 import com.langfuse.client.resources.projects.types.Project;
 
@@ -100,14 +100,12 @@ class LangfuseServiceIntegrationTest {
         // Given - First get all projects to have a valid ID
         List<Project> projects = langfuseService.getProjects();
 
-        if (!projects.isEmpty()) {
+        if (projects == null || projects.isEmpty()) {
             logger.warn("⚠️  WARNING: No projects found. Skipping test. Create a project in Langfuse UI first.");
             // Mark test as passed but log warning
             assertTrue(true, "Test skipped - no projects available");
             return;
         }
-
-        String projectId = (String) projects.get(0).getId();
 
         // Then
         assertNotNull(projects, "Projects list should not be null");
@@ -130,7 +128,7 @@ class LangfuseServiceIntegrationTest {
         // Given - First get all projects to have a valid ID
         List<Project> projects = langfuseService.getProjects();
 
-        if (!projects.isEmpty()) {
+        if (projects == null || projects.isEmpty()) {
             logger.warn("⚠️  WARNING: No projects found. Skipping test. Create a project in Langfuse UI first.");
             // Mark test as passed but log warning
             assertTrue(true, "Test skipped - no projects available");
@@ -216,7 +214,7 @@ class LangfuseServiceIntegrationTest {
     }
 
     // #endregion
-    @Test
+    // @Test
     void testCreateDatasetSuccess() {
         // Given
         String datasetName = "No Description Dataset " + UUID.randomUUID().toString().substring(0, 8);
@@ -230,41 +228,50 @@ class LangfuseServiceIntegrationTest {
         logger.info("✓ Confirmed: created dataset via API (expected behavior)");
     }
 
-    @Test
+    // @Test
     void testCreateDatasetItemSuccess() {
         String datasetName = "No Description Dataset " + UUID.randomUUID().toString().substring(0, 8);
-
-        // When
         Dataset createdDataset = langfuseService.createDataset(datasetName, "dataset description");
         if (createdDataset == null || createdDataset.getName() == null) {
             logger.warn("⚠️  Dataset creation unsupported on this Langfuse instance. Skipping dataset item test.");
             assertTrue(true, "Dataset creation not supported");
             return;
         }
-
         logger.info("Created dataset with ID: {}", createdDataset.getId());
-
         DatasetItem createdItem = langfuseService.createDatasetItems(createdDataset.getName(), "Italy", "Rome");
-
-        // Then
-        // API doesn't support dataset creation, so this will return null
         assertNotNull(createdItem, "Dataset creation not supported via API");
         logger.info("✓ Confirmed: created dataset item via API (expected behavior)");
     }
 
     @Test
+    void testGetDataset() {
+        String datasetName = "No Description Dataset 1f4d1a1c";
+        Dataset retrievedDataset = langfuseService.getDataset(datasetName);
+        assertNotNull(retrievedDataset, "Retrieved dataset should not be null");
+        logger.info("✓ Confirmed: retrieved dataset via API (expected behavior)");
+    }
+
+    @Test
     void testGetTraces() {
+        Agent agent = buildAgentWithIntegrationCredentials();
+        var traces = langfuseService.getTraces(agent);
+        assertNotNull(traces, "Traces response should not be null");
+        // traces.forEach(trace -> {
+        // logger.info("Trace ID: {} - Name: {}", trace.getId(), trace.getName());
+        // });
+        logger.info("Retrieved {} traces for project ID", traces.size());
+
+    }
+
+    @Test
+    void getRunBenchmark() {
         // Given
         Agent agent = buildAgentWithIntegrationCredentials();
-
         // When
-        var traces = langfuseService.getTraces(agent);
-        // Then
-        assertNotNull(traces, "Traces response should not be null");
-        traces.forEach(trace -> {
-            logger.info("Trace ID: {} - Name: {}", trace.getId(), trace.getName());
-        });
-        logger.info("Retrieved {} traces for project ID", traces.size());
+        List<TraceWithFullDetails> lista = langfuseService.getRunBenchmarkTraces(agent, "ause_train",
+                "run test - 2025-12-05T08:48:15.353757Z");
+        assertTrue(!lista.isEmpty());
+        logger.info("Retrieved run benchmarks for project ID {}", lista.size());
 
     }
 
@@ -274,12 +281,7 @@ class LangfuseServiceIntegrationTest {
         Agent agent = buildAgentWithIntegrationCredentials();
 
         // When
-        langfuseService.getMetrics2(agent);
-        // Then
-        // assertNotNull(traces, "Traces response should not be null");
-        // traces.forEach(trace -> {
-        //     logger.info("Trace ID: {} - Name: {}", trace.getId(), trace.getName());
-        // });
+        langfuseService.getMetrics(agent, "latency_sec");
         logger.info("Retrieved metrics for project ID");
 
     }

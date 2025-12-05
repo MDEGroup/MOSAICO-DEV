@@ -1,5 +1,7 @@
 package it.univaq.disim.mosaico.wp2.repository.service;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -12,20 +14,28 @@ import com.langfuse.client.core.LangfuseClientApiException;
 import com.langfuse.client.core.RequestOptions;
 import com.langfuse.client.resources.commons.types.Dataset;
 import com.langfuse.client.resources.commons.types.DatasetItem;
+import com.langfuse.client.resources.commons.types.DatasetRunWithItems;
 import com.langfuse.client.resources.commons.types.Score;
+import com.langfuse.client.resources.commons.types.Trace;
 import com.langfuse.client.resources.commons.types.NumericScore;
 import com.langfuse.client.resources.commons.types.TraceWithDetails;
+import com.langfuse.client.resources.commons.types.TraceWithFullDetails;
 import com.langfuse.client.resources.datasetitems.types.CreateDatasetItemRequest;
 import com.langfuse.client.resources.datasets.types.CreateDatasetRequest;
+import com.langfuse.client.resources.datasets.types.PaginatedDatasets;
 import com.langfuse.client.resources.metrics.requests.GetMetricsRequest;
 import com.langfuse.client.resources.metrics.types.MetricsResponse;
 import com.langfuse.client.resources.projects.ProjectsClient;
 import com.langfuse.client.resources.projects.requests.CreateProjectRequest;
 import com.langfuse.client.resources.projects.types.Project;
+import com.langfuse.client.resources.scorev2.requests.GetScoresRequest;
+import com.langfuse.client.resources.scorev2.types.GetScoresResponse;
 import com.langfuse.client.resources.trace.requests.GetTracesRequest;
+import com.langfuse.client.resources.utils.pagination.types.MetaResponse;
 
 import it.univaq.disim.mosaico.wp2.repository.config.LangfuseProperties;
 import it.univaq.disim.mosaico.wp2.repository.data.Agent;
+import it.univaq.disim.mosaico.wp2.repository.data.Metric;
 
 /**
  * Service for managing Langfuse projects.
@@ -61,19 +71,23 @@ public class LangfuseService {
     public List<Project> getProjects() {
         if (!isEnabled()) {
             logger.warn("Langfuse is not enabled, returning empty project list");
-            return null;
+            return Collections.emptyList();
         }
 
         try {
             LangfuseClient client = buildDefaultClient();
             if (client == null) {
-                return null;
+                return Collections.emptyList();
             }
             ProjectsClient pips = client.projects();
             return pips.get().getData();
         } catch (LangfuseClientApiException error) {
-            System.out.println("ERRORE" + error.getMessage());
-            return null;
+            if (isNotFound(error)) {
+                logNotFound("listing Langfuse projects", error);
+                return Collections.emptyList();
+            }
+            logger.warn("Failed to load Langfuse projects: {}", error.getMessage());
+            return Collections.emptyList();
         }
 
     }
@@ -94,28 +108,54 @@ public class LangfuseService {
         if (client == null) {
             return null;
         }
-        Project project = client.projects().get().getData().stream().filter(p -> p.getId().equals(projectId))
-                .findFirst().orElse(null);
-        if (project != null) {
-            logger.info("Retrieved project {} from Langfuse", projectId);
+        try {
+            Project project = client.projects().get().getData().stream().filter(p -> p.getId().equals(projectId))
+                    .findFirst().orElse(null);
+            if (project != null) {
+                logger.info("Retrieved project {} from Langfuse", projectId);
+            }
+            return project;
+        } catch (LangfuseClientApiException ex) {
+            if (isNotFound(ex)) {
+                logNotFound("fetching project " + projectId, ex);
+                return null;
+            }
+            throw ex;
         }
-        return project;
     }
 
     public List<TraceWithDetails> getTraces(Agent agent) {
         if (agent == null) {
             logger.warn("Cannot load Langfuse traces: agent is null");
-            return null;
+            return Collections.emptyList();
         }
 
         LangfuseClient client = buildClient(agent.getLlangfuseUrl(), agent.getLlangfusePublicKey(),
                 agent.getLlangfuseSecretKey());
         if (client == null) {
-            return null;
+            return Collections.emptyList();
         }
+        try {
+            MetaResponse numb_of_pages = client.trace().list(GetTracesRequest.builder().name(agent.getLlangfuseProjectName()).build()).getMeta();
+            List<TraceWithDetails> traces = new ArrayList<>();
+            for (int i = 1; i <= numb_of_pages.getTotalPages(); i++) {
+                traces.addAll(client.trace().list(GetTracesRequest.builder().page(i).name(agent.getLlangfuseProjectName()).build()).getData());
+            }
 
-        return client.trace().list(GetTracesRequest.builder().name(agent.getLlangfuseProjectName()).build()).getData();
+            return traces;
+        } catch (LangfuseClientApiException ex) {
+            if (isNotFound(ex)) {
+                logNotFound("loading traces for project " + agent.getLlangfuseProjectName(), ex);
+                return Collections.emptyList();
+            }
+            throw ex;
+        }
     }
+
+
+
+
+ 
 
     /**
      * Create a new project in Langfuse.
@@ -132,89 +172,203 @@ public class LangfuseService {
         if (client == null) {
             return null;
         }
-        Project project = client.projects()
-                .create(CreateProjectRequest.builder().name("agent name").retention(3).build());
+        try {
+            Project project = client.projects()
+                    .create(CreateProjectRequest.builder().name("agent name").retention(3).build());
 
-        return project;
-    }
-
-    public void getMetrics(Agent agent) {
-        if (agent == null) {
-            logger.warn("Cannot load Langfuse metrics: agent is null");
-            return;
-        }
-
-        LangfuseClient client = buildClient(agent.getLlangfuseUrl(), agent.getLlangfusePublicKey(),
-                agent.getLlangfuseSecretKey());
-        if (client == null) {
-            return;
-        }
-        String query = """
-                {
-                  "view": "traces",
-                  "metrics": [
-                    {"measure": "latency_sec", "aggregation": "count"}
-                  ],
-                  "dimensions": [
-                    {"field": "name"}
-                  ],
-                  "filters": [],
-                  "fromTimestamp": "2025-05-01T00:00:00Z",
-                  "toTimestamp": "2025-12-13T00:00:00Z"
-                }
-                """;
-        MetricsResponse response = client.metrics()
-                .metrics(GetMetricsRequest.builder().query(query).build());
-        List<Map<String, Object>> metricsData = response.getData();
-        for (Map<String, Object> row : metricsData) {
-            for (Map.Entry<String, Object> entry : row.entrySet()) {
-                logger.info(entry.getKey() + ": " + entry.getValue());
+            return project;
+        } catch (LangfuseClientApiException ex) {
+            if (isNotFound(ex)) {
+                logNotFound("creating project " + projectName, ex);
+                return null;
             }
+            throw ex;
         }
-        // TO BE IMPLEMENTED
     }
 
-    public void getMetrics2(Agent agent) {
+    // public void getMetrics(Agent agent) {
+    //     if (agent == null) {
+    //         logger.warn("Cannot load Langfuse metrics: agent is null");
+    //         return;
+    //     }
+
+    //     LangfuseClient client = buildClient(agent.getLlangfuseUrl(), agent.getLlangfusePublicKey(),
+    //             agent.getLlangfuseSecretKey());
+    //     if (client == null) {
+    //         return;
+    //     }
+    //     String query = """
+    //             {
+    //               "view": "traces",
+    //               "metrics": [
+    //                 {"measure": "latency_sec", "aggregation": "count"}
+    //               ],
+    //               "dimensions": [
+    //                 {"field": "name"}
+    //               ],
+    //               "filters": [],
+    //               "fromTimestamp": "2025-05-01T00:00:00Z",
+    //               "toTimestamp": "2025-12-13T00:00:00Z"
+    //             }
+    //             """;
+    //     MetricsResponse response = client.metrics()
+    //             .metrics(GetMetricsRequest.builder().query(query).build());
+    //     List<Map<String, Object>> metricsData = response.getData();
+    //     for (Map<String, Object> row : metricsData) {
+    //         for (Map.Entry<String, Object> entry : row.entrySet()) {
+    //             logger.info(entry.getKey() + ": " + entry.getValue());
+    //         }
+    //     }
+    //     // TO BE IMPLEMENTED
+    // }
+
+    public List<Metric> getMetrics(Agent agent) {
         if (agent == null) {
             logger.warn("Cannot load Langfuse metrics: agent is null");
-            return;
+            return new ArrayList<>();
         }
-
         LangfuseClient client = buildClient(agent.getLlangfuseUrl(), agent.getLlangfusePublicKey(),
                 agent.getLlangfuseSecretKey());
         if (client == null) {
-            return;
+            return new ArrayList<>();
         }
         List<TraceWithDetails> traces = getTraces(agent);
+        List<Metric> metrics = new ArrayList<>();
         for (TraceWithDetails trace : traces) {
             for (String scoreId : trace.getScores()) {
                 try {
-
                     Score score = client.scoreV2().getById(scoreId);
                     score.getNumeric().ifPresent(numericScore -> {
                         String scoreName = numericScore.getName();
                         Double scoreValue = numericScore.getValue();
-                        logger.info("Trace {} - {}: {}", trace.getId(), scoreName, scoreValue);
+                        Metric metricRecord = new Metric();
+                        metricRecord.setName(scoreName);
+                        metricRecord.setFloatValue(scoreValue.floatValue());
+                        metrics.add(metricRecord);
                     });
                      score.getBoolean().ifPresent(numericScore -> {
                         String scoreName = numericScore.getName();
                         Double scoreValue = numericScore.getValue();
-                        logger.info("Trace {} - {}: {}", trace.getId(), scoreName, scoreValue);
+                        Metric metricRecord = new Metric();
+                        metricRecord.setName(scoreName);
+                        metricRecord.setBooleanValue(scoreValue.intValue() != 0);
                     });
                 } catch (LangfuseClientApiException ex) {
-                    logger.warn("Failed to load score {} for trace {}: {}", scoreId, trace.getId(), ex.getMessage());
+                    if (isNotFound(ex)) {
+                        logNotFound("loading score " + scoreId, ex);
+                    } else {
+                        logger.warn("Failed to load score {} for trace {}: {}", scoreId, trace.getId(), ex.getMessage());
+                    }
                 }
             }
         }
+        return metrics;
     }
 
-    private void logLatencyScore(TraceWithDetails trace, NumericScore numericScore) {
-        if ("latency_sec".equals(numericScore.getName())) {
-            logger.info("Trace {} - latency_sec score: {}", trace.getId(), numericScore.getValue());
+    public List<Metric> getMetrics(Agent agent, String metric) {
+        if (agent == null) {
+            logger.warn("Cannot load Langfuse metrics: agent is null");
+            return new ArrayList<>();
+        }
+
+        LangfuseClient client = buildClient(agent.getLlangfuseUrl(), agent.getLlangfusePublicKey(),
+                agent.getLlangfuseSecretKey());
+        if (client == null) {
+            return new ArrayList<>();
+        }
+        List<TraceWithDetails> traces = getTraces(agent);
+        List<Metric> metrics = new ArrayList<>();
+        for (TraceWithDetails trace : traces) {
+            for(String scoreId : trace.getScores())
+                try {
+                    Score score = client.scoreV2().getById(scoreId);
+                    Metric metricRecord = new Metric();
+                    score.getNumeric().ifPresent(numericScore -> { 
+                        String scoreName = numericScore.getName();
+                        Double scoreValue = numericScore.getValue();
+                        if(metric.equals(scoreName)){
+                            metricRecord.setName(scoreName);
+                            metricRecord.setFloatValue(scoreValue.floatValue());
+                        }
+                    });
+                        score.getBoolean().ifPresent(numericScore -> {
+                        String scoreName = numericScore.getName();
+                        Double scoreValue = numericScore.getValue();
+                        if(metric.equals(scoreName)){
+                            metricRecord.setName(scoreName);
+                            metricRecord.setBooleanValue(scoreValue.intValue() != 0);   
+                        }
+                    });
+                    metrics.add(metricRecord);
+                } catch (LangfuseClientApiException ex) {
+                    if (isNotFound(ex)) {
+                        logNotFound("loading score for trace " + trace.getId(), ex);
+                    } else {
+                        logger.warn("Failed to load score for trace {}: {}", trace.getId(), ex.getMessage());
+                    }
+                }
+        }
+        return metrics;
+    }
+
+
+    public List<TraceWithFullDetails> getRunBenchmarkTraces(Agent agent, String datasetName, String runName) {
+        // TO BE IMPLEMENTED
+        LangfuseClient client = buildClient(agent.getLlangfuseUrl(), agent.getLlangfusePublicKey(),
+                agent.getLlangfuseSecretKey());
+        List<TraceWithFullDetails> traces = new ArrayList<>();
+        if (client == null) {
+            return traces;
+        }
+        try {
+            DatasetRunWithItems datasetRun = client.datasets().getRun(datasetName, runName, RequestOptions.builder().build());
+            datasetRun.getDatasetRunItems().forEach(item -> {
+                try {
+                    DatasetItem datasetItem = client.datasetItems().get(item.getDatasetItemId());
+                    TraceWithFullDetails trace = client.trace().get(item.getTraceId());
+                    trace.getAdditionalProperties().put("expected", datasetItem.getExpectedOutput());
+                    traces.add(trace);
+                } catch (LangfuseClientApiException ex) {
+                    if (isNotFound(ex)) {
+                        logNotFound("loading trace " + item.getTraceId(), ex);
+                    } else {
+                        throw ex;
+                    }
+                }
+            });
+            return traces;
+        } catch (LangfuseClientApiException ex) {
+            if (isNotFound(ex)) {
+                logNotFound("loading dataset run " + runName, ex);
+                return traces;
+            }
+            throw ex;
         }
     }
-
+    
     public List<Dataset> getDatasets() {
+        if (!isEnabled()) {
+            logger.warn("Langfuse is not enabled, returning empty dataset list");
+            return Collections.emptyList();
+        }
+
+        try {
+            LangfuseClient client = buildDefaultClient();
+            if (client == null) {
+                return Collections.emptyList();
+            }
+            return client.datasets().list().getData();
+        } catch (LangfuseClientApiException error) {
+            if (isNotFound(error)) {
+                logNotFound("listing datasets", error);
+                return Collections.emptyList();
+            }
+            logger.warn("Failed to load datasets: {}", error.getMessage());
+            return Collections.emptyList();
+        }
+
+    }
+    public Dataset getDataset(String dataset) {
         if (!isEnabled()) {
             logger.warn("Langfuse is not enabled, returning empty dataset list");
             return null;
@@ -225,9 +379,13 @@ public class LangfuseService {
             if (client == null) {
                 return null;
             }
-            return client.datasets().list().getData();
+            return client.datasets().get(dataset);
         } catch (LangfuseClientApiException error) {
-            System.out.println("ERRORE" + error.getMessage());
+            if (isNotFound(error)) {
+                logNotFound("fetching dataset " + dataset, error);
+                return null;
+            }
+            logger.warn("Failed to load dataset {}: {}", dataset, error.getMessage());
             return null;
         }
 
@@ -243,14 +401,22 @@ public class LangfuseService {
         if (client == null) {
             return null;
         }
-        DatasetItem createdItems = client.datasetItems().create(
-                CreateDatasetItemRequest.builder()
-                        .datasetName(datasetName)
-                        .input(input)
-                        .expectedOutput(expectedOutput)
-                        .build());
+        try {
+            DatasetItem createdItems = client.datasetItems().create(
+                    CreateDatasetItemRequest.builder()
+                            .datasetName(datasetName)
+                            .input(input)
+                            .expectedOutput(expectedOutput)
+                            .build());
 
-        return createdItems;
+            return createdItems;
+        } catch (LangfuseClientApiException ex) {
+            if (isNotFound(ex)) {
+                logNotFound("creating dataset item in " + datasetName, ex);
+                return null;
+            }
+            throw ex;
+        }
     }
 
     public Dataset createDataset(String datasetName, String description) {
@@ -259,10 +425,18 @@ public class LangfuseService {
         if (client == null) {
             return null;
         }
-        Dataset dataset = client.datasets()
-                .create(CreateDatasetRequest.builder().name(datasetName).description(description).build());
+        try {
+            Dataset dataset = client.datasets()
+                    .create(CreateDatasetRequest.builder().name(datasetName).description(description).build());
 
-        return dataset;
+            return dataset;
+        } catch (LangfuseClientApiException ex) {
+            if (isNotFound(ex)) {
+                logNotFound("creating dataset " + datasetName, ex);
+                return null;
+            }
+            throw ex;
+        }
     }
 
     private LangfuseClient buildDefaultClient() {
@@ -282,5 +456,13 @@ public class LangfuseService {
                 .url(baseUrl)
                 .credentials(publicKey, secretKey)
                 .build();
+    }
+
+    private boolean isNotFound(LangfuseClientApiException ex) {
+        return ex != null && ex.statusCode() == 404;
+    }
+
+    private void logNotFound(String action, LangfuseClientApiException ex) {
+        logger.info("Langfuse returned 404 while {}: {}", action, ex.getMessage());
     }
 }

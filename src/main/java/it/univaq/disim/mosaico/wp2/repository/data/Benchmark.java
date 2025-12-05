@@ -2,11 +2,16 @@ package it.univaq.disim.mosaico.wp2.repository.data;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -25,27 +30,33 @@ public class Benchmark {
 
     private String metadata;
     private String features;
-    private String datasetRef;
-    private String taskDef;
-    private String protocolVersion;
-    @Transient
-    private List<Agent> evaluates;
+        private String datasetRef;
+        private String taskDef;
+        private String protocolVersion;
+
+        @ManyToMany(fetch = FetchType.LAZY)
+        @JoinTable(name = "benchmark_evaluates",
+            joinColumns = @JoinColumn(name = "benchmark_id"),
+            inverseJoinColumns = @JoinColumn(name = "agent_id"))
+        private List<Agent> evaluates = new ArrayList<>();
 
     @Transient
     private List<PerformanceKPI> measures;
+    private String runName;
 
     @Transient
     private List<Skill> assess;
-    public Benchmark(String id, String metadata, String features, String datasetRef, String taskDef, String protocolVersion, List<Agent> evaluates, List<PerformanceKPI> measures, List<Skill> assess) {
+    public Benchmark(String id, String metadata, String features, String datasetRef, String taskDef, String protocolVersion, List<Agent> evaluates, List<PerformanceKPI> measures, List<Skill> assess, String runName) {
         this.id = (id == null) ? UUID.randomUUID().toString() : id;
         this.metadata = metadata;
         this.features = features;
         this.datasetRef = datasetRef;
         this.taskDef = taskDef;
         this.protocolVersion = protocolVersion;
-        this.evaluates = evaluates;
+        this.evaluates = evaluates == null ? new ArrayList<>() : evaluates;
         this.measures = measures;
         this.assess = assess;
+        this.runName = runName;
     }
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
@@ -65,5 +76,20 @@ public class Benchmark {
 
     public String getProtocolVersion() { return protocolVersion; }
     public void setProtocolVersion(String protocolVersion) { this.protocolVersion = protocolVersion; }
+
+    public List<Agent> getEvaluates() {
+        return evaluates;
+    }
+
+    public void setEvaluates(List<Agent> evaluates) {
+        this.evaluates = evaluates;
+    }
     
+    public String getRunName() {
+        return runName;
+    }
+
+    public void setRunName(String runName) {
+        this.runName = runName;
+    }
 }
