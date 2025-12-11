@@ -1,8 +1,13 @@
 package it.univaq.disim.mosaico.wp2.repository.mcp;
 
 import java.util.List;
+import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springaicommunity.mcp.annotation.McpResource;
+import org.springaicommunity.mcp.annotation.McpTool;
+import org.springaicommunity.mcp.annotation.McpToolParam;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -27,6 +32,7 @@ public class AgentMCP {
 
     private final AgentService agentService;
     private final ObjectMapper objectMapper;
+    Logger logger = LoggerFactory.getLogger(AgentMCP.class);
 
     // Constructor injection makes the class easier to test (we can pass a mock
     // AgentService)
@@ -62,10 +68,10 @@ public class AgentMCP {
                 List.of(), // memory
                 List.of(), // interactionProtocols
                 List.of() // agentConsumption
-            );
-            codeReviewAgent.setId("agent1");
+        );
+        codeReviewAgent.setId("agent1");
 
-            Agent summaryAgent = new Agent(
+        Agent summaryAgent = new Agent(
                 "Code Summarization",
                 "AI agent specialized in code summarization",
                 "v1.0",
@@ -83,10 +89,10 @@ public class AgentMCP {
                 List.of(), // memory
                 List.of(), // interactionProtocols
                 List.of() // agentConsumption
-            );
-            summaryAgent.setId("agent2");
+        );
+        summaryAgent.setId("agent2");
 
-            List<Agent> agents = List.of(codeReviewAgent, summaryAgent);
+        List<Agent> agents = List.of(codeReviewAgent, summaryAgent);
         String json;
         try {
             json = objectMapper.writeValueAsString(agents);
@@ -130,8 +136,8 @@ public class AgentMCP {
                 List.of(), // memory
                 List.of(), // interactionProtocols
                 List.of() // agentConsumption
-            );
-            agent.setId(id);
+        );
+        agent.setId(id);
         String json;
         try {
             json = objectMapper.writeValueAsString(agent);
@@ -144,6 +150,31 @@ public class AgentMCP {
                 json // payload testuale
         );
         return new ReadResourceResult(List.of(contents));
+
+    }
+
+    @McpTool(name = "AgentMCPTool", description = "Tool to search MOSAICO Agents via MCP")
+    public String searchAgents(@McpToolParam String query, @McpToolParam int topK) {
+
+        if (query == null || query.isBlank()) {
+            throw new IllegalArgumentException("query must not be empty");
+        }
+        if (topK <= 0) {
+            throw new IllegalArgumentException("topK must be greater than zero");
+        }
+        logger.info("Query: {}", query);
+        logger.info("TopK: {}", topK);
+
+        List<Agent> results = agentService.semanticSearch(query, Map.of(), topK);
+        logger.info("Result size: {}", results.size());
+        String json;
+        try {
+            json = objectMapper.writeValueAsString(results);
+        } catch (JsonProcessingException e) {
+            json = "[]"; // Fallback a lista vuota in caso di errore
+        }
+        logger.info(json);
+        return json;
 
     }
 }

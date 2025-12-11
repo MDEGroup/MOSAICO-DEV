@@ -1,0 +1,402 @@
+@startuml
+hide empty members
+skinparam classAttributeIconSize 0
+package "it.univaq.disim.mosaico.wp2.repository.data" as data_pkg {
+  class Agent {
+    String id
+    String name
+    String description
+    String version
+    Provider provider
+    String license
+    String beliefs
+    String intentions
+    String desires
+    String role
+    String objective
+    String llangfuseSecretKey
+    String llangfuseUrl
+    String llangfusePublicKey
+    String llangfuseProjectName
+    List<IOModality> ioModalities
+    String backStory
+    List<Skill> skills
+    List<Tool> exploits
+    List<Memory> has
+    List<InteractionProtocol> supports
+    List<AgentConsumption> consumptions
+  }
+  class AgentConsumption {
+    String id
+    String hyperparameter
+    List<InputParameter> inputParameters
+    List<OutputStructure> outputStructures
+  }
+  class AgentDefinition {
+    String id
+    String name
+    String description
+    String type
+    Map<String,Object> config
+    List<String> capabilities
+    Map<String,Object> parameters
+    List<String> requiredTools
+    String initializationScript
+    int complexityLevel
+  }
+  class AgentUsage {
+    String id
+    LocalDateTime timestamp
+    long durationMs
+    Agent agent
+    AgentConsumption via
+    List<HumanFeedback> feedback
+    UsageBreakdown details
+    List<MonetaryCharge> incurs
+  }
+  class BehaviorDefinition {
+    String id
+    String name
+    String description
+    String type
+    List<Map<String, Object>> goals
+    Map<String, Object> triggers
+    String algorithmDescription
+    Map<String, Object> parameters
+    List<String> requiredCapabilities
+  }
+  class Benchmark {
+    String id
+    String metadata
+    String features
+    String datasetRef
+    String taskDef
+    String protocolVersion
+    List<Agent> evaluates
+    List<PerformanceKPI> measures
+    String runName
+    List<Skill> assess
+  }
+  class CollaborationAgent {
+    String id
+    String name
+    String description
+    String version
+    Provider provider
+    String license
+    String beliefs
+    String intentions
+    String desires
+    String role
+    String objective
+    CollaborationPattern collaborationPattern
+  }
+  class CommunicationProtocol {
+    String id
+    String name
+    String description
+    String version
+    String format
+    String transportLayer
+    Map<String, Object> messageSchema
+    boolean encryption
+    int messageTimeout
+    boolean distributed
+  }
+  class CoordinationPattern {
+    String id
+    String name
+    String description
+    String patternType
+    List<String> participatingAgents
+    Map<String, Object> roles
+    String flowDefinition
+    List<String> rules
+    int complexityLevel
+    List<String> supportedAgentTypes
+    List<String> supportedTools
+    String communicationProtocol
+    List<String> domains
+  }
+  class Environment {
+    String id
+    String name
+    String description
+    Map<String, Object> properties
+    List<Agent> agents
+    List<Rule> environmentRules
+  }
+  class HumanFeedback {
+    String id
+    FeedbackKind kind
+    String source
+    String rationale
+  }
+  class InputParameter {
+    String name
+    String value
+  }
+  class InteractionProtocol {
+    String id
+    String name
+    String version
+    String specUrl
+    String description
+  }
+  class KeyValue {
+    String name
+    String value
+  }
+  class Memory {
+    String id
+    MemoryType type
+    MemoryScope scope
+    String db
+  }
+  class Metric {
+    String id
+    MetricType type
+    String name
+    Float floatValue
+    Boolean booleanValue
+    String stringValue
+    Optional<> floatValue
+    String unit
+  }
+  class Model {
+    String id
+    String name
+    String description
+    String version
+    String author
+    String license
+    String modelType
+    List<String> tags
+    Map<String, String> config
+    String architecture
+    List<AgentDefinition> agents
+    List<ToolDefinition> tools
+    List<CoordinationPattern> coordinationPatterns
+    List<CommunicationProtocol> communicationProtocols
+    MonitoringConfig monitoringConfig
+    List<BehaviorDefinition> behaviors
+    List<Metric> metrics
+    String trainingFramework
+    String trainingCompute
+    List<String> limitations
+    List<String> useCases
+    long downloadCount
+    String repositoryUrl
+    Instant lastUpdated
+    Instant createdAt
+  }
+  class MonetaryCharge {
+    UUID id
+    BigDecimal amount
+    String currency
+  }
+  class MonitoringConfig {
+    String id
+    boolean enabled
+    int samplingRate
+    List<String> trackedEvents
+    Map<String, Object> alertRules
+    String telemetryEndpoint
+    boolean collectPerformanceMetrics
+    boolean collectUsageStatistics
+    int dataRetentionDays
+  }
+  class OutputStructure {
+    String name
+    String value
+  }
+  class PerformanceKPI {
+    String id
+    String description
+    List<Metric> includes
+  }
+  class Provider {
+    String id
+    String name
+    String description
+    String contactUrl
+  }
+  class Rule {
+    String id
+    String name
+    String description
+    String condition
+    String action
+    boolean enabled
+  }
+  class Skill {
+    String id
+    String name
+    String description
+    ProficiencyLevel level
+    LocalDateTime lastEvaluated
+    List<String> softEngTaskIds
+  }
+  class SoftEngTask {
+    String id
+    String name
+    String description
+    SwebokKAId primaryKA
+    List<SwebokKAId> secondaryKAs
+    List<ArtifactType> inputTypes
+    List<ArtifactType> outputTypes
+    List<String> supportedNL
+    List<String> supportedPL
+  }
+  class SolutionAgent {
+    String id
+    String name
+    String description
+    String version
+    Provider provider
+    String license
+    String promptType
+  }
+  class Task {
+    String id
+    String name
+    String description
+    List<Tool> requiredTools
+    Map<String, Object> parameters
+    String precondition
+    String postcondition
+    int estimatedDuration
+  }
+  class Tool {
+    String id
+    String name
+    String description
+    String authMethod
+    String scopes
+    String quotaLimit
+    String rateLimitPolicy
+  }
+  class ToolDefinition {
+    String id
+    String name
+    String description
+    String version
+    String category
+    String apiSchema
+    Map<String,String> config
+    List<String> examples
+    String authenticationMethod
+  }
+  class UsageBreakdown {
+    long promptTokens
+    long completionTokens
+    int requests
+    long bytesIn
+    long bytesOut
+  }
+  package "enums" as it_univaq_disim_mosaico_wp2_repository_data_enums {
+    enum ArtifactType {
+      TEXT
+      CODE
+      MODEL
+      TEST
+      ISSUE
+      DOCUMENTATION
+    }
+    enum CollaborationPattern {
+      CHAIN
+      BROADCAST
+      ROUND_ROBIN
+    }
+    enum FeedbackKind {
+      POSITIVE
+    }
+    enum IOModality {
+      TEXT
+      CODE
+      IMAGE
+    }
+    enum MemoryScope {
+      AGENT
+    }
+    enum MemoryType {
+      SHORT_TERM
+    }
+    enum MetricType {
+      ROUGE
+      BLEU
+      ACCURACY
+      PRECISION
+      RECALL
+    }
+    enum ProficiencyLevel {
+      AWARENESS
+      WORKING
+      ADVANCED
+    }
+    enum SwebokKAId {
+      REQUIREMENTS
+      ARCHITECTURE
+      DESIGN
+      CONSTRUCTION
+      TESTING
+      OPERATION
+      MAINTENANCE
+      CONFIGURATION_MANAGEMENT
+      ENGINEERING_MANAGEMENT
+      PROCESS
+      MODELS_AND_METHODS
+      QUALITY
+      SECURITY
+      PROFESSIONAL_PRACTICE
+      ECONOMICS
+      COMPUTING_FOUNDATIONS
+      MATHEMATICAL_FOUNDATIONS
+    }
+    enum TelemetryKind {
+      LOG
+      TRACE
+    }
+  }
+}
+Agent "1" --> Provider : provider
+Agent "*" --> IOModality : ioModalities
+Agent "*" --> Skill : skills
+Agent "*" --> Tool : exploits
+Agent "*" --> Memory : has
+Agent "*" --> InteractionProtocol : supports
+Agent "*" --> AgentConsumption : consumptions
+AgentConsumption "*" --> InputParameter : inputParameters
+AgentConsumption "*" --> OutputStructure : outputStructures
+AgentUsage "1" --> Agent : agent
+AgentUsage "1" --> AgentConsumption : via
+AgentUsage "*" --> HumanFeedback : feedback
+AgentUsage "1" --> UsageBreakdown : details
+AgentUsage "*" --> MonetaryCharge : incurs
+Benchmark "*" --> Agent : evaluates
+Benchmark "*" --> PerformanceKPI : measures
+Benchmark "*" --> Skill : assess
+CollaborationAgent "1" --> Provider : provider
+CollaborationAgent "1" --> CollaborationPattern : collaborationPattern
+Environment "*" --> Agent : agents
+Environment "*" --> Rule : environmentRules
+HumanFeedback "1" --> FeedbackKind : kind
+Memory "1" --> MemoryType : type
+Memory "1" --> MemoryScope : scope
+Metric "1" --> MetricType : type
+Model "*" --> AgentDefinition : agents
+Model "*" --> ToolDefinition : tools
+Model "*" --> CoordinationPattern : coordinationPatterns
+Model "*" --> CommunicationProtocol : communicationProtocols
+Model "1" --> MonitoringConfig : monitoringConfig
+Model "*" --> BehaviorDefinition : behaviors
+Model "*" --> Metric : metrics
+PerformanceKPI "*" --> Metric : includes
+Skill "1" --> ProficiencyLevel : level
+SoftEngTask "1" --> SwebokKAId : primaryKA
+SoftEngTask "*" --> SwebokKAId : secondaryKAs
+SoftEngTask "*" --> ArtifactType : inputTypes
+SoftEngTask "*" --> ArtifactType : outputTypes
+SolutionAgent "1" --> Provider : provider
+Task "*" --> Tool : requiredTools
+@enduml

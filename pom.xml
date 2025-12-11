@@ -105,6 +105,14 @@
 			<artifactId>spring-ai-mcp-annotations</artifactId>
 			<version>1.1.0</version>
 		</dependency>
+		<!-- Ensure macOS-native DNS resolver is available for Netty to avoid UnsatisfiedLinkError -->
+		<dependency>
+			<groupId>io.netty</groupId>
+			<artifactId>netty-resolver-dns-native-macos</artifactId>
+			<classifier>osx-aarch_64</classifier>
+			<scope>runtime</scope>
+		</dependency>
+
 	</dependencies>
 		<repositories>
 		<repository>

@@ -14,12 +14,10 @@ public interface AgentService {
     List<Agent> findAll();
     Optional<Agent> findById(String id);
     Agent save(Agent agent);
-    void deleteById(String id);
-    
+    void deleteById(String id); 
     List<Agent> findByName(String name);
     List<Agent> findByProvider(String providerId);
     List<Agent> findByRole(String role);
     List<Agent> findByIOModality(IOModality ioModality);
-    List<Agent> semanticSearc(String version);
     List<Agent> semanticSearch(String query, Map<String,Object> filters, int topK);
 }

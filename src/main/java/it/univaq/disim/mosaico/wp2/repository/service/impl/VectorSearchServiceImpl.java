@@ -12,6 +12,7 @@ import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Service;
 import it.univaq.disim.mosaico.wp2.repository.service.VectorSearchService;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -100,14 +101,18 @@ public class VectorSearchServiceImpl implements VectorSearchService {
      * contents.
      */
     @Override
-    public List<String> semanticSearch(String query, Map<String, Object> filters, int topK) {
+    public Map<String, String> semanticSearch(String query, Map<String, Object> filters, int topK) {
         List<Document> docs = vectorStore.similaritySearch(
             SearchRequest.query(query).withTopK(topK).withFilterExpression(buildFilterExpression(filters)));
 
         return docs.stream()
                 .filter(doc -> matchesFilters(doc, filters))
-                .map(Document::getContent)
-                .collect(Collectors.toList());
+                .collect(Collectors.toMap(
+                    doc -> (String) doc.getMetadata().get("entityId"), // key = id from metadata
+                    Document::getContent,                         // value = content
+                    (existing, replacement) -> existing,          // in case of duplicate ids, keep the first
+                    LinkedHashMap::new                            // preserve order of results
+            ));
     }
 
     private boolean matchesFilters(Document document, Map<String, Object> filters) {

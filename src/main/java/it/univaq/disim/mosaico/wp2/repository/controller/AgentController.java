@@ -121,8 +121,8 @@ public class AgentController {
         String query = request.getQuery();
         int topK = request.getTopK() == null ? 5 : request.getTopK();
         Map<String, Object> filters = request.getFilters() == null ? Map.of() : request.getFilters();
-
         List<Agent> results = agentService.semanticSearch(query, filters, topK);
+        results.forEach(z -> logger.info(z.toString()));
         return ResponseEntity.ok(results);
     }
 }

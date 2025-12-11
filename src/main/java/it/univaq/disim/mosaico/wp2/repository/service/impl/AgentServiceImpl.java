@@ -91,20 +91,15 @@ public class AgentServiceImpl implements AgentService {
                 .toList();
     }
 
-    @Override
-    public List<Agent> semanticSearc(String version) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'semanticSearc'");
-    }
+
 
     @Override
     public List<Agent> semanticSearch(String query, Map<String, Object> filters, int topK) {
-        filters.put("entityType", "Agent");
-        List<String> results = vectorSearchService.semanticSearch(query, filters, topK);
-        for (String content : results) {
-            System.out.println("Semantic search result content: " + content);
-        }
-        return null;
+        Map<String, String> semanticResMap = vectorSearchService.semanticSearch(query, filters, topK);
+        List<Agent> results = agentRepository.findAllById(
+                semanticResMap.keySet()
+        );
+        System.out.println("Results: " + results.size());
+        return results;
     }
-    
 }

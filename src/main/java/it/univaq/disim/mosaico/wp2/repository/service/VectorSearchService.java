@@ -1,7 +1,6 @@
 package it.univaq.disim.mosaico.wp2.repository.service;
 
 import it.univaq.disim.mosaico.wp2.repository.data.Agent;
-import java.util.List;
 import java.util.Map;
 
 public interface VectorSearchService {
@@ -15,5 +14,5 @@ public interface VectorSearchService {
      * Perform a semantic similarity search and return the matched document
      * contents.
      */
-    public List<String> semanticSearch(String query, Map<String, Object> filters, int topK);
+    public Map<String, String> semanticSearch(String query, Map<String, Object> filters, int topK);
 }
