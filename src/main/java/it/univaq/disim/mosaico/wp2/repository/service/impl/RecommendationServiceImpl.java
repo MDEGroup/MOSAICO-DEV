@@ -517,9 +517,9 @@ public class RecommendationServiceImpl implements RecommendationService {
         double score = 0.0;
         
         // Match distributed execution requirements
-        if (context.isDistributedExecution() && protocol.distributed()) {
+        if (context.isDistributedExecution() && protocol.isDistributed()) {
             score += 0.4;
-        } else if (!context.isDistributedExecution() && !protocol.distributed()) {
+        } else if (!context.isDistributedExecution() && !protocol.isDistributed()) {
             score += 0.3;
         }
         

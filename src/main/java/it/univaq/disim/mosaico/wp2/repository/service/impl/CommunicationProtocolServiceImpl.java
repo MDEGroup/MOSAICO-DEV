@@ -82,8 +82,8 @@ public class CommunicationProtocolServiceImpl implements CommunicationProtocolSe
      * @throws CommunicationProtocolNotFoundException - if the communication protocol does not exist
      */
     public CommunicationProtocol update(CommunicationProtocol communicationProtocol) {
-        if (!communicationProtocolRepository.existsById(communicationProtocol.id())) {
-            throw new CommunicationProtocolNotFoundException(communicationProtocol.id());
+        if (!communicationProtocolRepository.existsById(communicationProtocol.getId())) {
+            throw new CommunicationProtocolNotFoundException(communicationProtocol.getId());
         }
         // Update the communication protocol in the repository
         return communicationProtocolRepository.save(communicationProtocol); 

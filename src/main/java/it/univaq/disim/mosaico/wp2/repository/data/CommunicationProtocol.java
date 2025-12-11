@@ -22,18 +22,66 @@ public class CommunicationProtocol {
     private String id;
 
     private String name;
-    private String description;
+    public String getName() {
+        return name;
+    }
 
+    public void setName(String name) {
+        this.name = name;
+    }
+    private String description;
+    public String getDescription() {
+        return description;
+    }
+    public void setDescription(String description) {
+        this.description = description;
+    }
     private String version;
+    public String getVersion() {
+        return version;
+    }
+    public void setVersion(String version) {
+        this.version = version;
+    }
     private String format;
+    public String getFormat() {
+        return format;
+    }
+    public void setFormat(String format) {
+        this.format = format;
+    }
     private String transportLayer;
+    public String getTransportLayer() {
+        return transportLayer;
+    }
+    public void setTransportLayer(String transportLayer) {
+        this.transportLayer = transportLayer;
+    }
 
     @Transient
     private Map<String, Object> messageSchema;
 
     private boolean encryption;
+    public boolean isEncryption() {
+        return encryption;
+    }
+    public void setEncryption(boolean encryption) {
+        this.encryption = encryption;
+    }
     private int messageTimeout;
+    public int getMessageTimeout() {
+        return messageTimeout;
+    }
+    public void setMessageTimeout(int messageTimeout) {
+        this.messageTimeout = messageTimeout;
+    }
     private boolean distributed;
+    public boolean isDistributed() {
+        return distributed;
+    }
+    public void setDistributed(boolean distributed) {
+        this.distributed = distributed;
+    }
 
     public CommunicationProtocol() {}
 
@@ -50,16 +98,7 @@ public class CommunicationProtocol {
         this.distributed = distributed;
     }
 
-    public String id() { return id; }
-    public String name() { return name; }
-    public String description() { return description; }
-    public String version() { return version; }
-    public String format() { return format; }
-    public String transportLayer() { return transportLayer; }
-    public Map<String, Object> messageSchema() { return messageSchema; }
-    public boolean encryption() { return encryption; }
-    public int messageTimeout() { return messageTimeout; }
-    public boolean distributed() { return distributed; }
+
 
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }

@@ -1,12 +1,11 @@
 package it.univaq.disim.mosaico.wp2.repository;
 
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.ActiveProfiles;
 
 import it.univaq.disim.mosaico.wp2.repository.data.Agent;
@@ -40,6 +39,8 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Test class for AgentRepository.
  */
+@DataJpaTest
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @ActiveProfiles("test")
 public class AgentRepositoryTest {
 
@@ -65,11 +66,6 @@ public class AgentRepositoryTest {
     private List<Memory> exampleMemories;
     private List<InteractionProtocol> exampleProtocols;
     private List<AgentConsumption> exampleConsumptions;
-    @AfterAll
-    static void tearDown(@Autowired AgentRepository agentRepository, @Autowired ProviderRepository providerRepository) {
-        //agentRepository.deleteAll();
-        //providerRepository.deleteAll();
-    }
     @BeforeEach
     void setUp() {
         // agentRepository.deleteAll();

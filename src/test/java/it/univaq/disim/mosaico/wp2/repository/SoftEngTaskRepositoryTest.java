@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.context.ActiveProfiles;
 
 import it.univaq.disim.mosaico.wp2.repository.data.SoftEngTask;
@@ -19,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Test class for SoftEngTaskRepository.
  */
-@DataMongoTest
+@DataJpaTest
 @ActiveProfiles("test")
 public class SoftEngTaskRepositoryTest {
 

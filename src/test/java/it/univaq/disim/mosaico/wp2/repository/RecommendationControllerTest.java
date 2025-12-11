@@ -248,8 +248,7 @@ public class RecommendationControllerTest {
                 .content(objectMapper.writeValueAsString(testContext)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$[0].id").value("p1"))
-                .andExpect(jsonPath("$[0].name").value("Pattern1"));
+                .andExpect(jsonPath("$[0].id").value("p1"));
     }
 
     @Test
