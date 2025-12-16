@@ -96,10 +96,12 @@ public class AgentServiceImpl implements AgentService {
     @Override
     public List<Agent> semanticSearch(String query, Map<String, Object> filters, int topK) {
         Map<String, String> semanticResMap = vectorSearchService.semanticSearch(query, filters, topK);
+        if (semanticResMap == null || semanticResMap.isEmpty()) {
+            return List.of();
+        }
         List<Agent> results = agentRepository.findAllById(
                 semanticResMap.keySet()
         );
-        System.out.println("Results: " + results.size());
         return results;
     }
 }

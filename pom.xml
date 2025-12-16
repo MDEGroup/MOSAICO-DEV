@@ -48,8 +48,6 @@
 			<artifactId>spring-ai-ollama-spring-boot-starter</artifactId>
 		</dependency>
 
-		<!-- Keep MongoDB starter temporarily to allow incremental migration (many classes still use @Document) -->
-		<!-- MongoDB starter removed: all entities and repositories migrated to JPA/Postgres -->
 		<!-- Spring Boot Docker Compose Support -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

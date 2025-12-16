@@ -30,15 +30,13 @@ public class Benchmark {
 
     private String metadata;
     private String features;
-        private String datasetRef;
-        private String taskDef;
-        private String protocolVersion;
+    private String datasetRef;
+    private String taskDef;
+    private String protocolVersion;
 
-        @ManyToMany(fetch = FetchType.LAZY)
-        @JoinTable(name = "benchmark_evaluates",
-            joinColumns = @JoinColumn(name = "benchmark_id"),
-            inverseJoinColumns = @JoinColumn(name = "agent_id"))
-        private List<Agent> evaluates = new ArrayList<>();
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "benchmark_evaluates", joinColumns = @JoinColumn(name = "benchmark_id"), inverseJoinColumns = @JoinColumn(name = "agent_id"))
+    private List<Agent> evaluates = new ArrayList<>();
 
     @Transient
     private List<PerformanceKPI> measures;
@@ -46,7 +44,10 @@ public class Benchmark {
 
     @Transient
     private List<Skill> assess;
-    public Benchmark(String id, String metadata, String features, String datasetRef, String taskDef, String protocolVersion, List<Agent> evaluates, List<PerformanceKPI> measures, List<Skill> assess, String runName) {
+
+    public Benchmark(String id, String metadata, String features, String datasetRef, String taskDef,
+            String protocolVersion, List<Agent> evaluates, List<PerformanceKPI> measures, List<Skill> assess,
+            String runName) {
         this.id = (id == null) ? UUID.randomUUID().toString() : id;
         this.metadata = metadata;
         this.features = features;
@@ -58,24 +59,58 @@ public class Benchmark {
         this.assess = assess;
         this.runName = runName;
     }
-    public String getId() { return id; }
-    public void setId(String id) { this.id = id; }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
     // other getters/setters omitted for brevity
-    public Benchmark() {}
-    public String getMetadata() { return metadata; }
-    public void setMetadata(String metadata) { this.metadata = metadata; }
+    public Benchmark() {
+    }
 
-    public String getFeatures() { return features; }
-    public void setFeatures(String features) { this.features = features; }
+    public String getMetadata() {
+        return metadata;
+    }
 
-    public String getDatasetRef() { return datasetRef; }
-    public void setDatasetRef(String datasetRef) { this.datasetRef = datasetRef; }
+    public void setMetadata(String metadata) {
+        this.metadata = metadata;
+    }
 
-    public String getTaskDef() { return taskDef; }
-    public void setTaskDef(String taskDef) { this.taskDef = taskDef; }
+    public String getFeatures() {
+        return features;
+    }
 
-    public String getProtocolVersion() { return protocolVersion; }
-    public void setProtocolVersion(String protocolVersion) { this.protocolVersion = protocolVersion; }
+    public void setFeatures(String features) {
+        this.features = features;
+    }
+
+    public String getDatasetRef() {
+        return datasetRef;
+    }
+
+    public void setDatasetRef(String datasetRef) {
+        this.datasetRef = datasetRef;
+    }
+
+    public String getTaskDef() {
+        return taskDef;
+    }
+
+    public void setTaskDef(String taskDef) {
+        this.taskDef = taskDef;
+    }
+
+    public String getProtocolVersion() {
+        return protocolVersion;
+    }
+
+    public void setProtocolVersion(String protocolVersion) {
+        this.protocolVersion = protocolVersion;
+    }
 
     public List<Agent> getEvaluates() {
         return evaluates;
@@ -84,12 +119,19 @@ public class Benchmark {
     public void setEvaluates(List<Agent> evaluates) {
         this.evaluates = evaluates;
     }
-    
+
     public String getRunName() {
         return runName;
     }
 
     public void setRunName(String runName) {
         this.runName = runName;
+    }
+
+    public List<PerformanceKPI> getMeasures() {
+        return measures;
+    }
+    public void setMeasures(List<PerformanceKPI> measures) {
+        this.measures = measures;
     }
 }

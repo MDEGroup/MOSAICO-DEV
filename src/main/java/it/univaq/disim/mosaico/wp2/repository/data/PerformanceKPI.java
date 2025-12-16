@@ -24,19 +24,19 @@ public class PerformanceKPI {
     @Column(columnDefinition = "text")
     private String description;
     @Transient
-    private List<Metric> includes;
-
-    public List<Metric> getIncludes() {
-        return includes;
-    }
-    public void setIncludes(List<Metric> includes) {
-        this.includes = includes;
-    }
+    private List<MetricKey> includes;
+    private KPISpecification specification;
+    
     public PerformanceKPI() {}
-    public PerformanceKPI(String description, List<Metric> includes) {
+    public PerformanceKPI(String description, List<MetricKey> includes) {
+
         this.description = description;
         this.includes = includes;
     }
+    public KPISpecification getSpecification() {return specification;}
+    public void setSpecification(KPISpecification specification) {this.specification = specification;}
+    public List<MetricKey> getIncludes() {return includes;}
+    public void setIncludes(List<MetricKey> includes) {this.includes = includes;   }
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
     public String getDescription() {return description;}

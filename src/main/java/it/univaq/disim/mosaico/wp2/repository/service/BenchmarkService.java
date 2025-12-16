@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import it.univaq.disim.mosaico.wp2.repository.data.Agent;
 import it.univaq.disim.mosaico.wp2.repository.data.Benchmark;
+import it.univaq.disim.mosaico.wp2.repository.data.Metric;
 
 /**
  * Service interface for Benchmark operations.
@@ -17,5 +18,7 @@ public interface BenchmarkService {
     Benchmark findByDatasetRef(String datasetRef);
     Benchmark findByProtocolVersion(String protocolVersion);
     List<Benchmark> findByEvaluates_Id(String agentId);
-    void computeBenchmarkMetrics(Benchmark benchmark, Agent agent);
+    List<Metric> computeBenchmarkMetrics(Benchmark benchmark, Agent agent);
+    void computeKPIs(Benchmark benchmark, Agent agent);
+    List<Metric> computeBenchmarkMetrics(Benchmark benchmark, Agent agent, List<MetricProvider> metricProviders);
 }

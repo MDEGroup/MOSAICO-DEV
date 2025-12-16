@@ -46,7 +46,4 @@ public interface MetricService {
      */
     public Metric update(Metric metric);
 
-    public Metric computeRougeScoreMetric(String referenceText, String generatedText);
-
-    public Metric computeBleuScoreMetric(String referenceText, String generatedText);
 }
