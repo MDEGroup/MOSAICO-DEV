@@ -46,6 +46,8 @@ class AgentMcpTest {
             "Code Review",
             List.of(),
             "Background",
+            null, // a2aAgentCardUrl
+            null, // deployment
             List.of(), List.of(), List.of(), List.of(), List.of()
         );
         a1.setId("agent1");
@@ -83,6 +85,8 @@ class AgentMcpTest {
             "Code Review",
             List.of(),
             "Background",
+            null, // a2aAgentCardUrl
+            null, // deployment
             List.of(), List.of(), List.of(), List.of(), List.of()
         );
         a1.setId("agent1");

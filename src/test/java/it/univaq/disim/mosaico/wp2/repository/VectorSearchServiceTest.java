@@ -145,6 +145,8 @@ class VectorSearchServiceTest {
                 "Improve quality",
                 List.of(IOModality.TEXT),
                 "A helpful agent",
+                null, // a2aAgentCardUrl
+                null, // deployment
                 List.of(),
                 List.of(),
                 List.of(),

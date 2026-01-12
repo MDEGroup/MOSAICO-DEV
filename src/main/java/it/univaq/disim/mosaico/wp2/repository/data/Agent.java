@@ -2,6 +2,7 @@ package it.univaq.disim.mosaico.wp2.repository.data;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -59,6 +60,12 @@ public class Agent {
     @Column(columnDefinition = "text")
     private String backStory;
 
+    @Column(columnDefinition = "text")
+    private String a2aAgentCardUrl;
+
+    @Embedded
+    private Deployment deployment;
+
     @Transient
     private List<Skill> skills;
 
@@ -90,6 +97,8 @@ public class Agent {
                  String objective,
                  List<IOModality> ioModalities,
                  String backStory,
+                 String a2aAgentCardUrl,
+                 Deployment deployment,
                  List<Skill> skills,
                  List<Tool> exploits,
                  List<Memory> has,
@@ -107,6 +116,8 @@ public class Agent {
         this.objective = objective;
         this.ioModalities = ioModalities;
         this.backStory = backStory;
+        this.a2aAgentCardUrl = a2aAgentCardUrl;
+        this.deployment = deployment;
         this.skills = skills;
         this.exploits = exploits;
         this.has = has;
@@ -142,6 +153,10 @@ public class Agent {
     public void setIoModalities(List<IOModality> ioModalities) { this.ioModalities = ioModalities; }
     public String getBackStory() { return backStory; }
     public void setBackStory(String backStory) { this.backStory = backStory; }
+    public String getA2aAgentCardUrl() { return a2aAgentCardUrl; }
+    public void setA2aAgentCardUrl(String a2aAgentCardUrl) { this.a2aAgentCardUrl = a2aAgentCardUrl; }
+    public Deployment getDeployment() { return deployment; }
+    public void setDeployment(Deployment deployment) { this.deployment = deployment; }
     public List<Skill> getSkills() { return skills; }
     public void setSkills(List<Skill> skills) { this.skills = skills; }
     public List<Tool> getExploits() { return exploits; }
