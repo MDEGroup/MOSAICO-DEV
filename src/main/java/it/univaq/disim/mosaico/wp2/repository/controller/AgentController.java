@@ -71,6 +71,7 @@ public class AgentController {
         logger.info("PUT /api/agents/{}", id);
         Optional<Agent> existingAgent = agentService.findById(id);
         if (existingAgent.isPresent()) {
+            agent.setId(id); // client may not set the ID in the request body
             Agent updatedAgent = agentService.save(agent);
             return ResponseEntity.ok(updatedAgent);
         }
