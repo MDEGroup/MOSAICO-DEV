@@ -204,15 +204,15 @@ Set up MOSAICO AI Coding Extension to chat with Reference Agent.
         apiBase: http://localhost:4000
     ```
 
-5. Chat with Reference Agent. Try the following messages that demonstrates classification of SE and non-SE, two different agents for SE tasks, and context management when switching between SE and non-SE.
-    - Hi
-    - Write a Python script that prints "Hello world!"
-    - What is the capital of France?
-    - How about Germany?
-    - Back to the Python script, change the string to "Good morning!!!"
-    - Write a Python script that can sum, substract, multiply, divide two inputed numbers.
-    - Please generate a metamodel of a simple library management system with two main concepts: Library and Book. Each Library has a name (String) and contains a collection of Books (containment reference). Each Book has a title (String).
-    - Please generate a metamodel of a simple library management system with three main concepts: Library, Book, and Author. Each Library has a name (String) and contains a collection of Books and a collection of Authors (both containment references). Each Book has a title (String) and a page count(int) and has a non-containment reference to its main Author. Each Author has a name (String) and age (int) and knows which Books they have written (non-containment reference to Books). The system should clearly distinguish between containment and non-containment relationships: A Library owns its Books and its Authors (deleting the Library deletes its Books and its Authors). Authors and Books reference each other but do not manage each other's lifecycles.
+Chat with Reference Agent. Try the following messages that demonstrates classification of SE and non-SE, two different agents for SE tasks, and context management when switching between SE and non-SE.
+  - Hi
+  - Write a Python script that prints "Hello world!"
+  - What is the capital of France?
+  - How about Germany?
+  - Back to the Python script, change the string to "Good morning!!!"
+  - Write a Python script that can sum, substract, multiply, divide two inputed numbers.
+  - Please generate a metamodel of a simple library management system with two main concepts: Library and Book. Each Library has a name (String) and contains a collection of Books (containment reference). Each Book has a title (String).
+  - Please generate a metamodel of a simple library management system with three main concepts: Library, Book, and Author. Each Library has a name (String) and contains a collection of Books and a collection of Authors (both containment references). Each Book has a title (String) and a page count(int) and has a non-containment reference to its main Author. Each Author has a name (String) and age (int) and knows which Books they have written (non-containment reference to Books). The system should clearly distinguish between containment and non-containment relationships: A Library owns its Books and its Authors (deleting the Library deletes its Books and its Authors). Authors and Books reference each other but do not manage each other's lifecycles.
 
 
 
