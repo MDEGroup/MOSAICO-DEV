@@ -295,14 +295,14 @@ If you need a fresh build before running:
 
 For example, if you add an aisp-mini-swe-agent with the following details (without agent card url and deployment details):
 ```bash
-curl -X PUT http://localhost:8080/api/agents/{AGENT-ID-FROM-ABOVE} \
+curl -X POST http://localhost:8080/api/agents \
   -H 'Content-Type: application/json' \
   -d '{
-    "name": "aisp-mini-swe-agent",
-    "description": "Agent who solves generic software engineering issues using a bash-only tool, including write Python script, explain code, solve coding challenges.",
+    "name": "metamodel-generation-collaboration-agent",
+    "description": "Collaboration agent who should handle a query for generating a metamodel.",
     "version": "1.0.0",
-    "role": "generic software engineering solver",
-    "objective": "solves generic software engineering issues"
+    "role": "collaboration agent",
+    "objective": "coordinate solution agent and supervisor agent to generate and verify metamodel based on user description."
   }'
 ```
 
