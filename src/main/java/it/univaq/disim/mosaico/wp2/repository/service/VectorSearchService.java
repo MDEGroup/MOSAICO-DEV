@@ -15,4 +15,10 @@ public interface VectorSearchService {
      * contents.
      */
     public Map<String, String> semanticSearch(String query, Map<String, Object> filters, int topK);
+
+    /**
+     * Remove an agent from the vector store by its ID.
+     * Should be called when an agent is deleted from the database.
+     */
+    public void removeAgent(String agentId);
 }
