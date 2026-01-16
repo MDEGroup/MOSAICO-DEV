@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+
 /**
  * Benchmark class for MOSAICO taxonomy.
  * Represents evaluation benchmarks for agents.
@@ -27,12 +28,8 @@ public class Benchmark {
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id", nullable = false)
     private String id;
-
     private String metadata;
-    private String features;
     private String datasetRef;
-    private String taskDef;
-    private String protocolVersion;
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "benchmark_evaluates", joinColumns = @JoinColumn(name = "benchmark_id"), inverseJoinColumns = @JoinColumn(name = "agent_id"))
@@ -44,6 +41,11 @@ public class Benchmark {
 
     @Transient
     private List<Skill> assess;
+    
+    private String taskDef;
+    private String protocolVersion;
+    private String features;
+       
 
     public Benchmark(String id, String metadata, String features, String datasetRef, String taskDef,
             String protocolVersion, List<Agent> evaluates, List<PerformanceKPI> measures, List<Skill> assess,
@@ -131,7 +133,16 @@ public class Benchmark {
     public List<PerformanceKPI> getMeasures() {
         return measures;
     }
+
     public void setMeasures(List<PerformanceKPI> measures) {
         this.measures = measures;
+    }
+
+    public List<Skill> getAssess() {
+        return assess;
+    }
+
+    public void setAssess(List<Skill> assess) {
+        this.assess = assess;
     }
 }
