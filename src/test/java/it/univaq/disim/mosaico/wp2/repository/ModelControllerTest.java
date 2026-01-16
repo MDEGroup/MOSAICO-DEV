@@ -169,8 +169,6 @@ class ModelControllerTest {
         Model response = controller.one("1");
 
         assertNotNull(response);
-        System.out.println(response);
-
     }
 
     void testGetModelByIdNotFound() throws Exception {
