@@ -97,7 +97,7 @@ curl -X POST http://localhost:8080/api/agents \
     "version": "1.0.0",
     "role": "generic software engineering solver",
     "objective": "solves generic software engineering issues",
-    "a2aAgentCardUrl": "http://localhost:20000",
+    "a2aAgentCardUrl": "http://localhost:20000/.well-known/agent-card.json",
     "deployment": {
       "mode": "ENDPOINT"
     }
