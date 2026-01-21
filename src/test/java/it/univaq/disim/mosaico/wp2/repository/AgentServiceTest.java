@@ -65,6 +65,8 @@ public class AgentServiceTest {
             "Code Review",
             List.of(IOModality.TEXT),
             "Background in software engineering",
+            null, // a2aAgentCardUrl
+            null, // deployment
             List.of(), // skills
             List.of(), // tools  
             List.of(), // memory
