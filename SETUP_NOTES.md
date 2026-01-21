@@ -34,33 +34,7 @@ curl -I http://localhost:3000
 - Go to Langfuse http://localhost:3000
 - Register the admin account with details in .env.langfuse (note that my version of langfuse required a special character in the password)
 - Create an organisation, a project within that, and generate API key for the project
-- Copy Langfuse public and private keys into `.env.langfuse`, `application.properties`, `application-dev.properties`, and `LangfuseServiceIntegrationTest.java`
-
-## 4. Setup Langfuse's PostgreSQL Database (for integration tests)
-
-In `LangfuseServiceIntegrationTest.java`, two tests expect specific data:
-  1. `testGetDataset` - looks for a hardcoded dataset name: *No Description Dataset 1f4d1a1c*
-  2. `getRunBenchmark` - looks for a specific dataset run with name: *run test - 2025-12-05T08:48:15.353757Z*
-
-Set up those use the following commands:
-
-### Create the test dataset
-
-```bash
-docker exec langfuse-postgres psql -U langfuse -d langfuse -c "INSERT INTO datasets (id, name, description, project_id, created_at, updated_at) VALUES ('1f4d1a1c', 'No Description Dataset 1f4d1a1c', 'Test dataset for integration tests', (SELECT id FROM projects LIMIT 1), NOW(), NOW()) ON CONFLICT DO NOTHING;"
-```
-
-### Create a dataset run for benchmarks
-
-```bash
-docker exec langfuse-postgres psql -U langfuse -d langfuse -c "INSERT INTO dataset_runs (id, name, dataset_id, project_id, created_at, updated_at, description) VALUES ('run-test-1', 'run test - 2025-12-05T08:48:15.353757Z', '1f4d1a1c', (SELECT id FROM projects LIMIT 1), NOW(), NOW(), 'Test benchmark run') ON CONFLICT DO NOTHING;"
-```
-
-### (Optional) Verify datasets were created
-
-```bash
-docker exec langfuse-postgres psql -U langfuse -d langfuse -c "SELECT id, name, project_id FROM datasets; SELECT id, name, dataset_id FROM dataset_runs;"
-```
+- Copy Langfuse public and private keys into `.env.langfuse`, `application.properties`, `application-dev.properties`, `LangfuseServiceIntegrationTest.java`, and `llm-usecase/config.bench.json`
 
 ## 5. Run unit tests
 
@@ -72,17 +46,15 @@ To run all unit tests:
 
 Unit tests are fast and do not require a running Langfuse instance (they use mocks in test resources).
 
-## 6. Run integration tests (real Langfuse calls)
+## 6. Langfuse Integration Test DOES NOT require for integration between WP1 and WP2
 
-Integration tests in this repository actually call a live Langfuse instance. They are protected by an environment variable guard to avoid accidental runs in environments without Langfuse.
+This is the placeholder for instructions to set up Langfuse Integration Test.
 
-The easiest way to run them is the provided runner script which verifies Langfuse availability and API keys, sets the guard variable, and runs the integration test class:
+## 7. Rebuild the container
 
-```bash
-./run-integration-tests.sh
-```
+During development, the container may not be up do date. You can rebuild mosaico-app ([instructions below](#rebuild-and-relaunch-mosaico-app-docker)).
 
-## 7. Add and search agent
+## 8. Add and search agent
 
 You can add and search for agents via [Swagger UI](#swagger-ui-link) or using the following commands in the terminal.
 
@@ -120,7 +92,7 @@ curl -X 'GET' \
   -H 'accept: */*'
 ```
 
-## 8. Inspect MCP Server
+## 9. Inspect MCP Server
 
 ### Connect to MCP Server via MCP Inspector
 
@@ -148,10 +120,10 @@ The MCP server is running and accessible using the following settings:
 
 Test by using AgentMCPTool and query = "Python" and topK = 10. You should be able to see the recently-added aisp-mini-swe-agent.
 
-See [AgentMCP.java](src/main/java/it/univaq/disim/mosaico/wp2/repository/mcp/AgentMCP.java) for implementation details. If a feature is missing, the container may not be up do date; you can try rebuild mosaico-app ([instructions below](#rebuild-and-relaunch-mosaico-app-docker)).
+See [AgentMCP.java](src/main/java/it/univaq/disim/mosaico/wp2/repository/mcp/AgentMCP.java) for implementation details.
 
 
-## 9. Full Demostration with the AI Coding Extension
+## 10. Full Demostration with the AI Coding Extension
 
 ### Add a metamodel generation agent via `POST api/agents`
 
@@ -238,7 +210,7 @@ docker-compose -f docker-compose.langfuse.yml ps mosaico-app
 docker-compose -f docker-compose.langfuse.yml logs -f mosaico-app
 ```
 
-### Start Docker manually instead of using start-langfuse.sh script (note: using the env file is critical)
+### Start Docker manually instead of using `start-langfuse.sh` script (note: using the env file is critical)
 
 ```bash
 docker-compose -f docker-compose.langfuse.yml --env-file .env.langfuse up -d

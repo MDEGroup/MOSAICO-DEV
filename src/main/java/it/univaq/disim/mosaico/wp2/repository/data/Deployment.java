@@ -11,17 +11,15 @@ import jakarta.persistence.Embeddable;
 public class Deployment {
 
     private DeploymentMode mode;
-    private String dockerFileUrl;
-    private String envFileUrl;
+    private String dockerImageReference;
 
     public Deployment() {
         // JPA
     }
 
-    public Deployment(DeploymentMode mode, String dockerFileUrl, String envFileUrl) {
+    public Deployment(DeploymentMode mode, String dockerImageReference) {
         this.mode = mode;
-        this.dockerFileUrl = dockerFileUrl;
-        this.envFileUrl = envFileUrl;
+        this.dockerImageReference = dockerImageReference;
     }
 
     public DeploymentMode getMode() {
@@ -32,19 +30,11 @@ public class Deployment {
         this.mode = mode;
     }
 
-    public String getDockerFileUrl() {
-        return dockerFileUrl;
+    public String getDockerImageReference() {
+        return dockerImageReference;
     }
 
-    public void setDockerFileUrl(String dockerFileUrl) {
-        this.dockerFileUrl = dockerFileUrl;
-    }
-
-    public String getEnvFileUrl() {
-        return envFileUrl;
-    }
-
-    public void setEnvFileUrl(String envFileUrl) {
-        this.envFileUrl = envFileUrl;
+    public void setDockerImageReference(String dockerImageReference) {
+        this.dockerImageReference = dockerImageReference;
     }
 }
