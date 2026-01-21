@@ -65,6 +65,7 @@ public class AgentServiceImpl implements AgentService {
     @Override
     public void deleteById(String id) {
         agentRepository.deleteById(id);
+        vectorSearchService.removeAgent(id);
     }
     
     @Override

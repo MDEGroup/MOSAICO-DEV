@@ -140,4 +140,22 @@ public class VectorSearchServiceImpl implements VectorSearchService {
         // add other fields you consider relevant
         return sb.toString().trim();
     }
+
+    /**
+     * Remove an agent from the vector store by its ID.
+     */
+    @Override
+    public void removeAgent(String agentId) {
+        if (agentId == null || agentId.isBlank()) {
+            logger.warn("Cannot remove agent with null or blank ID");
+            return;
+        }
+        
+        try {
+            vectorStore.delete(List.of(agentId));
+            logger.info("Removed agent from vector store: {}", agentId);
+        } catch (Exception ex) {
+            logger.warn("Failed to remove agent {} from vector store: {}", agentId, ex.getMessage());
+        }
+    }
 }
