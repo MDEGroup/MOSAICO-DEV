@@ -1,0 +1,341 @@
+@startuml metric-benchmark-architecture
+!theme plain
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+
+title MOSAICO Repository - Metric Provider & Benchmark Services Architecture
+
+package "API Layer" <<Rectangle>> {
+    class BenchmarkController <<@RestController>> {
+        - benchmarkService: BenchmarkService
+        --
+        + getAllBenchmarks(): List<Benchmark>
+        + getBenchmarkById(id): Benchmark
+        + createBenchmark(benchmark): Benchmark
+        + updateBenchmark(id, benchmark): Benchmark
+        + deleteBenchmark(id): void
+        + findByDatasetRef(datasetRef): Benchmark
+        + findByProtocolVersion(version): Benchmark
+        + findByAgentId(agentId): List<Benchmark>
+        + computeMetrics(benchmarkId, agentId): List<Metric>
+        + computeKPIs(benchmarkId, agentId): PerformanceKPI
+    }
+
+    class MetricController <<@RestController>> {
+        - metricService: MetricService
+        --
+        + getAllMetrics(): List<Metric>
+        + getMetricById(id): Metric
+        + createMetric(metric): Metric
+        + updateMetric(id, metric): Metric
+        + deleteMetric(id): void
+    }
+}
+
+package "Service Layer" <<Rectangle>> {
+    interface BenchmarkService <<interface>> {
+        + findAll(): List<Benchmark>
+        + findById(id): Optional<Benchmark>
+        + save(benchmark): Benchmark
+        + deleteById(id): void
+        + findByDatasetRef(datasetRef): Benchmark
+        + findByProtocolVersion(version): Benchmark
+        + findByEvaluates_Id(agentId): List<Benchmark>
+        --
+        + computeBenchmarkMetrics(benchmark, agent): List<Metric>
+        + computeKPIs(benchmark, agent): PerformanceKPI
+    }
+
+    interface MetricService <<interface>> {
+        + findAll(): List<Metric>
+        + findById(id): Optional<Metric>
+        + save(metric): Metric
+        + deleteById(id): void
+        + update(metric): Metric
+    }
+
+    class BenchmarkServiceImpl <<@Service>> {
+        - benchmarkRepository: BenchmarkRepository
+        - metricProviderRegistry: MetricProviderRegistry
+        - langfuseService: LangfuseService
+        - metricService: MetricService
+        --
+        + computeBenchmarkMetrics(benchmark, agent): List<Metric>
+        + computeKPIs(benchmark, agent): PerformanceKPI
+        - extractExpectedText(trace): String
+        - extractGeneratedText(trace): String
+        - buildMetricValueMap(metrics): Map<Class, Double>
+    }
+
+    class MetricServiceImpl <<@Service>> {
+        - metricRepository: MetricRepository
+        --
+        + findAll(): List<Metric>
+        + findById(id): Optional<Metric>
+        + save(metric): Metric
+        + deleteById(id): void
+        + update(metric): Metric
+    }
+}
+
+package "Metric Provider System" <<Rectangle>> #LightBlue {
+    interface "MetricProvider<K extends MetricKey>" as MetricProvider <<interface>> {
+        + compute(agent, referenceText, generatedText, trace): Metric
+        + key(): Class<K>
+    }
+
+    class MetricProviderRegistry <<@Service>> {
+        - byKey: Map<Class<MetricKey>, MetricProvider>
+        --
+        + MetricProviderRegistry(providers: List<MetricProvider>)
+        + providerFor(key: Class<K>): MetricProvider<K>
+        + getAllProviders(): Collection<MetricProvider>
+        + getRegisteredKeys(): Set<Class<MetricKey>>
+        + hasProvider(key): boolean
+    }
+
+    class RougeMetricProvider <<@Component>> {
+        --
+        + compute(agent, ref, gen, trace): Metric
+        + key(): Class<RougeMetric>
+        - computeLCS(tokens1, tokens2): int
+        - tokenize(text): List<String>
+    }
+
+    class BlueMetricProvider <<@Component>> {
+        --
+        + compute(agent, ref, gen, trace): Metric
+        + key(): Class<BlueMetric>
+        - computeLCS(tokens1, tokens2): int
+        - tokenize(text): List<String>
+    }
+
+    interface MetricKey <<marker interface>> {
+    }
+
+    class RougeMetric implements MetricKey {
+    }
+
+    class BlueMetric implements MetricKey {
+    }
+
+    note right of MetricProvider
+        Strategy Pattern:
+        Each provider implements
+        specific metric computation
+        algorithm
+    end note
+
+    note right of MetricProviderRegistry
+        Registry Pattern:
+        Auto-discovers all MetricProvider
+        beans via Spring DI
+    end note
+}
+
+package "KPI Evaluation System" <<Rectangle>> #LightGreen {
+    interface KPIFormula <<@FunctionalInterface>> {
+        + evaluate(metricValues: Map): double
+    }
+
+    class AverageFormula implements KPIFormula {
+        + evaluate(metricValues): double
+    }
+
+    class WeightedSumFormula implements KPIFormula {
+        - weights: Map<Class<MetricKey>, Double>
+        + evaluate(metricValues): double
+    }
+
+    class ThresholdFormula implements KPIFormula {
+        - threshold: double
+        - metricKey: Class<MetricKey>
+        + evaluate(metricValues): double
+    }
+
+    class KPISpecification <<@Embeddable>> {
+        - formulaType: String
+        - formulaConfig: String
+        --
+        + getFormula(): KPIFormula
+    }
+
+    note right of KPIFormula
+        Functional Interface:
+        Allows flexible KPI
+        calculation strategies
+    end note
+}
+
+package "Data Model" <<Rectangle>> {
+    class Benchmark <<@Entity>> {
+        - id: String
+        - metadata: Map<String, Object>
+        - datasetRef: String
+        - features: List<String>
+        - taskDef: String
+        - protocolVersion: String
+        - runName: String
+        --
+        + evaluates: Set<Agent> <<@ManyToMany>>
+        + measures: List<PerformanceKPI> <<@Transient>>
+        + assess: List<Skill> <<@Transient>>
+    }
+
+    class PerformanceKPI <<@Entity>> {
+        - id: String
+        - description: String
+        --
+        + specification: KPISpecification <<@Embedded>>
+        + includes: List<MetricKey> <<@Transient>>
+    }
+
+    class Metric <<@Entity>> {
+        - id: UUID
+        - type: MetricType
+        - name: String
+        - floatValue: Float
+        - booleanValue: Boolean
+        - stringValue: String
+        - unit: String
+    }
+
+    class Agent <<@Entity>> {
+        - id: String
+        - name: String
+        - langfuseSecretKey: String
+        - langfusePublicKey: String
+        - langfuseBaseUrl: String
+        ...
+    }
+
+    enum MetricType <<enum>> {
+        ROUGE
+        BLEU
+        ACCURACY
+        PRECISION
+        RECALL
+        F1_SCORE
+    }
+}
+
+package "External Integration" <<Rectangle>> #LightYellow {
+    interface LangfuseService <<interface>> {
+        + getRunBenchmarkTraces(agent, datasetRef, runName): List<TraceWithFullDetails>
+    }
+
+    class LangfuseServiceImpl <<@Service>> {
+        - langfuseApiClient: LangfuseApiClient
+        --
+        + getRunBenchmarkTraces(agent, datasetRef, runName): List<TraceWithFullDetails>
+    }
+
+    class TraceWithFullDetails {
+        - id: String
+        - output: String
+        - additionalProperties: Map<String, Object>
+        --
+        + getOutput(): String
+        + getAdditionalProperties(): Map
+    }
+
+    cloud "Langfuse Platform" as LFP
+}
+
+package "Repository Layer" <<Rectangle>> {
+    interface BenchmarkRepository <<JpaRepository>> {
+        + findByDatasetRef(datasetRef): Optional<Benchmark>
+        + findByProtocolVersion(version): Optional<Benchmark>
+        + findByEvaluates_Id(agentId): List<Benchmark>
+    }
+
+    interface MetricRepository <<JpaRepository>> {
+        + findById(id): Optional<Metric>
+        + findAll(): List<Metric>
+        + save(metric): Metric
+        + deleteById(id): void
+    }
+
+    interface PerformanceKPIRepository <<JpaRepository>> {
+    }
+
+    database "PostgreSQL" as DB
+}
+
+package "Exceptions" <<Rectangle>> #LightCoral {
+    class MetricProviderNotFoundException
+    class MetricComputationException
+    class KPIEvaluationException
+    class MetricNotFoundException
+}
+
+' === RELATIONSHIPS ===
+
+' Controller dependencies
+BenchmarkController --> BenchmarkService : uses
+MetricController --> MetricService : uses
+
+' Service implementations
+BenchmarkService <|.. BenchmarkServiceImpl
+MetricService <|.. MetricServiceImpl
+
+' BenchmarkServiceImpl dependencies
+BenchmarkServiceImpl --> MetricProviderRegistry : uses
+BenchmarkServiceImpl --> LangfuseService : uses
+BenchmarkServiceImpl --> MetricService : uses
+BenchmarkServiceImpl --> BenchmarkRepository : uses
+
+' MetricServiceImpl dependencies
+MetricServiceImpl --> MetricRepository : uses
+
+' MetricProvider pattern
+MetricProvider <|.. RougeMetricProvider
+MetricProvider <|.. BlueMetricProvider
+MetricProviderRegistry o-- MetricProvider : registers
+MetricProviderRegistry --> MetricProviderNotFoundException : throws
+
+' MetricKey associations
+RougeMetricProvider --> RougeMetric : uses
+BlueMetricProvider --> BlueMetric : uses
+
+' KPI relationships
+PerformanceKPI *-- KPISpecification
+KPISpecification --> KPIFormula : creates
+BenchmarkServiceImpl --> KPIFormula : evaluates
+
+' Data model relationships
+Benchmark "1" --> "*" PerformanceKPI : measures
+Benchmark "*" --> "*" Agent : evaluates
+Metric --> MetricType : has
+PerformanceKPI --> MetricKey : includes
+
+' Langfuse integration
+LangfuseService <|.. LangfuseServiceImpl
+LangfuseServiceImpl --> LFP : calls API
+LangfuseServiceImpl --> TraceWithFullDetails : returns
+
+' Repository to DB
+BenchmarkRepository --> DB
+MetricRepository --> DB
+PerformanceKPIRepository --> DB
+
+' === SEQUENCE DIAGRAM NOTE ===
+note as N1
+    **Metric Computation Flow:**
+    1. BenchmarkController receives request
+    2. BenchmarkServiceImpl retrieves traces from Langfuse
+    3. For each trace, extracts expected/generated text
+    4. MetricProviderRegistry provides all registered providers
+    5. Each MetricProvider computes its metric
+    6. Results aggregated and returned
+
+    **KPI Computation Flow:**
+    1. Compute all metrics first
+    2. For each PerformanceKPI in benchmark
+    3. Build metric value map
+    4. Retrieve KPIFormula from specification
+    5. Evaluate formula with metric values
+    6. Return computed KPI
+end note
+
+@enduml

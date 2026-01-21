@@ -1,0 +1,317 @@
+@startuml data-model
+!theme plain
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+skinparam classFontSize 11
+skinparam packageFontSize 12
+
+title MOSAICO Repository - Data Model Class Diagram
+
+package "Core Entities" {
+    class Agent {
+        - id: String
+        - name: String
+        - version: String
+        - author: String
+        - description: String
+        - license: String
+        - agentType: String
+        - modelId: String
+        - systemPrompt: String
+        - agentUrl: String
+        - langfuseSecretKey: String
+        - langfusePublicKey: String
+        - langfuseBaseUrl: String
+        --
+        + deployment: Deployment <<Embedded>>
+        + skills: List<Skill> <<Transient>>
+        + tools: List<Tool> <<Transient>>
+        + memory: List<Memory> <<Transient>>
+        + interactionProtocols: List<InteractionProtocol> <<Transient>>
+        + consumptions: List<AgentConsumption> <<Transient>>
+    }
+
+    class AgentDefinition {
+        - id: String
+        - name: String
+        - version: String
+        - author: String
+        - agentType: String
+        - capabilities: List<String>
+        - configuration: Map<String, String>
+        - complexityLevel: String
+    }
+
+    class Provider {
+        - id: String
+        - name: String
+        - description: String
+        - contactUrl: String
+    }
+
+    class Model {
+        - id: String
+        - name: String
+        - version: String
+        - author: String
+        - license: String
+        - modelType: String
+        - tags: List<String>
+        - config: Map<String, Object>
+        - downloads: Long
+        - repositoryUrl: String
+        --
+        + agents: List<AgentDefinition> <<Transient>>
+        + tools: List<ToolDefinition> <<Transient>>
+        + metrics: List<Metric> <<Transient>>
+        + coordinationPatterns: List<CoordinationPattern> <<Transient>>
+        + communicationProtocols: List<CommunicationProtocol> <<Transient>>
+    }
+}
+
+package "Agent Capabilities" {
+    class Skill {
+        - id: String
+        - name: String
+        - description: String
+        - level: ProficiencyLevel
+        - lastEvaluated: Timestamp
+        - softEngTaskIds: List<String>
+    }
+
+    class Tool {
+        - id: String
+        - name: String
+        - description: String
+        - authType: String
+        - scopes: List<String>
+        - quotas: Map<String, Integer>
+        - rateLimits: Map<String, Integer>
+    }
+
+    class ToolDefinition {
+        - id: String
+        - name: String
+        - description: String
+        - version: String
+        - inputSchema: String
+        - outputSchema: String
+    }
+
+    class Memory {
+        - id: String
+        - name: String
+        - scope: MemoryScope
+        - type: MemoryType
+        - content: String
+    }
+
+    class InteractionProtocol {
+        - id: String
+        - name: String
+        - description: String
+        - pattern: String
+    }
+}
+
+package "Agent Execution" {
+    class AgentUsage {
+        - id: String
+        - timestamp: Timestamp
+        - duration: Long
+        --
+        + consumption: AgentConsumption <<Transient>>
+        + feedbacks: List<HumanFeedback> <<Transient>>
+    }
+
+    class AgentConsumption {
+        - id: String
+        - hyperparameters: Map<String, Object>
+        - inputStructure: IOSpecification
+        - outputStructure: IOSpecification
+    }
+
+    class HumanFeedback {
+        - id: String
+        - kind: FeedbackKind
+        - rating: Integer
+        - comment: String
+        - timestamp: Timestamp
+    }
+
+    class Deployment <<Embeddable>> {
+        - mode: DeploymentMode
+        - dockerImageReference: String
+    }
+}
+
+package "Tasks & Coordination" {
+    abstract class Task {
+        - id: String
+        - name: String
+        - description: String
+        - preconditions: List<String>
+        - postconditions: List<String>
+        - requiredTools: List<String>
+    }
+
+    class SoftEngTask {
+        - id: String
+        - name: String
+        - swebokKAId: SwebokKAId
+        - description: String
+    }
+
+    class CoordinationPattern {
+        - id: String
+        - name: String
+        - description: String
+        - pattern: CollaborationPattern
+    }
+
+    class CommunicationProtocol {
+        - id: String
+        - name: String
+        - description: String
+        - specification: String
+    }
+
+    class BehaviorDefinition {
+        - id: String
+        - name: String
+        - type: String
+        - description: String
+    }
+}
+
+package "Benchmarking & Metrics" {
+    class Benchmark {
+        - id: String
+        - metadata: Map<String, Object>
+        - datasetRef: String
+        - features: List<String>
+        - taskDef: String
+        - protocolVersion: String
+        - runName: String
+        --
+        + measures: List<PerformanceKPI> <<Transient>>
+        + assess: List<Skill> <<Transient>>
+    }
+
+    class Metric {
+        - id: UUID
+        - type: MetricType
+        - name: String
+        - floatValue: Float
+        - booleanValue: Boolean
+        - stringValue: String
+        - unit: String
+    }
+
+    class PerformanceKPI {
+        - id: String
+        - description: String
+        --
+        + specification: KPISpecification <<Embedded>>
+        + includes: List<MetricKey> <<Transient>>
+    }
+
+    class KPISpecification <<Embeddable>> {
+        - formulaType: String
+        - formulaConfig: String (JSON)
+        --
+        + formula: KPIFormula <<Transient>>
+    }
+
+    interface MetricKey <<marker>> {
+    }
+
+    class BlueMetric implements MetricKey {
+    }
+
+    class RougeMetric implements MetricKey {
+    }
+
+    class MonitoringConfig {
+        - id: String
+        - name: String
+        - telemetryKind: TelemetryKind
+        - enabled: Boolean
+        - configuration: Map<String, String>
+    }
+}
+
+package "Enumerations" {
+    enum MetricType {
+        ROUGE
+        BLEU
+        ACCURACY
+        PRECISION
+        RECALL
+        F1_SCORE
+    }
+
+    enum DeploymentMode {
+        DOCKER
+        KUBERNETES
+        SERVERLESS
+        LOCAL
+    }
+
+    enum ProficiencyLevel {
+        NOVICE
+        BEGINNER
+        INTERMEDIATE
+        ADVANCED
+        EXPERT
+    }
+
+    enum MemoryType {
+        SHORT_TERM
+        LONG_TERM
+        EPISODIC
+        SEMANTIC
+    }
+
+    enum MemoryScope {
+        LOCAL
+        SHARED
+        GLOBAL
+    }
+}
+
+' Relationships
+Agent "many" --> "1" Provider : belongs to
+Agent *-- Deployment : contains
+Agent "1" o-- "many" Skill : has
+Agent "1" o-- "many" Tool : uses
+Agent "1" o-- "many" Memory : has
+Agent "1" o-- "many" InteractionProtocol : follows
+Agent "1" o-- "many" AgentConsumption : tracks
+
+AgentUsage "many" --> "1" Agent : records usage of
+AgentUsage "1" o-- "1" AgentConsumption : includes
+AgentUsage "1" o-- "many" HumanFeedback : collects
+
+Benchmark "many" <--> "many" Agent : evaluates
+Benchmark "1" o-- "many" PerformanceKPI : measures
+Benchmark "1" o-- "many" Skill : assesses
+
+PerformanceKPI *-- KPISpecification : contains
+PerformanceKPI "1" o-- "many" MetricKey : includes
+
+Metric --> MetricType : has type
+
+Model "1" o-- "many" AgentDefinition : contains
+Model "1" o-- "many" ToolDefinition : contains
+Model "1" o-- "many" Metric : tracks
+Model "many" <--> "many" BehaviorDefinition : uses
+Model "1" o-- "many" CoordinationPattern : defines
+Model "1" o-- "many" CommunicationProtocol : specifies
+
+Skill --> ProficiencyLevel : has level
+Memory --> MemoryType : has type
+Memory --> MemoryScope : has scope
+Deployment --> DeploymentMode : has mode
+
+@enduml

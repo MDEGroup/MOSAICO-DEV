@@ -1,0 +1,569 @@
+@startuml ideal-benchmarking-architecture
+!theme plain
+skinparam linetype ortho
+skinparam componentStyle uml2
+skinparam defaultFontSize 11
+
+title MOSAICO - Ideal Benchmarking System Architecture
+
+' ============================================
+' ACTORS & EXTERNAL SYSTEMS
+' ============================================
+actor "Admin/Researcher" as Admin
+actor "System Administrator" as SysAdmin
+
+cloud "Langfuse Platform" as Langfuse {
+    component [Traces API] as LangfuseTraces
+    component [Datasets API] as LangfuseDatasets
+    component [Metrics API] as LangfuseMetrics
+}
+
+cloud "Notification Services" as NotificationCloud {
+    component [Email Service] as EmailSvc
+    component [Slack/Teams] as SlackSvc
+    component [Webhook Endpoints] as WebhookSvc
+}
+
+database "PostgreSQL" as DB {
+    storage "benchmarks" as BenchmarksTable
+    storage "benchmark_runs" as RunsTable
+    storage "benchmark_results" as ResultsTable
+    storage "metric_snapshots" as MetricSnapshotsTable
+    storage "kpi_history" as KPIHistoryTable
+    storage "agents" as AgentsTable
+    storage "alert_configs" as AlertConfigsTable
+}
+
+queue "Message Queue\n(RabbitMQ/Kafka)" as MQ {
+    storage "benchmark.scheduled" as ScheduledQueue
+    storage "benchmark.triggered" as TriggeredQueue
+    storage "benchmark.completed" as CompletedQueue
+    storage "notification.send" as NotificationQueue
+}
+
+storage "Redis Cache" as Cache {
+    storage "langfuse:traces" as TracesCache
+    storage "langfuse:datasets" as DatasetsCache
+    storage "benchmark:results" as ResultsCache
+}
+
+' ============================================
+' API LAYER
+' ============================================
+package "API Layer" <<Rectangle>> #LightBlue {
+    component [BenchmarkController] as BenchmarkCtrl {
+        portin "POST /benchmarks/{id}/run" as RunEndpoint
+        portin "POST /benchmarks/{id}/schedule" as ScheduleEndpoint
+        portin "GET /benchmarks/{id}/results" as ResultsEndpoint
+        portin "GET /benchmarks/{id}/history" as HistoryEndpoint
+        portin "GET /benchmarks/{id}/kpis" as KPIsEndpoint
+        portin "POST /benchmarks/{id}/export" as ExportEndpoint
+    }
+
+    component [AlertController] as AlertCtrl {
+        portin "POST /alerts" as CreateAlertEndpoint
+        portin "GET /alerts/history" as AlertHistoryEndpoint
+    }
+
+    component [ReportController] as ReportCtrl {
+        portin "GET /reports/agent/{id}" as AgentReportEndpoint
+        portin "GET /reports/comparison" as ComparisonEndpoint
+        portin "POST /reports/generate" as GenerateReportEndpoint
+    }
+
+    component [WebSocket Handler] as WSHandler
+}
+
+' ============================================
+' SCHEDULING LAYER
+' ============================================
+package "Scheduling Layer" <<Rectangle>> #LightGreen {
+    component [BenchmarkSchedulerService] as SchedulerSvc {
+        note right
+            @Scheduled jobs:
+            - Periodic benchmark runs
+            - Data sync from Langfuse
+            - Stale data cleanup
+            - Report generation
+        end note
+    }
+
+    component [CronJobManager] as CronMgr {
+        note right
+            Configurable schedules:
+            - "0 0 * * *" daily
+            - "0 */6 * * *" every 6h
+            - Custom per benchmark
+        end note
+    }
+
+    component [EventTriggerService] as EventTriggerSvc {
+        note right
+            Event-based triggers:
+            - New trace detected
+            - Agent updated
+            - Dataset changed
+            - Manual trigger
+        end note
+    }
+}
+
+' ============================================
+' ORCHESTRATION LAYER
+' ============================================
+package "Orchestration Layer" <<Rectangle>> #LightYellow {
+    component [BenchmarkOrchestrator] as Orchestrator {
+        note right
+            Coordinates the entire
+            benchmark execution flow:
+            1. Validate prerequisites
+            2. Fetch data
+            3. Compute metrics
+            4. Evaluate KPIs
+            5. Persist results
+            6. Trigger notifications
+        end note
+    }
+
+    component [BenchmarkRunManager] as RunManager {
+        note right
+            Manages benchmark runs:
+            - Create run records
+            - Track run status
+            - Handle failures/retries
+            - Aggregate results
+        end note
+    }
+
+    component [RetryHandler] as RetryHandler {
+        note right
+            Retry policies:
+            - Exponential backoff
+            - Max attempts: 3
+            - Dead letter queue
+        end note
+    }
+}
+
+' ============================================
+' DATA ACQUISITION LAYER
+' ============================================
+package "Data Acquisition Layer" <<Rectangle>> #LightCoral {
+    component [LangfuseDataSyncService] as DataSyncSvc {
+        note right
+            Syncs data from Langfuse:
+            - Incremental sync (delta)
+            - Full sync (scheduled)
+            - Real-time webhook listener
+        end note
+    }
+
+    component [TraceCollector] as TraceCollector {
+        note right
+            Collects and normalizes:
+            - Agent execution traces
+            - Input/output pairs
+            - Metadata & timestamps
+        end note
+    }
+
+    component [DatasetManager] as DatasetMgr {
+        note right
+            Manages test datasets:
+            - Golden datasets
+            - Ground truth data
+            - Version control
+        end note
+    }
+
+    component [CacheManager] as CacheMgr {
+        note right
+            Redis caching:
+            - TTL: 15 minutes (traces)
+            - TTL: 1 hour (datasets)
+            - Invalidation on sync
+        end note
+    }
+}
+
+' ============================================
+' METRIC COMPUTATION LAYER
+' ============================================
+package "Metric Computation Layer" <<Rectangle>> #Wheat {
+    component [MetricComputationEngine] as MetricEngine {
+        note right
+            Parallel metric computation:
+            - Thread pool execution
+            - Batch processing
+            - Progress tracking
+        end note
+    }
+
+    component [MetricProviderRegistry] as MetricRegistry
+
+    component [RougeMetricProvider] as RougeProvider
+    component [BleuMetricProvider] as BleuProvider
+    component [AccuracyProvider] as AccuracyProvider
+    component [F1ScoreProvider] as F1Provider
+    component [CustomMetricProvider] as CustomProvider
+
+    component [MetricAggregator] as MetricAggregator {
+        note right
+            Aggregates metrics:
+            - Per trace
+            - Per agent
+            - Per benchmark run
+            - Statistical summaries
+        end note
+    }
+}
+
+' ============================================
+' KPI EVALUATION LAYER
+' ============================================
+package "KPI Evaluation Layer" <<Rectangle>> #Plum {
+    component [KPIEvaluationEngine] as KPIEngine {
+        note right
+            Evaluates KPIs:
+            - Formula-based calculation
+            - Threshold checking
+            - Trend analysis
+        end note
+    }
+
+    component [FormulaRegistry] as FormulaRegistry
+
+    component [AverageFormula] as AvgFormula
+    component [WeightedSumFormula] as WeightedFormula
+    component [ThresholdFormula] as ThresholdFormula
+    component [TrendFormula] as TrendFormula
+    component [PercentileFormula] as PercentileFormula
+
+    component [KPIComparator] as KPIComparator {
+        note right
+            Compares KPIs:
+            - Against baselines
+            - Against thresholds
+            - Historical comparison
+            - Agent vs Agent
+        end note
+    }
+}
+
+' ============================================
+' PERSISTENCE LAYER
+' ============================================
+package "Persistence Layer" <<Rectangle>> #LightSteelBlue {
+    component [BenchmarkRunRepository] as RunRepo
+    component [BenchmarkResultRepository] as ResultRepo
+    component [MetricSnapshotRepository] as MetricSnapshotRepo
+    component [KPIHistoryRepository] as KPIHistoryRepo
+    component [AlertConfigRepository] as AlertConfigRepo
+
+    component [ResultPersistenceService] as PersistenceSvc {
+        note right
+            Persists all results:
+            - Benchmark runs
+            - Individual metrics
+            - Aggregated KPIs
+            - Historical snapshots
+        end note
+    }
+}
+
+' ============================================
+' ALERTING & NOTIFICATION LAYER
+' ============================================
+package "Alerting & Notification Layer" <<Rectangle>> #Thistle {
+    component [AlertEvaluationService] as AlertEvalSvc {
+        note right
+            Evaluates alert conditions:
+            - KPI below threshold
+            - Metric degradation
+            - Anomaly detection
+            - SLA violations
+        end note
+    }
+
+    component [AlertRuleEngine] as AlertRuleEngine {
+        note right
+            Alert rules:
+            - ROUGE < 0.7 → Warning
+            - ROUGE < 0.5 → Critical
+            - F1 drop > 10% → Alert
+        end note
+    }
+
+    component [NotificationDispatcher] as NotificationDispatcher {
+        note right
+            Multi-channel dispatch:
+            - Email
+            - Slack/Teams
+            - Webhooks
+            - In-app notifications
+        end note
+    }
+
+    component [NotificationTemplateEngine] as TemplateEngine
+}
+
+' ============================================
+' REPORTING LAYER
+' ============================================
+package "Reporting Layer" <<Rectangle>> #MistyRose {
+    component [ReportGenerationService] as ReportGenSvc {
+        note right
+            Generates reports:
+            - PDF/HTML reports
+            - CSV/Excel exports
+            - JSON API responses
+        end note
+    }
+
+    component [DashboardDataService] as DashboardSvc {
+        note right
+            Provides dashboard data:
+            - Real-time metrics
+            - Historical trends
+            - Comparison charts
+        end note
+    }
+
+    component [TrendAnalysisService] as TrendSvc {
+        note right
+            Analyzes trends:
+            - Performance over time
+            - Regression detection
+            - Forecasting
+        end note
+    }
+
+    component [ComparisonService] as ComparisonSvc {
+        note right
+            Compares:
+            - Agent vs Agent
+            - Version vs Version
+            - Benchmark vs Benchmark
+        end note
+    }
+}
+
+' ============================================
+' NEW DATA MODELS
+' ============================================
+package "New Data Models" <<Rectangle>> #Honeydew {
+    class BenchmarkRun <<@Entity>> {
+        - id: UUID
+        - benchmarkId: String
+        - agentId: String
+        - status: RunStatus
+        - triggeredBy: TriggerType
+        - startedAt: Timestamp
+        - completedAt: Timestamp
+        - errorMessage: String
+    }
+
+    class BenchmarkResult <<@Entity>> {
+        - id: UUID
+        - runId: UUID
+        - traceId: String
+        - metrics: List<MetricSnapshot>
+        - kpiValues: Map<String, Double>
+        - createdAt: Timestamp
+    }
+
+    class MetricSnapshot <<@Entity>> {
+        - id: UUID
+        - runId: UUID
+        - metricType: MetricType
+        - metricKey: String
+        - value: Double
+        - traceId: String
+        - timestamp: Timestamp
+    }
+
+    class KPIHistory <<@Entity>> {
+        - id: UUID
+        - benchmarkId: String
+        - agentId: String
+        - kpiName: String
+        - value: Double
+        - baselineValue: Double
+        - threshold: Double
+        - status: KPIStatus
+        - recordedAt: Timestamp
+    }
+
+    class AlertConfig <<@Entity>> {
+        - id: UUID
+        - benchmarkId: String
+        - kpiName: String
+        - condition: AlertCondition
+        - threshold: Double
+        - severity: Severity
+        - channels: List<NotificationChannel>
+        - enabled: Boolean
+    }
+
+    class ScheduleConfig <<@Entity>> {
+        - id: UUID
+        - benchmarkId: String
+        - cronExpression: String
+        - enabled: Boolean
+        - lastRunAt: Timestamp
+        - nextRunAt: Timestamp
+    }
+
+    enum RunStatus {
+        PENDING
+        RUNNING
+        COMPLETED
+        FAILED
+        CANCELLED
+    }
+
+    enum TriggerType {
+        MANUAL
+        SCHEDULED
+        EVENT
+        WEBHOOK
+    }
+
+    enum KPIStatus {
+        HEALTHY
+        WARNING
+        CRITICAL
+        UNKNOWN
+    }
+
+    enum Severity {
+        INFO
+        WARNING
+        CRITICAL
+    }
+}
+
+' ============================================
+' CONNECTIONS - API to Services
+' ============================================
+Admin --> BenchmarkCtrl : REST API
+Admin --> ReportCtrl : Reports
+Admin --> AlertCtrl : Alerts
+SysAdmin --> CronMgr : Configure schedules
+
+BenchmarkCtrl --> Orchestrator
+BenchmarkCtrl --> RunManager
+AlertCtrl --> AlertEvalSvc
+ReportCtrl --> ReportGenSvc
+WSHandler --> DashboardSvc : Real-time updates
+
+' ============================================
+' CONNECTIONS - Scheduling
+' ============================================
+SchedulerSvc --> CronMgr : Triggers
+SchedulerSvc --> MQ : Publishes
+CronMgr --> ScheduledQueue : Schedule events
+EventTriggerSvc --> TriggeredQueue : Trigger events
+EventTriggerSvc --> Langfuse : Webhook listener
+
+' ============================================
+' CONNECTIONS - Orchestration
+' ============================================
+Orchestrator --> DataSyncSvc : 1. Fetch data
+Orchestrator --> MetricEngine : 2. Compute metrics
+Orchestrator --> KPIEngine : 3. Evaluate KPIs
+Orchestrator --> PersistenceSvc : 4. Persist results
+Orchestrator --> AlertEvalSvc : 5. Check alerts
+Orchestrator --> CompletedQueue : 6. Publish completion
+
+RunManager --> RunRepo
+RunManager --> RetryHandler
+RetryHandler --> MQ : Retry/DLQ
+
+' ============================================
+' CONNECTIONS - Data Acquisition
+' ============================================
+DataSyncSvc --> Langfuse : Fetch traces
+DataSyncSvc --> CacheMgr : Cache data
+TraceCollector --> LangfuseTraces
+DatasetMgr --> LangfuseDatasets
+CacheMgr --> Cache
+
+' ============================================
+' CONNECTIONS - Metric Computation
+' ============================================
+MetricEngine --> MetricRegistry
+MetricRegistry --> RougeProvider
+MetricRegistry --> BleuProvider
+MetricRegistry --> AccuracyProvider
+MetricRegistry --> F1Provider
+MetricRegistry --> CustomProvider
+MetricEngine --> MetricAggregator
+
+' ============================================
+' CONNECTIONS - KPI Evaluation
+' ============================================
+KPIEngine --> FormulaRegistry
+FormulaRegistry --> AvgFormula
+FormulaRegistry --> WeightedFormula
+FormulaRegistry --> ThresholdFormula
+FormulaRegistry --> TrendFormula
+FormulaRegistry --> PercentileFormula
+KPIEngine --> KPIComparator
+KPIComparator --> KPIHistoryRepo : Historical data
+
+' ============================================
+' CONNECTIONS - Persistence
+' ============================================
+PersistenceSvc --> RunRepo
+PersistenceSvc --> ResultRepo
+PersistenceSvc --> MetricSnapshotRepo
+PersistenceSvc --> KPIHistoryRepo
+
+RunRepo --> RunsTable
+ResultRepo --> ResultsTable
+MetricSnapshotRepo --> MetricSnapshotsTable
+KPIHistoryRepo --> KPIHistoryTable
+AlertConfigRepo --> AlertConfigsTable
+
+' ============================================
+' CONNECTIONS - Alerting
+' ============================================
+AlertEvalSvc --> AlertRuleEngine
+AlertEvalSvc --> AlertConfigRepo
+AlertRuleEngine --> NotificationDispatcher
+NotificationDispatcher --> NotificationQueue
+NotificationDispatcher --> TemplateEngine
+
+NotificationQueue --> EmailSvc
+NotificationQueue --> SlackSvc
+NotificationQueue --> WebhookSvc
+
+' ============================================
+' CONNECTIONS - Reporting
+' ============================================
+ReportGenSvc --> ResultRepo
+ReportGenSvc --> KPIHistoryRepo
+DashboardSvc --> ResultsCache
+DashboardSvc --> WSHandler
+TrendSvc --> KPIHistoryRepo
+ComparisonSvc --> ResultRepo
+
+' ============================================
+' LEGEND
+' ============================================
+legend right
+    |= Color |= Layer |
+    | <#LightBlue> | API Layer |
+    | <#LightGreen> | Scheduling Layer |
+    | <#LightYellow> | Orchestration Layer |
+    | <#LightCoral> | Data Acquisition Layer |
+    | <#Wheat> | Metric Computation Layer |
+    | <#Plum> | KPI Evaluation Layer |
+    | <#LightSteelBlue> | Persistence Layer |
+    | <#Thistle> | Alerting & Notification |
+    | <#MistyRose> | Reporting Layer |
+    | <#Honeydew> | New Data Models |
+endlegend
+
+@enduml

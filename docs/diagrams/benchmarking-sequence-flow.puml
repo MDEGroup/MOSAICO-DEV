@@ -1,0 +1,302 @@
+@startuml benchmarking-sequence-flow
+!theme plain
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+
+title MOSAICO - Benchmark Execution Flow (Ideal Architecture)
+
+' ============================================
+' PARTICIPANTS
+' ============================================
+actor "Admin" as Admin
+participant "BenchmarkController" as API
+participant "BenchmarkScheduler" as Scheduler
+queue "Message Queue" as MQ
+participant "BenchmarkOrchestrator" as Orchestrator
+participant "RunManager" as RunMgr
+database "Redis Cache" as Cache
+participant "LangfuseDataSync" as DataSync
+cloud "Langfuse" as Langfuse
+participant "MetricEngine" as MetricEngine
+participant "MetricProviderRegistry" as MetricRegistry
+participant "KPIEngine" as KPIEngine
+participant "PersistenceService" as Persistence
+database "PostgreSQL" as DB
+participant "AlertService" as AlertSvc
+participant "NotificationDispatcher" as Notifier
+actor "Stakeholders" as Stakeholders
+
+' ============================================
+' FLOW 1: SCHEDULED BENCHMARK RUN
+' ============================================
+== Scheduled Benchmark Execution ==
+
+Scheduler -> Scheduler : Cron trigger\n(e.g., daily at 00:00)
+activate Scheduler
+
+Scheduler -> DB : Get active schedules
+DB --> Scheduler : List<ScheduleConfig>
+
+loop For each scheduled benchmark
+    Scheduler -> MQ : Publish to\nbenchmark.scheduled
+    note right
+        Message:
+        {
+          benchmarkId: "b-123",
+          agentId: "a-456",
+          triggerType: "SCHEDULED"
+        }
+    end note
+end
+
+deactivate Scheduler
+
+' ============================================
+' FLOW 2: MANUAL BENCHMARK TRIGGER
+' ============================================
+== Manual Benchmark Trigger (Alternative) ==
+
+Admin -> API : POST /benchmarks/{id}/run\n{ agentId: "a-456" }
+activate API
+
+API -> API : Validate request
+API -> MQ : Publish to\nbenchmark.triggered
+API --> Admin : 202 Accepted\n{ runId: "run-789" }
+
+deactivate API
+
+' ============================================
+' FLOW 3: ORCHESTRATION
+' ============================================
+== Benchmark Orchestration ==
+
+MQ -> Orchestrator : Consume message
+activate Orchestrator
+
+Orchestrator -> RunMgr : createRun(benchmarkId, agentId, triggerType)
+activate RunMgr
+
+RunMgr -> DB : INSERT benchmark_run\n(status: PENDING)
+DB --> RunMgr : runId
+RunMgr --> Orchestrator : BenchmarkRun
+
+deactivate RunMgr
+
+Orchestrator -> RunMgr : updateStatus(runId, RUNNING)
+RunMgr -> DB : UPDATE status = RUNNING
+
+' ============================================
+' STEP 1: DATA ACQUISITION
+' ============================================
+group Step 1: Data Acquisition
+
+    Orchestrator -> Cache : get(langfuse:traces:{agentId})
+
+    alt Cache HIT
+        Cache --> Orchestrator : Cached traces
+    else Cache MISS
+        Orchestrator -> DataSync : fetchTraces(agent, datasetRef, runName)
+        activate DataSync
+
+        DataSync -> Langfuse : GET /datasets/{name}/runs/{runName}
+        Langfuse --> DataSync : DatasetRunItems
+
+        loop For each DatasetRunItem
+            DataSync -> Langfuse : GET /dataset-items/{itemId}
+            Langfuse --> DataSync : Expected output
+
+            DataSync -> Langfuse : GET /traces/{traceId}
+            Langfuse --> DataSync : Full trace with output
+        end
+
+        DataSync -> Cache : set(langfuse:traces:{agentId}, traces, TTL=15min)
+        DataSync --> Orchestrator : List<TraceWithFullDetails>
+
+        deactivate DataSync
+    end
+
+end
+
+' ============================================
+' STEP 2: METRIC COMPUTATION
+' ============================================
+group Step 2: Metric Computation
+
+    Orchestrator -> MetricEngine : computeMetrics(traces, agent)
+    activate MetricEngine
+
+    MetricEngine -> MetricRegistry : getAllProviders()
+    MetricRegistry --> MetricEngine : [RougeProvider, BleuProvider, F1Provider, ...]
+
+    loop For each trace (parallel execution)
+        MetricEngine -> MetricEngine : extractExpectedText(trace)
+        MetricEngine -> MetricEngine : extractGeneratedText(trace)
+
+        loop For each MetricProvider
+            MetricEngine -> MetricRegistry : provider.compute(agent, expected, generated, trace)
+            MetricRegistry --> MetricEngine : Metric
+        end
+    end
+
+    MetricEngine -> MetricEngine : aggregateMetrics()
+    note right
+        Aggregation:
+        - Per trace metrics
+        - Average per metric type
+        - Min/Max/StdDev
+    end note
+
+    MetricEngine --> Orchestrator : MetricComputationResult
+
+    deactivate MetricEngine
+
+end
+
+' ============================================
+' STEP 3: KPI EVALUATION
+' ============================================
+group Step 3: KPI Evaluation
+
+    Orchestrator -> KPIEngine : evaluateKPIs(benchmark, metrics)
+    activate KPIEngine
+
+    KPIEngine -> KPIEngine : buildMetricValueMap(metrics)
+
+    loop For each PerformanceKPI in benchmark.measures
+        KPIEngine -> KPIEngine : getFormula(kpi.specification)
+        KPIEngine -> KPIEngine : formula.evaluate(metricValueMap)
+        KPIEngine -> KPIEngine : compareWithBaseline(kpiValue)
+        KPIEngine -> KPIEngine : checkThreshold(kpiValue)
+    end
+
+    KPIEngine --> Orchestrator : KPIEvaluationResult
+
+    deactivate KPIEngine
+
+end
+
+' ============================================
+' STEP 4: PERSISTENCE
+' ============================================
+group Step 4: Result Persistence
+
+    Orchestrator -> Persistence : persistResults(run, metrics, kpis)
+    activate Persistence
+
+    Persistence -> DB : INSERT benchmark_results
+    Persistence -> DB : INSERT metric_snapshots (batch)
+    Persistence -> DB : INSERT kpi_history (batch)
+
+    Persistence -> Cache : invalidate(benchmark:results:{benchmarkId})
+    Persistence -> Cache : set(benchmark:results:{runId}, results)
+
+    Persistence --> Orchestrator : PersistenceResult
+
+    deactivate Persistence
+
+end
+
+' ============================================
+' STEP 5: ALERT EVALUATION
+' ============================================
+group Step 5: Alert Evaluation
+
+    Orchestrator -> AlertSvc : evaluateAlerts(benchmark, kpis)
+    activate AlertSvc
+
+    AlertSvc -> DB : SELECT alert_configs\nWHERE benchmarkId = ?
+    DB --> AlertSvc : List<AlertConfig>
+
+    loop For each AlertConfig
+        AlertSvc -> AlertSvc : checkCondition(kpi, config)
+
+        alt Alert triggered
+            AlertSvc -> MQ : Publish to notification.send
+            note right
+                Alert:
+                {
+                  type: "KPI_THRESHOLD",
+                  severity: "WARNING",
+                  kpi: "ROUGE",
+                  value: 0.65,
+                  threshold: 0.7
+                }
+            end note
+        end
+    end
+
+    AlertSvc --> Orchestrator : AlertEvaluationResult
+
+    deactivate AlertSvc
+
+end
+
+' ============================================
+' STEP 6: NOTIFICATION
+' ============================================
+group Step 6: Notification Dispatch (Async)
+
+    MQ -> Notifier : Consume notification.send
+    activate Notifier
+
+    Notifier -> Notifier : renderTemplate(alert)
+
+    par Send notifications in parallel
+        Notifier -> Stakeholders : Send Email
+    and
+        Notifier -> Stakeholders : Send Slack message
+    and
+        Notifier -> Stakeholders : POST to Webhook
+    end
+
+    deactivate Notifier
+
+end
+
+' ============================================
+' FINALIZATION
+' ============================================
+Orchestrator -> RunMgr : updateStatus(runId, COMPLETED)
+RunMgr -> DB : UPDATE status = COMPLETED,\ncompletedAt = NOW()
+
+Orchestrator -> MQ : Publish to benchmark.completed
+note right
+    Completion event:
+    {
+      runId: "run-789",
+      benchmarkId: "b-123",
+      status: "COMPLETED",
+      summary: { ... }
+    }
+end note
+
+deactivate Orchestrator
+
+' ============================================
+' FLOW 4: REAL-TIME DASHBOARD UPDATE
+' ============================================
+== Real-time Dashboard Update ==
+
+MQ -> API : Consume benchmark.completed
+activate API
+
+API -> API : WebSocket broadcast
+API -> Admin : Push update via WebSocket
+
+deactivate API
+
+' ============================================
+' FLOW 5: ERROR HANDLING
+' ============================================
+== Error Handling (Failure Scenario) ==
+
+note over Orchestrator, DB
+    If any step fails:
+    1. Log error details
+    2. Update run status to FAILED
+    3. Retry based on RetryPolicy
+    4. After max retries, move to Dead Letter Queue
+    5. Send failure notification
+end note
+
+@enduml

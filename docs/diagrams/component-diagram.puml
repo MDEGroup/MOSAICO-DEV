@@ -1,0 +1,239 @@
+@startuml component-diagram
+!theme plain
+skinparam componentStyle uml2
+skinparam linetype ortho
+
+title MOSAICO Repository - Component Diagram
+
+package "Presentation Layer" <<Rectangle>> {
+    package "REST Controllers" {
+        component [AgentController] as AC
+        component [BenchmarkController] as BC
+        component [MetricController] as MC
+        component [ModelController] as MoC
+        component [ProviderController] as PC
+        component [SkillController] as SkC
+        component [TaskController] as TaC
+        component [ToolController] as ToC
+        component [AgentDefinitionController] as ADC
+        component [ToolDefinitionController] as TDC
+        component [BehaviorDefinitionController] as BDC
+        component [CoordinationPatternController] as CPC
+        component [CommunicationProtocolController] as CPrC
+        component [MonitoringConfigController] as MCfC
+        component [RecommendationController] as RC
+        component [SoftEngTaskController] as SEC
+        component [LangfuseProjectController] as LPC
+    }
+
+    component [HTTP Interceptors] as HI
+}
+
+package "Business Logic Layer" <<Rectangle>> {
+    package "Core Services" {
+        interface AgentService
+        interface BenchmarkService
+        interface MetricService
+        interface ModelService
+        interface ProviderService
+
+        component [AgentServiceImpl] as ASI
+        component [BenchmarkServiceImpl] as BSI
+        component [MetricServiceImpl] as MSI
+        component [ModelServiceImpl] as MoSI
+        component [ProviderServiceImpl] as PSI
+    }
+
+    package "Domain Services" {
+        interface SkillService
+        interface TaskService
+        interface ToolService
+        interface ToolDefinitionService
+        interface AgentDefinitionService
+        interface SoftEngTaskService
+
+        component [SkillServiceImpl] as SkSI
+        component [TaskServiceImpl] as TaSI
+        component [ToolServiceImpl] as ToSI
+        component [ToolDefinitionServiceImpl] as TDSI
+        component [AgentDefinitionServiceImpl] as ADSI
+        component [SoftEngTaskServiceImpl] as SESI
+    }
+
+    package "Infrastructure Services" {
+        interface MemoryService
+        interface BehaviorDefinitionService
+        interface CoordinationPatternService
+        interface CommunicationProtocolService
+        interface MonitoringConfigService
+
+        component [MemoryServiceImpl] as MeSI
+        component [BehaviorDefinitionServiceImpl] as BDSI
+        component [CoordinationPatternServiceImpl] as CPSI
+        component [CommunicationProtocolServiceImpl] as CPrSI
+        component [MonitoringConfigServiceImpl] as MCfSI
+    }
+
+    package "Metric Computation" <<Rectangle>> {
+        interface MetricProvider <<interface>>
+        component [MetricProviderRegistry] as MPR
+        component [RougeMetricProvider] as RMP
+        component [BlueMetricProvider] as BMP
+    }
+
+    package "Advanced Services" {
+        interface RecommendationService
+        interface VectorSearchService
+        interface LangfuseService
+        interface LangfuseTracingService
+
+        component [RecommendationServiceImpl] as RSI
+        component [VectorSearchServiceImpl] as VSSI
+        component [LangfuseServiceImpl] as LSI
+        component [LangfuseTracingServiceImpl] as LTSI
+    }
+}
+
+package "Data Access Layer" <<Rectangle>> {
+    package "JPA Repositories" {
+        component [AgentRepository] as AR
+        component [BenchmarkRepository] as BR
+        component [MetricRepository] as MR
+        component [ModelRepository] as MoR
+        component [ProviderRepository] as PR
+        component [SkillRepository] as SkR
+        component [TaskRepository] as TaR
+        component [ToolRepository] as ToR
+        component [ToolDefinitionRepository] as TDR
+        component [AgentDefinitionRepository] as ADR
+        component [AgentUsageRepository] as AUR
+        component [AgentConsumptionRepository] as ACR
+        component [MemoryRepository] as MeR
+        component [HumanFeedbackRepository] as HFR
+        component [BehaviorDefinitionRepository] as BDR
+        component [CoordinationPatternRepository] as CPR
+        component [CommunicationProtocolRepository] as CPrR
+        component [MonitoringConfigRepository] as MCfR
+        component [InteractionProtocolRepository] as IPR
+        component [SoftEngTaskRepository] as SER
+        component [PerformanceKPIRepository] as PKPIR
+    }
+}
+
+package "Infrastructure" <<Rectangle>> {
+    package "Configuration" {
+        component [ApplicationConfig] as AppCfg
+        component [WebConfig] as WebCfg
+        component [SecurityConfig] as SecCfg
+    }
+
+    package "MCP Integration" {
+        component [AgentMCP] as AMCP
+    }
+}
+
+database "PostgreSQL\nDatabase" as DB
+cloud "Langfuse\nPlatform" as LF
+cloud "Vector Store\n(Semantic Search)" as VS
+
+' Controller to Service connections
+AC --> AgentService
+BC --> BenchmarkService
+MC --> MetricService
+MoC --> ModelService
+PC --> ProviderService
+SkC --> SkillService
+TaC --> TaskService
+ToC --> ToolService
+ADC --> AgentDefinitionService
+TDC --> ToolDefinitionService
+BDC --> BehaviorDefinitionService
+CPC --> CoordinationPatternService
+CPrC --> CommunicationProtocolService
+MCfC --> MonitoringConfigService
+RC --> RecommendationService
+SEC --> SoftEngTaskService
+LPC --> LangfuseService
+
+' Service Implementations
+AgentService <|.. ASI
+BenchmarkService <|.. BSI
+MetricService <|.. MSI
+ModelService <|.. MoSI
+ProviderService <|.. PSI
+SkillService <|.. SkSI
+TaskService <|.. TaSI
+ToolService <|.. ToSI
+ToolDefinitionService <|.. TDSI
+AgentDefinitionService <|.. ADSI
+MemoryService <|.. MeSI
+BehaviorDefinitionService <|.. BDSI
+CoordinationPatternService <|.. CPSI
+CommunicationProtocolService <|.. CPrSI
+MonitoringConfigService <|.. MCfSI
+RecommendationService <|.. RSI
+VectorSearchService <|.. VSSI
+LangfuseService <|.. LSI
+LangfuseTracingService <|.. LTSI
+SoftEngTaskService <|.. SESI
+
+' Metric Provider pattern
+MetricProvider <|.. RMP
+MetricProvider <|.. BMP
+MPR --> MetricProvider : registers
+
+' Service to Repository connections
+ASI --> AR
+BSI --> BR
+BSI --> MPR
+BSI --> LSI
+MSI --> MR
+MoSI --> MoR
+PSI --> PR
+SkSI --> SkR
+TaSI --> TaR
+ToSI --> ToR
+TDSI --> TDR
+ADSI --> ADR
+MeSI --> MeR
+BDSI --> BDR
+CPSI --> CPR
+CPrSI --> CPrR
+MCfSI --> MCfR
+SESI --> SER
+
+' Repository to Database
+AR --> DB
+BR --> DB
+MR --> DB
+MoR --> DB
+PR --> DB
+SkR --> DB
+TaR --> DB
+ToR --> DB
+TDR --> DB
+ADR --> DB
+AUR --> DB
+ACR --> DB
+MeR --> DB
+HFR --> DB
+BDR --> DB
+CPR --> DB
+CPrR --> DB
+MCfR --> DB
+IPR --> DB
+SER --> DB
+PKPIR --> DB
+
+' External integrations
+LSI --> LF
+LTSI --> LF
+VSSI --> VS
+RSI --> VSSI
+
+' Interceptors
+HI --> AC
+HI --> BC
+HI --> MC
+
+@enduml
