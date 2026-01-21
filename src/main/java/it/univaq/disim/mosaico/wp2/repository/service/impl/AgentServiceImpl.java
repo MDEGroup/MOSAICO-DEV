@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import it.univaq.disim.mosaico.wp2.repository.data.Agent;
 import it.univaq.disim.mosaico.wp2.repository.data.Provider;
 import it.univaq.disim.mosaico.wp2.repository.data.enums.IOModality;
+import it.univaq.disim.mosaico.wp2.repository.dto.AgentSearchResult;
 import it.univaq.disim.mosaico.wp2.repository.repository.AgentRepository;
 import it.univaq.disim.mosaico.wp2.repository.repository.ProviderRepository;
 import it.univaq.disim.mosaico.wp2.repository.service.AgentService;
@@ -104,5 +105,21 @@ public class AgentServiceImpl implements AgentService {
                 semanticResMap.keySet()
         );
         return results;
+    }
+
+    @Override
+    public List<AgentSearchResult> semanticSearchWithScores(String query, Map<String, Object> filters, int topK) {
+        Map<String, Double> scoresMap = vectorSearchService.semanticSearchWithScores(query, filters, topK);
+        if (scoresMap == null || scoresMap.isEmpty()) {
+            return List.of();
+        }
+        List<Agent> agents = agentRepository.findAllById(scoresMap.keySet());
+        Map<String, Agent> agentMap = agents.stream()
+                .collect(java.util.stream.Collectors.toMap(Agent::getId, a -> a));
+
+        return scoresMap.entrySet().stream()
+                .filter(e -> agentMap.containsKey(e.getKey()))
+                .map(e -> new AgentSearchResult(agentMap.get(e.getKey()), e.getValue()))
+                .toList();
     }
 }

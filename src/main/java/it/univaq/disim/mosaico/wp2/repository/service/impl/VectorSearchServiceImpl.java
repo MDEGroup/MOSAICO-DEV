@@ -115,6 +115,27 @@ public class VectorSearchServiceImpl implements VectorSearchService {
             ));
     }
 
+    /**
+     * Perform a semantic similarity search and return a map of entity IDs to their similarity scores.
+     */
+    @Override
+    public Map<String, Double> semanticSearchWithScores(String query, Map<String, Object> filters, int topK) {
+        List<Document> docs = vectorStore.similaritySearch(
+            SearchRequest.query(query).withTopK(topK).withFilterExpression(buildFilterExpression(filters)));
+
+        return docs.stream()
+                .filter(doc -> matchesFilters(doc, filters))
+                .collect(Collectors.toMap(
+                    doc -> (String) doc.getMetadata().get("entityId"),
+                    doc -> {
+                        double distance = ((Number) doc.getMetadata().getOrDefault("distance", 1.0)).doubleValue();
+                        return 1.0 - distance;
+                    },
+                    (existing, replacement) -> existing,
+                    LinkedHashMap::new
+            ));
+    }
+
     private boolean matchesFilters(Document document, Map<String, Object> filters) {
         if (filters == null || filters.isEmpty()) {
             return true;

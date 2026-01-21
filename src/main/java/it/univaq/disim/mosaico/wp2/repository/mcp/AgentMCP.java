@@ -18,6 +18,7 @@ import io.modelcontextprotocol.spec.McpSchema.TextResourceContents;
 import it.univaq.disim.mosaico.wp2.repository.data.Agent;
 import it.univaq.disim.mosaico.wp2.repository.data.Provider;
 import it.univaq.disim.mosaico.wp2.repository.data.enums.IOModality;
+import it.univaq.disim.mosaico.wp2.repository.dto.AgentSearchResult;
 import it.univaq.disim.mosaico.wp2.repository.service.AgentService;
 
 /**
@@ -165,7 +166,7 @@ public class AgentMCP {
         logger.info("Query: {}", query);
         logger.info("TopK: {}", topK);
 
-        List<Agent> results = agentService.semanticSearch(query, Map.of(), topK);
+        List<AgentSearchResult> results = agentService.semanticSearchWithScores(query, Map.of(), topK);
         logger.info("Result size: {}", results.size());
         String json;
         try {

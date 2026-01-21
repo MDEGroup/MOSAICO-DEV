@@ -4,7 +4,7 @@ import it.univaq.disim.mosaico.wp2.repository.data.Agent;
 import java.util.Map;
 
 public interface VectorSearchService {
- 
+
     /**
      * Save an agent and index its textual representation in the vector store.
      */
@@ -15,6 +15,11 @@ public interface VectorSearchService {
      * contents.
      */
     public Map<String, String> semanticSearch(String query, Map<String, Object> filters, int topK);
+
+    /**
+     * Perform a semantic similarity search and return a map of entity IDs to their similarity scores.
+     */
+    public Map<String, Double> semanticSearchWithScores(String query, Map<String, Object> filters, int topK);
 
     /**
      * Remove an agent from the vector store by its ID.
