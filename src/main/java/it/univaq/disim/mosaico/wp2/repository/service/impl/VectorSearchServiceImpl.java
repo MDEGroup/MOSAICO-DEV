@@ -152,14 +152,77 @@ public class VectorSearchServiceImpl implements VectorSearchService {
 
     private String buildAgentText(Agent a) {
         StringBuilder sb = new StringBuilder();
-        if (a.getName() != null)
-            sb.append(a.getName()).append(" ");
-        if (a.getDescription() != null)
-            sb.append(a.getDescription()).append(" ");
-        if (a.getRole() != null)
-            sb.append(a.getRole()).append(" ");
-        // add other fields you consider relevant
+
+        // Core identity fields
+        appendIfNotEmpty(sb, "Name", a.getName());
+        appendIfNotEmpty(sb, "Description", a.getDescription());
+        appendIfNotEmpty(sb, "Role", a.getRole());
+        appendIfNotEmpty(sb, "Objective", a.getObjective());
+
+        // BDI (Beliefs, Desires, Intentions)
+        appendIfNotEmpty(sb, "Beliefs", a.getBeliefs());
+        appendIfNotEmpty(sb, "Desires", a.getDesires());
+        appendIfNotEmpty(sb, "Intentions", a.getIntentions());
+
+        // Background and context
+        appendIfNotEmpty(sb, "BackStory", a.getBackStory());
+        appendIfNotEmpty(sb, "License", a.getLicense());
+        appendIfNotEmpty(sb, "Version", a.getVersion());
+
+        // IO Modalities
+        if (a.getIoModalities() != null && !a.getIoModalities().isEmpty()) {
+            String modalities = a.getIoModalities().stream()
+                    .map(Enum::name)
+                    .collect(Collectors.joining(", "));
+            sb.append("IO Modalities: ").append(modalities).append(". ");
+        }
+
+        // Provider information
+        if (a.getProvider() != null) {
+            appendIfNotEmpty(sb, "Provider", a.getProvider().getName());
+            appendIfNotEmpty(sb, "Provider Description", a.getProvider().getDescription());
+        }
+
+        // Skills
+        if (a.getSkills() != null && !a.getSkills().isEmpty()) {
+            sb.append("Skills: ");
+            for (var skill : a.getSkills()) {
+                if (skill.getName() != null) {
+                    sb.append(skill.getName());
+                    if (skill.getDescription() != null) {
+                        sb.append(" (").append(skill.getDescription()).append(")");
+                    }
+                    if (skill.getLevel() != null) {
+                        sb.append(" [").append(skill.getLevel().name()).append("]");
+                    }
+                    sb.append(", ");
+                }
+            }
+            sb.append(". ");
+        }
+
+        // Tools
+        if (a.getExploits() != null && !a.getExploits().isEmpty()) {
+            sb.append("Tools: ");
+            for (var tool : a.getExploits()) {
+                if (tool.getName() != null) {
+                    sb.append(tool.getName());
+                    if (tool.getDescription() != null) {
+                        sb.append(" (").append(tool.getDescription()).append(")");
+                    }
+                    sb.append(", ");
+                }
+            }
+            sb.append(". ");
+        }
+
         return sb.toString().trim();
+    }
+
+    private void appendIfNotEmpty(StringBuilder sb, String label, String value) {
+        if (value != null && !value.isBlank()) {
+            sb.append(label).append(": ").append(value).append(". ");
+        }
     }
 
     /**

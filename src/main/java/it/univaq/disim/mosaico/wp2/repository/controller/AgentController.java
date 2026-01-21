@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import it.univaq.disim.mosaico.wp2.repository.data.Agent;
 import it.univaq.disim.mosaico.wp2.repository.data.enums.IOModality;
+import it.univaq.disim.mosaico.wp2.repository.dto.AgentSearchResult;
 import it.univaq.disim.mosaico.wp2.repository.service.AgentService;
 
 /**
@@ -118,11 +119,11 @@ public class AgentController {
         return ResponseEntity.ok(agents);
     }
     @PostMapping("/search")
-    public ResponseEntity<List<Agent>> semanticSearch(@RequestBody SemanticSearchRequest request) {
+    public ResponseEntity<List<AgentSearchResult>> semanticSearch(@RequestBody SemanticSearchRequest request) {
         String query = request.getQuery();
         int topK = request.getTopK() == null ? 5 : request.getTopK();
         Map<String, Object> filters = request.getFilters() == null ? Map.of() : request.getFilters();
-        List<Agent> results = agentService.semanticSearch(query, filters, topK);
+        List<AgentSearchResult> results = agentService.semanticSearchWithScores(query, filters, topK);
         results.forEach(z -> logger.info(z.toString()));
         return ResponseEntity.ok(results);
     }
