@@ -146,6 +146,8 @@ public class AgentRepositoryTest {
             "coding assistance",
             Arrays.asList(IOModality.TEXT, IOModality.CODE),
             "Test backstory",
+            null, // a2aAgentCardUrl
+            null, // deployment
             exampleSkills,
             exampleTools,
             exampleMemories,
