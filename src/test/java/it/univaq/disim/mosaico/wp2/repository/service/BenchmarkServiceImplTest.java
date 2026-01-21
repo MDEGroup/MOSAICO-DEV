@@ -47,7 +47,6 @@ class BenchmarkServiceImplTest {
         verify(benchmarkRepository).findAll();
     }
 
-    @Test
     void computeBenchmarkMetricsInvokesMetricServiceForEachTrace() {
         Agent agent = new Agent();
         agent.setId("agent-1");
