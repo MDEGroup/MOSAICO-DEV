@@ -1,0 +1,47 @@
+@startuml scheduling-flow
+
+!theme plain
+title Benchmark Scheduling - Flow Diagram
+
+participant "Scheduled\nTask Runner" as Runner
+participant "Schedule\nConfig Repo" as ConfigRepo
+participant "Benchmark\nOrchestrator" as Orchestrator
+participant "BenchmarkRun\nManager" as RunManager
+database "Database" as DB
+
+== Scheduled Execution (every minute) ==
+
+Runner -> Runner: @Scheduled(fixedRate=60000)
+
+Runner -> ConfigRepo: findByEnabledAndNextRunAtBefore(now)
+ConfigRepo -> DB: SELECT * FROM schedule_configs\nWHERE enabled=true AND next_run_at <= now
+DB --> ConfigRepo: List<ScheduleConfig>
+ConfigRepo --> Runner: configs
+
+loop for each ScheduleConfig
+    Runner -> RunManager: createRun(benchmarkId, agentId, SCHEDULED)
+    RunManager -> DB: INSERT benchmark_run
+    RunManager --> Runner: runId
+
+    Runner -> Orchestrator: executeBenchmarkRunAsync(runId)
+    note right: Async execution\nin separate thread
+
+    alt Run completed successfully
+        Runner -> ConfigRepo: recordRunSuccess(runId)
+        ConfigRepo -> DB: UPDATE schedule_config\nSET last_run_status='COMPLETED',\nconsecutive_failures=0
+    else Run failed
+        Runner -> ConfigRepo: recordRunFailure(runId)
+        ConfigRepo -> DB: UPDATE schedule_config\nSET last_run_status='FAILED',\nconsecutive_failures++
+
+        alt consecutiveFailures >= maxConsecutiveFailures
+            ConfigRepo -> DB: UPDATE schedule_config\nSET enabled=false
+            note right: Auto-disable\nafter N failures
+        end
+    end
+
+    Runner -> Runner: calculateNextRunAt(cronExpression)
+    Runner -> ConfigRepo: setNextRunAt(nextRunAt)
+    ConfigRepo -> DB: UPDATE schedule_config\nSET next_run_at=?
+end
+
+@enduml

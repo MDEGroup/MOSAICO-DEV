@@ -1,0 +1,124 @@
+@startuml entity-relationships
+
+!theme plain
+skinparam linetype ortho
+
+title MOSAICO Benchmarking - Entity Relationship Diagram
+
+entity "Agent" as agent {
+    * id : VARCHAR(36) <<PK>>
+    --
+    name : VARCHAR(255)
+    description : TEXT
+    version : VARCHAR(50)
+    llangfuse_project_name : VARCHAR(255)
+    llangfuse_url : VARCHAR(255)
+    llangfuse_secret_key : VARCHAR(255)
+    llangfuse_public_key : VARCHAR(255)
+    provider_id : VARCHAR(36) <<FK>>
+}
+
+entity "Benchmark" as benchmark {
+    * id : VARCHAR(36) <<PK>>
+    --
+    metadata : TEXT
+    dataset_ref : VARCHAR(255)
+    run_name : VARCHAR(255)
+    task_def : TEXT
+    features : TEXT
+    protocol_version : VARCHAR(50)
+}
+
+entity "benchmark_evaluates" as bench_eval {
+    * benchmark_id : VARCHAR(36) <<FK>>
+    * agent_id : VARCHAR(36) <<FK>>
+}
+
+entity "BenchmarkRun" as run {
+    * id : VARCHAR(36) <<PK>>
+    --
+    benchmark_id : VARCHAR(36) <<FK>>
+    agent_id : VARCHAR(36) <<FK>>
+    status : ENUM('PENDING','RUNNING','COMPLETED','FAILED','CANCELLED')
+    triggered_by : ENUM('MANUAL','SCHEDULED','EVENT','WEBHOOK')
+    triggered_by_user : VARCHAR(255)
+    started_at : TIMESTAMP
+    completed_at : TIMESTAMP
+    error_message : TEXT
+    traces_processed : INTEGER
+    metrics_computed : INTEGER
+    retry_count : INTEGER
+    schedule_config_id : VARCHAR(36) <<FK>>
+}
+
+entity "BenchmarkResult" as result {
+    * id : VARCHAR(36) <<PK>>
+    --
+    benchmark_run_id : VARCHAR(36) <<FK>>
+    trace_id : VARCHAR(255)
+    metric_type : ENUM('ROUGE','BLEU','ACCURACY',...)
+    metric_value : DOUBLE
+    computed_at : TIMESTAMP
+}
+
+entity "ScheduleConfig" as schedule {
+    * id : VARCHAR(36) <<PK>>
+    --
+    name : VARCHAR(255)
+    description : TEXT
+    benchmark_id : VARCHAR(36) <<FK>>
+    agent_id : VARCHAR(36) <<FK>>
+    cron_expression : VARCHAR(100)
+    timezone : VARCHAR(50)
+    enabled : BOOLEAN
+    last_run_at : TIMESTAMP
+    last_run_id : VARCHAR(36)
+    last_run_status : VARCHAR(20)
+    next_run_at : TIMESTAMP
+    run_count : INTEGER
+    failure_count : INTEGER
+    consecutive_failures : INTEGER
+    max_consecutive_failures : INTEGER
+    auto_disable_on_failure : BOOLEAN
+    created_at : TIMESTAMP
+    updated_at : TIMESTAMP
+    created_by : VARCHAR(255)
+}
+
+entity "KPIHistory" as kpi {
+    * id : VARCHAR(36) <<PK>>
+    --
+    benchmark_run_id : VARCHAR(36) <<FK>>
+    kpi_name : VARCHAR(255)
+    formula_expression : TEXT
+    computed_value : DOUBLE
+    computed_at : TIMESTAMP
+}
+
+entity "MetricSnapshot" as snapshot {
+    * id : VARCHAR(36) <<PK>>
+    --
+    benchmark_run_id : VARCHAR(36) <<FK>>
+    trace_id : VARCHAR(255)
+    metric_key : VARCHAR(100)
+    metric_value : DOUBLE
+    computed_at : TIMESTAMP
+}
+
+' Relationships
+benchmark ||--o{ bench_eval
+agent ||--o{ bench_eval
+bench_eval }o--|| benchmark
+bench_eval }o--|| agent
+
+benchmark ||--o{ run : "1:N"
+agent ||--o{ run : "1:N"
+run ||--o{ result : "1:N"
+run ||--o{ kpi : "1:N"
+run ||--o{ snapshot : "1:N"
+
+benchmark ||--o{ schedule : "1:N"
+agent ||--o{ schedule : "1:N"
+schedule |o--o| run : "triggers"
+
+@enduml
