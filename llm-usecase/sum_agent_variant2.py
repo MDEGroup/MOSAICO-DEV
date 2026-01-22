@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Variante 2: Utilizza mistral:7b con temperature bassa per output più deterministici
+Variante 2: Utilizza qwen2.5:0.5b - modello ultra compatto e veloce
 """
 import os
 import json
@@ -13,8 +13,8 @@ from langfuse import Langfuse
 from ollama_agent import AgentConfig, build_agent
 
 # Configurazione specifica per questa variante
-VARIANT_NAME = "variant2_mistral_7b_deterministic"
-VARIANT_MODEL = "mistral:7b"
+VARIANT_NAME = "variant2_qwen25_05b_compact"
+VARIANT_MODEL = "qwen2.5:0.5b"
 VARIANT_OPTIONS = {
     "temperature": 0.2,
     "top_p": 0.8,
@@ -98,12 +98,8 @@ def main():
         raise NotImplementedError("Only provider=ollama is supported in this template.")
 
 
-    begin = CFG.start if CFG.start >= 0 else 0
-    end = begin + CFG.limit if CFG.limit > 0 else None
-    selected_items = items[begin:end]
-    if not selected_items:
-        raise RuntimeError("Selected dataset slice returned no items")
-
+    
+    lf = Langfuse(public_key=CFG.lf_pk, secret_key=CFG.lf_sk, host=CFG.lf_host)
     agent_config = AgentConfig(
         model=CFG.model_name,
         host=CFG.ollama_host,
@@ -111,15 +107,19 @@ def main():
         prompt_template=CFG.prompt_template,
     ) 
     agent = build_agent(agent_config)
-    lf = Langfuse(public_key=CFG.lf_pk, secret_key=CFG.lf_sk, host=CFG.lf_host)
     dataset = lf.get_dataset(CFG.dataset_name)
+    begin = CFG.start if CFG.start >= 0 else 0
+    end = begin + CFG.limit if CFG.limit > 0 else None
+    selected_items = dataset.items[begin:end]
+    if not selected_items:
+        raise RuntimeError("Selected dataset slice returned no items")
 
     # Nome esperimento specifico per questa variante
     experiment_name = f"experiment_{VARIANT_NAME}_{args.split}"
     
     result = lf.run_experiment(
         name=experiment_name,
-        description=f"Experiment using {VARIANT_MODEL} with deterministic settings (temp=0.2, top_p=0.8)",
+        description=f"Experiment using {VARIANT_MODEL} - ultra compact model (temp=0.2, top_p=0.8)",
         data=selected_items,
         task=agent,
         metadata={

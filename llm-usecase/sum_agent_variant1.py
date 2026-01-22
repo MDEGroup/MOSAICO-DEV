@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Variante 1: Utilizza llama3.1:8b con temperature più alta per output più creativi
+Variante 1: Utilizza llama3.2:1b - modello ultra leggero e veloce
 """
 import os
 import json
@@ -13,13 +13,13 @@ from langfuse import Langfuse
 from ollama_agent import AgentConfig, build_agent
 
 # Configurazione specifica per questa variante
-VARIANT_NAME = "variant1_llama31_8b_creative"
-VARIANT_MODEL = "llama3.1:8b"
+VARIANT_NAME = "variant1_llama32_1b_fast"
+VARIANT_MODEL = "llama3.2:1b"
 VARIANT_OPTIONS = {
-    "temperature": 0.8,
-    "top_p": 0.95,
-    "top_k": 50,
-    "num_predict": 512,
+    "temperature": 0.3,
+    "top_p": 0.9,
+    "top_k": 40,
+    "num_predict": 256,
 }
 
 @dataclass
@@ -107,13 +107,18 @@ def main():
     agent = build_agent(agent_config)
     lf = Langfuse(public_key=CFG.lf_pk, secret_key=CFG.lf_sk, host=CFG.lf_host)
     dataset = lf.get_dataset(CFG.dataset_name)
-
+    begin = CFG.start if CFG.start >= 0 else 0
+    end = 50 #begin + CFG.limit if CFG.limit > 0 else None
+    selected_items = dataset.items[begin:end]
+    if not selected_items:
+        raise RuntimeError("Selected dataset slice returned no items")
     # Nome esperimento specifico per questa variante
     experiment_name = f"experiment_{VARIANT_NAME}_{args.split}"
     
     result = lf.run_experiment(
         name=experiment_name,
-        description=f"Experiment using {VARIANT_MODEL} with creative settings (temp=0.8, top_p=0.95)",
+        description=f"Experiment using {VARIANT_MODEL} - ultra lightweight and fast model (temp=0.3)",
+        data=selected_items,
         task=agent,
         metadata={
             "model": CFG.model_name,
