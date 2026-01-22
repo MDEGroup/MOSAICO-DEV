@@ -30,7 +30,7 @@ public class ThresholdFormula implements KPIFormula {
     }
 
     @Override
-    public double evaluate(Map<Class<? extends MetricKey>, Double> metricValues) {
+    public double evaluate(Map<?, Double> metricValues) {
         if (!metricValues.containsKey(metricKey)) {
             throw new IllegalArgumentException("Missing required metric: " + metricKey.getSimpleName());
         }
