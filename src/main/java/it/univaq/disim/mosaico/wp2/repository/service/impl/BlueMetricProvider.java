@@ -7,17 +7,18 @@ import java.util.Objects;
 
 import org.springframework.stereotype.Service;
 
-import com.langfuse.client.resources.commons.types.TraceWithFullDetails;
+
 
 import it.univaq.disim.mosaico.wp2.repository.data.Agent;
 import it.univaq.disim.mosaico.wp2.repository.data.BlueMetric;
 import it.univaq.disim.mosaico.wp2.repository.data.Metric;
 import it.univaq.disim.mosaico.wp2.repository.data.enums.MetricType;
 import it.univaq.disim.mosaico.wp2.repository.service.MetricProvider;
+import it.univaq.disim.mosaico.wp2.repository.service.LangfuseService.TraceData;
 @Service
 public class BlueMetricProvider implements MetricProvider<BlueMetric> {
     @Override
-    public Metric compute(Agent agent, String referenceText, String generatedText, TraceWithFullDetails trace) {
+    public Metric compute(Agent agent, String referenceText, String generatedText, TraceData trace) {
         float rougeScore = computeRougeLScore(referenceText, generatedText);
         Metric rougeMetric = new Metric();
         rougeMetric.setName("BLEU Score");

@@ -55,7 +55,7 @@ public class TraceMetricsAggregator {
 
             for (MetricProvider<?> provider : providers) {
                 try {
-                    Metric metric = provider.compute(agent, trace.expectedOutput, trace.generatedOutput, trace.trace);
+                    Metric metric = provider.compute(agent, trace.expectedOutput, trace.generatedOutput, trace);
                     if (metric == null) {
                         continue;
                     }

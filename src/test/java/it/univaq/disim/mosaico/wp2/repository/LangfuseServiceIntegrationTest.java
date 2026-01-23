@@ -3,6 +3,8 @@ package it.univaq.disim.mosaico.wp2.repository;
 import it.univaq.disim.mosaico.wp2.repository.config.LangfuseProperties;
 import it.univaq.disim.mosaico.wp2.repository.data.Agent;
 import it.univaq.disim.mosaico.wp2.repository.service.LangfuseService;
+import it.univaq.disim.mosaico.wp2.repository.service.LangfuseService.TraceData;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
@@ -268,7 +270,7 @@ class LangfuseServiceIntegrationTest {
         // Given
         Agent agent = buildAgentWithIntegrationCredentials();
         // When
-        List<TraceWithFullDetails> lista = langfuseService.getRunBenchmarkTraces(agent, "ause_train",
+        List<TraceData> lista = langfuseService.fetchTracesFromRun(agent, "ause_train",
                 "run test - 2025-12-05T08:48:15.353757Z");
         assertTrue(!lista.isEmpty());
         logger.info("Retrieved run benchmarks for project ID {}", lista.size());

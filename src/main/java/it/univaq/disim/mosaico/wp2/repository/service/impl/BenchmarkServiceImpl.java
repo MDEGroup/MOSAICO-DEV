@@ -20,6 +20,7 @@ import it.univaq.disim.mosaico.wp2.repository.service.BenchmarkService;
 import it.univaq.disim.mosaico.wp2.repository.service.LangfuseService;
 import it.univaq.disim.mosaico.wp2.repository.service.MetricProvider;
 import it.univaq.disim.mosaico.wp2.repository.service.MetricService;
+import it.univaq.disim.mosaico.wp2.repository.service.LangfuseService.TraceData;
 
 /**
  * Implementation of BenchmarkService.
@@ -93,16 +94,16 @@ public class BenchmarkServiceImpl implements BenchmarkService {
 
         try {
             // Retrieve traces from Langfuse for this benchmark run
-            List<TraceWithFullDetails> traces = langfuseService.getRunBenchmarkTraces(
+            List<TraceData> traces = langfuseService.fetchTracesFromRun(
                 agent,
                 benchmark.getDatasetRef(),
                 benchmark.getRunName()
             );
 
             // Apply all registered metric providers to each trace
-            for (TraceWithFullDetails trace : traces) {
-                String expectedText = extractExpectedText(trace);
-                String generatedText = extractGeneratedText(trace);
+            for (TraceData trace : traces) {
+                String expectedText = trace.expectedOutput;
+                String generatedText = trace.generatedOutput;
 
                 // Compute metrics using all available providers
                 for (MetricProvider<?> provider : metricProviderRegistry.getAllProviders()) {
@@ -170,15 +171,15 @@ public class BenchmarkServiceImpl implements BenchmarkService {
         List<Metric> metrics = new ArrayList<>();
 
         try {
-            List<TraceWithFullDetails> traces = langfuseService.getRunBenchmarkTraces(
+            List<TraceData> traces = langfuseService.fetchTracesFromRun(
                 agent,
                 benchmark.getDatasetRef(),
                 benchmark.getRunName()
             );
 
-            for (TraceWithFullDetails trace : traces) {
-                String expectedText = extractExpectedText(trace);
-                String generatedText = extractGeneratedText(trace);
+            for (TraceData trace : traces) {
+                String expectedText = trace.expectedOutput;
+                String generatedText = trace.generatedOutput;
 
                 for (MetricProvider<?> provider : metricProviders) {
                     Metric metric = provider.compute(agent, expectedText, generatedText, trace);

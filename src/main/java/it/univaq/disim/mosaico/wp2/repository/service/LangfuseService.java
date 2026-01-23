@@ -6,10 +6,12 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import com.langfuse.client.LangfuseClient;
 import com.langfuse.client.core.LangfuseClientApiException;
@@ -43,6 +45,7 @@ public class LangfuseService {
     private static final Logger logger = LoggerFactory.getLogger(LangfuseService.class);
 
     private final LangfuseProperties properties;
+    private final Map<String, LangfuseClient> agentClientCache = new ConcurrentHashMap<>();
 
     public LangfuseService(LangfuseProperties properties) {
         this.properties = properties;
@@ -127,8 +130,7 @@ public class LangfuseService {
             return Collections.emptyList();
         }
 
-        LangfuseClient client = buildClient(agent.getLlangfuseUrl(), agent.getLlangfusePublicKey(),
-                agent.getLlangfuseSecretKey());
+        LangfuseClient client = buildClientForAgent(agent);
         if (client == null) {
             return Collections.emptyList();
         }
@@ -224,8 +226,7 @@ public class LangfuseService {
             logger.warn("Cannot load Langfuse metrics: agent is null");
             return new ArrayList<>();
         }
-        LangfuseClient client = buildClient(agent.getLlangfuseUrl(), agent.getLlangfusePublicKey(),
-                agent.getLlangfuseSecretKey());
+        LangfuseClient client = buildClientForAgent(agent);
         if (client == null) {
             return new ArrayList<>();
         }
@@ -269,8 +270,7 @@ public class LangfuseService {
             return new ArrayList<>();
         }
 
-        LangfuseClient client = buildClient(agent.getLlangfuseUrl(), agent.getLlangfusePublicKey(),
-                agent.getLlangfuseSecretKey());
+        LangfuseClient client = buildClientForAgent(agent);
         if (client == null) {
             return new ArrayList<>();
         }
@@ -309,44 +309,42 @@ public class LangfuseService {
         return metrics;
     }
 
-    public List<TraceWithFullDetails> getRunBenchmarkTraces(Agent agent, String datasetName, String runName) {
-        LangfuseClient client = buildClient(agent.getLlangfuseUrl(), agent.getLlangfusePublicKey(),
-                agent.getLlangfuseSecretKey());
-        List<TraceWithFullDetails> traces = new ArrayList<>();
-        if (client == null) {
-            return traces;
-        }
-        try {
-            DatasetRunWithItems datasetRun = client.datasets().getRun(datasetName, runName,
-                    RequestOptions.builder().build());
-            datasetRun.getDatasetRunItems().forEach(item -> {
-                try {
-                    DatasetItem datasetItem = client.datasetItems().get(item.getDatasetItemId());
-                    TraceWithFullDetails trace = client.trace().get(item.getTraceId());
-                    trace.getAdditionalProperties().put("expected", datasetItem.getExpectedOutput());
-                    traces.add(trace);
-                } catch (LangfuseClientApiException ex) {
-                    if (isNotFound(ex)) {
-                        logNotFound("loading trace " + item.getTraceId(), ex);
-                    } else {
-                        throw ex;
-                    }
-                }
-            });
-            return traces;
-        } catch (LangfuseClientApiException ex) {
-            if (isNotFound(ex)) {
-                logNotFound("loading dataset run " + runName, ex);
-                return traces;
-            }
-            throw ex;
-        }
-    }
+    // public List<TraceWithFullDetails> getRunBenchmarkTraces(Agent agent, String datasetName, String runName) {
+    //     LangfuseClient client = buildClientForAgent(agent);
+    //     List<TraceWithFullDetails> traces = new ArrayList<>();
+    //     if (client == null) {
+    //         return traces;
+    //     }
+    //     try {
+    //         DatasetRunWithItems datasetRun = client.datasets().getRun(datasetName, runName,
+    //                 RequestOptions.builder().build());
+    //         datasetRun.getDatasetRunItems().forEach(item -> {
+    //             try {
+    //                 DatasetItem datasetItem = client.datasetItems().get(item.getDatasetItemId());
+    //                 TraceWithFullDetails trace = client.trace().get(item.getTraceId());
+    //                 trace.getAdditionalProperties().put("expected", datasetItem.getExpectedOutput());
+    //                 traces.add(trace);
+    //             } catch (LangfuseClientApiException ex) {
+    //                 if (isNotFound(ex)) {
+    //                     logNotFound("loading trace " + item.getTraceId(), ex);
+    //                 } else {
+    //                     throw ex;
+    //                 }
+    //             }
+    //         });
+    //         return traces;
+    //     } catch (LangfuseClientApiException ex) {
+    //         if (isNotFound(ex)) {
+    //             logNotFound("loading dataset run " + runName, ex);
+    //             return traces;
+    //         }
+    //         throw ex;
+    //     }
+    // }
 
-    public List<TraceData> fetchTracesFromRun(Agent agent, String runName, String datasetName) {
+    public List<TraceData> fetchTracesFromRun(Agent agent, String datasetName, String runName) {
         List<TraceData> result = new ArrayList<>();
-        LangfuseClient langfuseClient = buildClient(agent.getLlangfuseUrl(), agent.getLlangfusePublicKey(),
-                agent.getLlangfuseSecretKey());
+        LangfuseClient langfuseClient = buildClientForAgent(agent);
         if (langfuseClient == null) {
             return result;
         }
@@ -496,8 +494,58 @@ public class LangfuseService {
         return buildClient(properties.getBaseUrl(), properties.getPublicKey(), properties.getSecretKey());
     }
 
+    private LangfuseClient buildClientForAgent(Agent agent) {
+        if (agent == null) {
+            logger.warn("Cannot create Langfuse client: agent is null");
+            return null;
+        }
+
+        logger.debug("Building Langfuse client for agent {}. Agent credentials: url={}, publicKey={}, secretKey={}",
+                agent.getId(),
+                agent.getLlangfuseUrl(),
+                agent.getLlangfusePublicKey() != null ? agent.getLlangfusePublicKey().substring(0, Math.min(10, agent.getLlangfusePublicKey().length())) + "..." : "null",
+                agent.getLlangfuseSecretKey() != null ? "***" : "null");
+
+        String baseUrl = StringUtils.hasText(agent.getLlangfuseUrl())
+                ? agent.getLlangfuseUrl()
+                : properties.getBaseUrl();
+        String publicKey = StringUtils.hasText(agent.getLlangfusePublicKey())
+                ? agent.getLlangfusePublicKey()
+                : properties.getPublicKey();
+        String secretKey = StringUtils.hasText(agent.getLlangfuseSecretKey())
+                ? agent.getLlangfuseSecretKey()
+                : properties.getSecretKey();
+
+        if (!StringUtils.hasText(publicKey) || !StringUtils.hasText(secretKey)) {
+            logger.warn("Missing Langfuse credentials for agent {} and no global defaults configured", agent.getId());
+            return null;
+        }
+
+        if (!StringUtils.hasText(baseUrl)) {
+            logger.warn("Missing Langfuse base URL for agent {} and no global default configured", agent.getId());
+            return null;
+        }
+
+        if (!StringUtils.hasText(agent.getLlangfusePublicKey()) || !StringUtils.hasText(agent.getLlangfuseSecretKey())) {
+            logger.debug("Falling back to global Langfuse credentials for agent {}", agent.getId());
+        }
+
+        logger.debug("Final credentials being used: url={}, publicKey={}", baseUrl,
+                publicKey != null ? publicKey.substring(0, Math.min(10, publicKey.length())) + "..." : "null");
+
+        String cacheKey = buildAgentCacheKey(baseUrl, publicKey, secretKey);
+        return agentClientCache.computeIfAbsent(cacheKey, key -> {
+            logger.debug("Creating cached Langfuse client for agent {} (key hash: {})", agent.getId(), key.hashCode());
+            return buildClient(baseUrl, publicKey, secretKey);
+        });
+    }
+
+    private String buildAgentCacheKey(String baseUrl, String publicKey, String secretKey) {
+        return baseUrl + "|" + publicKey + "|" + secretKey;
+    }
+
     private LangfuseClient buildClient(String baseUrl, String publicKey, String secretKey) {
-        if (baseUrl == null || publicKey == null || secretKey == null) {
+        if (!StringUtils.hasText(baseUrl) || !StringUtils.hasText(publicKey) || !StringUtils.hasText(secretKey)) {
             logger.warn("Missing Langfuse credentials, cannot create client");
             return null;
         }
@@ -658,8 +706,7 @@ public class LangfuseService {
         if (agent == null || itemId == null) {
             return null;
         }
-        LangfuseClient client = buildClient(agent.getLlangfuseUrl(), agent.getLlangfusePublicKey(),
-                agent.getLlangfuseSecretKey());
+        LangfuseClient client = buildClientForAgent(agent);
         if (client == null) {
             return null;
         }
@@ -686,8 +733,7 @@ public class LangfuseService {
         if (agent == null || traceId == null) {
             return null;
         }
-        LangfuseClient client = buildClient(agent.getLlangfuseUrl(), agent.getLlangfusePublicKey(),
-                agent.getLlangfuseSecretKey());
+        LangfuseClient client = buildClientForAgent(agent);
         if (client == null) {
             return null;
         }

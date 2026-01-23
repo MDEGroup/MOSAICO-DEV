@@ -384,7 +384,11 @@ class BenchmarkDemoRunner implements CommandLineRunner {
             print("  Run name: " + runName);
 
             try {
-                List<TraceData> traces = langfuseService.fetchTracesFromRun(agentResult.agent, runName, benchmark.getDatasetRef());
+                List<TraceData> traces = langfuseService.fetchTracesFromRun(
+                    agentResult.agent,
+                    benchmark.getDatasetRef(),
+                    runName
+                );
                 agentResult.traces = traces;
                 print("  Traces recuperate: " + traces.size());
 

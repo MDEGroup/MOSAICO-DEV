@@ -8,6 +8,8 @@ import it.univaq.disim.mosaico.wp2.repository.repository.BenchmarkResultReposito
 import it.univaq.disim.mosaico.wp2.repository.repository.KPIHistoryRepository;
 import it.univaq.disim.mosaico.wp2.repository.repository.MetricSnapshotRepository;
 import it.univaq.disim.mosaico.wp2.repository.service.*;
+import it.univaq.disim.mosaico.wp2.repository.service.LangfuseService.TraceData;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Async;
@@ -79,9 +81,10 @@ public class BenchmarkOrchestratorImpl implements BenchmarkOrchestrator {
             String langfuseRunName = resolveLangfuseRunName(run, benchmark);
             logger.debug("Fetching traces for benchmark run {} using dataset={} runName={}",
                 runId, benchmark.getDatasetRef(), langfuseRunName);
-            List<TraceWithFullDetails> traces = langfuseService.getRunBenchmarkTraces(
+            //List<TraceWithFullDetails> traces = langfuseService.getRunBenchmarkTraces(
+            //    agent, benchmark.getDatasetRef(), langfuseRunName);
+            List<TraceData> traces = langfuseService.fetchTracesFromRun(
                 agent, benchmark.getDatasetRef(), langfuseRunName);
-
             if (traces.isEmpty()) {
                 logger.warn("No traces found for benchmark run: {}", runId);
             }
@@ -90,7 +93,7 @@ public class BenchmarkOrchestratorImpl implements BenchmarkOrchestrator {
             int metricsComputed = 0;
 
             // 3. Process each trace
-            for (TraceWithFullDetails trace : traces) {
+            for (TraceData trace : traces) {
                 BenchmarkResult result = processTrace(run, benchmark, agent, trace);
                 resultRepository.save(result);
                 tracesProcessed++;
@@ -147,11 +150,11 @@ public class BenchmarkOrchestratorImpl implements BenchmarkOrchestrator {
         return newRun.getId();
     }
 
-    private BenchmarkResult processTrace(BenchmarkRun run, Benchmark benchmark, Agent agent, TraceWithFullDetails trace) {
-        BenchmarkResult result = new BenchmarkResult(run, trace.getId());
+    private BenchmarkResult processTrace(BenchmarkRun run, Benchmark benchmark, Agent agent, TraceData trace) {
+        BenchmarkResult result = new BenchmarkResult(run, trace.traceId);
 
-        String expectedText = extractExpectedText(trace);
-        String generatedText = extractGeneratedText(trace);
+        String expectedText = trace.expectedOutput;
+        String generatedText = trace.generatedOutput;
         result.setExpectedText(expectedText);
         result.setGeneratedText(generatedText);
 
@@ -159,11 +162,11 @@ public class BenchmarkOrchestratorImpl implements BenchmarkOrchestrator {
         for (MetricProvider<?> provider : metricProviderRegistry.getAllProviders()) {
             try {
                 Metric metric = provider.compute(agent, expectedText, generatedText, trace);
-                MetricSnapshot snapshot = MetricSnapshot.fromMetric(run.getId(), metric, trace.getId());
+                MetricSnapshot snapshot = MetricSnapshot.fromMetric(run.getId(), metric, trace.traceId);
                 result.addMetricSnapshot(snapshot);
             } catch (Exception e) {
                 logger.warn("Failed to compute metric {} for trace {}: {}",
-                    provider.getClass().getSimpleName(), trace.getId(), e.getMessage());
+                    provider.getClass().getSimpleName(), trace.traceId, e.getMessage());
             }
         }
 

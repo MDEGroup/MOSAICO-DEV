@@ -11,10 +11,11 @@ import it.univaq.disim.mosaico.wp2.repository.data.Metric;
 import it.univaq.disim.mosaico.wp2.repository.data.RougeMetric;
 import it.univaq.disim.mosaico.wp2.repository.data.enums.MetricType;
 import it.univaq.disim.mosaico.wp2.repository.service.MetricProvider;
+import it.univaq.disim.mosaico.wp2.repository.service.LangfuseService.TraceData;
 @Service
 public class RougeMetricProvider implements MetricProvider<RougeMetric> {
     @Override
-    public Metric compute(Agent agent, String referenceText, String generatedText, com.langfuse.client.resources.commons.types.TraceWithFullDetails trace) {
+    public Metric compute(Agent agent, String referenceText, String generatedText, TraceData trace) {
         float rougeScore = computeRougeLScore(referenceText, generatedText);
         Metric rougeMetric = new Metric();
         rougeMetric.setName("ROUGE Score");

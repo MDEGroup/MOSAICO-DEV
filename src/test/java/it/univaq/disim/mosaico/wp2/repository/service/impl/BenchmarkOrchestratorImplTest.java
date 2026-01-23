@@ -24,7 +24,10 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.contains;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 /**
@@ -95,7 +98,7 @@ class BenchmarkOrchestratorImplTest {
             when(runManager.startRun("run-789")).thenReturn(testRun);
             when(benchmarkService.findById("benchmark-123")).thenReturn(Optional.of(testBenchmark));
             when(agentService.findById("agent-456")).thenReturn(Optional.of(testAgent));
-            when(langfuseService.getRunBenchmarkTraces(any(), anyString(), anyString()))
+            when(langfuseService.fetchTracesFromRun(any(), anyString(), anyString()))
                 .thenReturn(Collections.emptyList());
             lenient().when(metricProviderRegistry.getAllProviders()).thenReturn(Collections.emptyList());
             when(runManager.completeRun(anyString(), anyInt(), anyInt())).thenReturn(testRun);
@@ -139,7 +142,7 @@ class BenchmarkOrchestratorImplTest {
             when(runManager.startRun("run-789")).thenReturn(testRun);
             when(benchmarkService.findById("benchmark-123")).thenReturn(Optional.of(testBenchmark));
             when(agentService.findById("agent-456")).thenReturn(Optional.of(testAgent));
-            when(langfuseService.getRunBenchmarkTraces(any(), anyString(), anyString()))
+            when(langfuseService.fetchTracesFromRun(any(), anyString(), anyString()))
                 .thenThrow(new RuntimeException("Connection failed"));
             when(runManager.failRun(anyString(), anyString())).thenReturn(testRun);
 
@@ -223,7 +226,7 @@ class BenchmarkOrchestratorImplTest {
             lenient().when(runManager.startRun("run-789")).thenReturn(testRun);
             lenient().when(benchmarkService.findById("benchmark-123")).thenReturn(Optional.of(testBenchmark));
             lenient().when(agentService.findById("agent-456")).thenReturn(Optional.of(testAgent));
-            lenient().when(langfuseService.getRunBenchmarkTraces(any(), anyString(), anyString()))
+            lenient().when(langfuseService.fetchTracesFromRun(any(), anyString(), anyString()))
                 .thenReturn(Collections.emptyList());
             lenient().when(metricProviderRegistry.getAllProviders()).thenReturn(Collections.emptyList());
             lenient().when(runManager.completeRun(anyString(), anyInt(), anyInt())).thenReturn(testRun);

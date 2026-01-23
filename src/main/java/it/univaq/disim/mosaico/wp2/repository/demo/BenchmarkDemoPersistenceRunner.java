@@ -205,7 +205,11 @@ public class BenchmarkDemoPersistenceRunner implements CommandLineRunner {
             print("\nRecupero traces per: " + agent.getName());
             print("  Run name: " + runName);
             try {
-                List<TraceData> traces = langfuseService.fetchTracesFromRun(agent, runName, benchmark.getDatasetRef());
+                List<TraceData> traces = langfuseService.fetchTracesFromRun(
+                    agent,
+                    benchmark.getDatasetRef(),
+                    runName
+                );
                 tracesByAgent.put(agent.getId(), traces);
                 print("  Traces recuperate: " + traces.size());
                 if (!traces.isEmpty()) {
