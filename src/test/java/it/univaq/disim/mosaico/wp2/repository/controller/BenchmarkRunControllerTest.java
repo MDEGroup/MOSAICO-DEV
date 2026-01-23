@@ -63,7 +63,8 @@ class BenchmarkRunControllerTest {
         @Test
         @DisplayName("Should trigger benchmark run")
         void shouldTriggerRun() {
-            when(runManager.createRun(anyString(), anyString(), any(), anyString())).thenReturn(testRun);
+            when(runManager.createRun(anyString(), anyString(), any(), anyString(), any()))
+                .thenReturn(testRun);
 
             Map<String, String> request = Map.of(
                 "benchmarkId", "benchmark-123",

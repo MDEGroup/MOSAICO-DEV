@@ -68,7 +68,8 @@ public class BenchmarkScheduledTaskRunner {
             schedule.getBenchmarkId(),
             schedule.getAgentId(),
             TriggerType.SCHEDULED,
-            "scheduler"
+            "scheduler",
+            schedule.getLangfuseRunName()
         );
         run.setScheduleConfigId(schedule.getId());
 

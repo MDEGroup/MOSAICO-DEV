@@ -10,6 +10,8 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -48,6 +50,8 @@ import it.univaq.disim.mosaico.wp2.repository.service.BenchmarkService;
 @SpringBootTest
 class LangfuseMetricProviderIntegrationTest {
 
+    private static final Logger log = LoggerFactory.getLogger(LangfuseMetricProviderIntegrationTest.class);
+
     @Autowired
     private BenchmarkService benchmarkService;
 
@@ -85,28 +89,28 @@ class LangfuseMetricProviderIntegrationTest {
         assertNotNull(metrics, "Metrics list should not be null");
 
         // Print diagnostic information
-        System.out.println("\n=== Langfuse Integration Test Results ===");
-        System.out.println("Dataset: " + testBenchmark.getDatasetRef());
-        System.out.println("Run: " + testBenchmark.getRunName());
-        System.out.println("Metrics computed: " + metrics.size());
+        log.info("\n=== Langfuse Integration Test Results ===");
+        log.info("Dataset: {}", testBenchmark.getDatasetRef());
+        log.info("Run: {}", testBenchmark.getRunName());
+        log.info("Metrics computed: {}", metrics.size());
 
         if (metrics.isEmpty()) {
-            System.out.println("\n⚠️ WARNING: No metrics were computed!");
-            System.out.println("Possible reasons:");
-            System.out.println("1. Langfuse is not running on http://localhost:3000");
-            System.out.println("2. The dataset or run ID is incorrect");
-            System.out.println("3. The run has no traces");
-            System.out.println("4. Authentication credentials are incorrect");
-            System.out.println("\nSkipping assertions for empty metrics.");
+            log.warn("\n⚠️ WARNING: No metrics were computed!");
+            log.warn("Possible reasons:");
+            log.warn("1. Langfuse is not running on http://localhost:3000");
+            log.warn("2. The dataset or run ID is incorrect");
+            log.warn("3. The run has no traces");
+            log.warn("4. Authentication credentials are incorrect");
+            log.warn("\nSkipping assertions for empty metrics.");
             return; // Skip assertions if no data available
         }
 
         // Print results
-        System.out.println("\n=== Computed Metrics ===");
+        log.info("\n=== Computed Metrics ===");
         for (Metric metric : metrics) {
-            System.out.printf("%s: %.4f %s%n",
+            log.info("{}: {} {}",
                 metric.getName(),
-                metric.getFloatValue().orElse(0f),
+                String.format("%.4f", metric.getFloatValue().orElse(0f)),
                 metric.getUnit() != null ? metric.getUnit() : ""
             );
         }
@@ -123,7 +127,7 @@ class LangfuseMetricProviderIntegrationTest {
         List<Metric> metrics = benchmarkService.computeBenchmarkMetrics(testBenchmark, testAgent);
 
         if (metrics.isEmpty()) {
-            System.out.println("\n⚠️ Skipping KPI test - no traces available from Langfuse");
+            log.warn("\n⚠️ Skipping KPI test - no traces available from Langfuse");
             return;
         }
 
@@ -149,8 +153,8 @@ class LangfuseMetricProviderIntegrationTest {
             "KPI description should contain computed value");
 
         // Print result
-        System.out.println("\n=== Computed KPI ===");
-        System.out.println(result.getDescription());
+        log.info("\n=== Computed KPI ===");
+        log.info(result.getDescription());
     }
 
     @Test
@@ -159,7 +163,7 @@ class LangfuseMetricProviderIntegrationTest {
         List<Metric> metrics = benchmarkService.computeBenchmarkMetrics(testBenchmark, testAgent);
 
         if (metrics.isEmpty()) {
-            System.out.println("\n⚠️ Skipping weighted KPI test - no traces available from Langfuse");
+            log.warn("\n⚠️ Skipping weighted KPI test - no traces available from Langfuse");
             return;
         }
 
@@ -187,8 +191,8 @@ class LangfuseMetricProviderIntegrationTest {
         assertNotNull(result, "KPI result should not be null");
 
         // Print result
-        System.out.println("\n=== Computed Weighted KPI ===");
-        System.out.println(result.getDescription());
+        log.info("\n=== Computed Weighted KPI ===");
+        log.info(result.getDescription());
     }
 
     @Test
@@ -205,9 +209,9 @@ class LangfuseMetricProviderIntegrationTest {
 
         // The number of metrics depends on how many traces are in the run
         // Each trace will generate metrics from all registered providers
-        System.out.println("\n=== Provider Registry Test ===");
-        System.out.println("Total metrics computed: " + metrics.size());
-        System.out.println("This includes metrics from all registered providers applied to all traces");
+        log.info("\n=== Provider Registry Test ===");
+        log.info("Total metrics computed: {}", metrics.size());
+        log.info("This includes metrics from all registered providers applied to all traces");
     }
 
     /**

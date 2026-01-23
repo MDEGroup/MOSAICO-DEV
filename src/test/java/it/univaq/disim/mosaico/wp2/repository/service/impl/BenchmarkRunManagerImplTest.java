@@ -65,7 +65,7 @@ class BenchmarkRunManagerImplTest {
             });
 
             BenchmarkRun result = manager.createRun(
-                "benchmark-123", "agent-456", TriggerType.MANUAL, "user@example.com");
+                "benchmark-123", "agent-456", TriggerType.MANUAL, "user@example.com", null);
 
             assertNotNull(result);
             assertEquals("new-run-id", result.getId());
@@ -86,10 +86,11 @@ class BenchmarkRunManagerImplTest {
             });
 
             BenchmarkRun result = manager.createRun(
-                "benchmark-123", "agent-456", TriggerType.SCHEDULED, "scheduler");
+                "benchmark-123", "agent-456", TriggerType.SCHEDULED, "scheduler", "run-name");
 
             assertEquals(TriggerType.SCHEDULED, result.getTriggeredBy());
             assertEquals("scheduler", result.getTriggeredByUser());
+            assertEquals("run-name", result.getLangfuseRunName());
         }
     }
 

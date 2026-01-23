@@ -29,6 +29,7 @@ public class BenchmarkRunService {
     public BenchmarkRun createRun(Benchmark benchmark, Agent agent) {
         BenchmarkRun run = new BenchmarkRun(benchmark.getId(), agent.getId(), TriggerType.MANUAL);
         run.setId("run-" + UUID.randomUUID().toString().substring(0, 8));
+        run.setLangfuseRunName(benchmark.getRunName());
         return run;
     }
 

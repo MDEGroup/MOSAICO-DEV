@@ -18,20 +18,13 @@ import com.langfuse.client.resources.commons.types.Dataset;
 import com.langfuse.client.resources.commons.types.DatasetItem;
 import com.langfuse.client.resources.commons.types.DatasetRunWithItems;
 import com.langfuse.client.resources.commons.types.Score;
-import com.langfuse.client.resources.commons.types.Trace;
-import com.langfuse.client.resources.commons.types.NumericScore;
 import com.langfuse.client.resources.commons.types.TraceWithDetails;
 import com.langfuse.client.resources.commons.types.TraceWithFullDetails;
 import com.langfuse.client.resources.datasetitems.types.CreateDatasetItemRequest;
 import com.langfuse.client.resources.datasets.types.CreateDatasetRequest;
-import com.langfuse.client.resources.datasets.types.PaginatedDatasets;
-import com.langfuse.client.resources.metrics.requests.GetMetricsRequest;
-import com.langfuse.client.resources.metrics.types.MetricsResponse;
 import com.langfuse.client.resources.projects.ProjectsClient;
 import com.langfuse.client.resources.projects.requests.CreateProjectRequest;
 import com.langfuse.client.resources.projects.types.Project;
-import com.langfuse.client.resources.scorev2.requests.GetScoresRequest;
-import com.langfuse.client.resources.scorev2.types.GetScoresResponse;
 import com.langfuse.client.resources.trace.requests.GetTracesRequest;
 import com.langfuse.client.resources.utils.pagination.types.MetaResponse;
 
@@ -86,7 +79,8 @@ public class LangfuseService {
             return pips.get().getData();
         } catch (LangfuseClientApiException error) {
             if (isNotFound(error)) {
-                logNotFound("listing Langfuse projects", error);
+                // TODO enable logging after demo
+                //logNotFound("listing Langfuse projects", error);
                 return Collections.emptyList();
             }
             logger.warn("Failed to load Langfuse projects: {}", error.getMessage());
@@ -120,7 +114,7 @@ public class LangfuseService {
             return project;
         } catch (LangfuseClientApiException ex) {
             if (isNotFound(ex)) {
-                logNotFound("fetching project " + projectId, ex);
+                // TODO enable logging after demo
                 return null;
             }
             throw ex;
@@ -151,7 +145,8 @@ public class LangfuseService {
             return traces;
         } catch (LangfuseClientApiException ex) {
             if (isNotFound(ex)) {
-                logNotFound("loading traces for project " + agent.getLlangfuseProjectName(), ex);
+                // TODO enable logging after demo
+                //logNotFound("loading traces for project " + agent.getLlangfuseProjectName(), ex);
                 return Collections.emptyList();
             }
             throw ex;
@@ -352,10 +347,20 @@ public class LangfuseService {
         List<TraceData> result = new ArrayList<>();
         LangfuseClient langfuseClient = buildClient(agent.getLlangfuseUrl(), agent.getLlangfusePublicKey(),
                 agent.getLlangfuseSecretKey());
+        if (langfuseClient == null) {
+            return result;
+        }
+        if (datasetName == null || datasetName.isBlank()) {
+            logger.warn("Dataset name is required to fetch Langfuse traces");
+            return result;
+        }
+        if (runName == null || runName.isBlank()) {
+            logger.warn("Run name is required to fetch Langfuse traces");
+            return result;
+        }
         try {
-            //TODO CHANGE DATASET NAME
             DatasetRunWithItems datasetRun = langfuseClient.datasets()
-                    .getRun("ause_train", runName, RequestOptions.builder().build());
+                    .getRun(datasetName, runName, RequestOptions.builder().build());
 
             for (var item : datasetRun.getDatasetRunItems()) {
                 try {
@@ -475,7 +480,8 @@ public class LangfuseService {
             return dataset;
         } catch (LangfuseClientApiException ex) {
             if (isNotFound(ex)) {
-                logNotFound("creating dataset " + datasetName, ex);
+                // TODO enable logging after demo
+                //logNotFound("creating dataset " + datasetName, ex);
                 return null;
             }
             throw ex;
@@ -661,7 +667,8 @@ public class LangfuseService {
             return client.datasetItems().get(itemId);
         } catch (LangfuseClientApiException ex) {
             if (isNotFound(ex)) {
-                logNotFound("fetching dataset item " + itemId, ex);
+                // TODO enable logging after demo
+                //logNotFound("fetching dataset item " + itemId, ex);
                 return null;
             }
             throw ex;
@@ -688,7 +695,8 @@ public class LangfuseService {
             return client.trace().get(traceId);
         } catch (LangfuseClientApiException ex) {
             if (isNotFound(ex)) {
-                logNotFound("fetching trace " + traceId, ex);
+                // TODO enable logging after demo
+                //logNotFound("fetching trace " + traceId, ex);
                 return null;
             }
             throw ex;

@@ -74,11 +74,12 @@ class BenchmarkOrchestratorImplTest {
     void setUp() {
         testRun = new BenchmarkRun("benchmark-123", "agent-456", TriggerType.MANUAL);
         testRun.setId("run-789");
+        testRun.setLangfuseRunName("dataset-run-001");
 
         testBenchmark = new Benchmark();
         testBenchmark.setId("benchmark-123");
-        testBenchmark.setDatasetRef("dataset-ref");
-        testBenchmark.setRunName("test-run");
+        testBenchmark.setDatasetRef("ause");
+        testBenchmark.setRunName("benchmark-run-001");
 
         testAgent = new Agent();
         testAgent.setId("agent-456");
@@ -174,13 +175,19 @@ class BenchmarkOrchestratorImplTest {
 
             BenchmarkRun newRun = new BenchmarkRun("benchmark-123", "agent-456", TriggerType.MANUAL);
             newRun.setId("retry-run-id");
-            when(runManager.createRun(anyString(), anyString(), any(), anyString()))
+            when(runManager.createRun(anyString(), anyString(), any(), anyString(), any()))
                 .thenReturn(newRun);
 
             String retryRunId = orchestrator.retryBenchmarkRun("run-789");
 
             assertEquals("retry-run-id", retryRunId);
-            verify(runManager).createRun("benchmark-123", "agent-456", TriggerType.MANUAL, "retry");
+            verify(runManager).createRun(
+                "benchmark-123",
+                "agent-456",
+                TriggerType.MANUAL,
+                "retry",
+                "dataset-run-001"
+            );
         }
 
         @Test

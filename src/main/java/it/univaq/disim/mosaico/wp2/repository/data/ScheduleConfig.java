@@ -72,6 +72,9 @@ public class ScheduleConfig {
     @Column(name = "auto_disable_on_failure")
     private Boolean autoDisableOnFailure;
 
+    @Column(name = "langfuse_run_name")
+    private String langfuseRunName;
+
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
@@ -169,6 +172,9 @@ public class ScheduleConfig {
 
     public String getCreatedBy() { return createdBy; }
     public void setCreatedBy(String createdBy) { this.createdBy = createdBy; }
+
+    public String getLangfuseRunName() { return langfuseRunName; }
+    public void setLangfuseRunName(String langfuseRunName) { this.langfuseRunName = langfuseRunName; }
 
     // Helper methods
     public void recordRunSuccess(String runId) {

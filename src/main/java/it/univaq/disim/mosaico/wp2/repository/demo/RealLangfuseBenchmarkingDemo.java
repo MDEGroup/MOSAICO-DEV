@@ -526,7 +526,7 @@ class BenchmarkDemoRunner implements CommandLineRunner {
             for (Map.Entry<String, String> kpi : kpiFormulas.entrySet()) {
                 String kpiName = kpi.getKey();
                 String formula = kpi.getValue();
-
+    
                 DslParseResult parseResult = kpiParser.parse(formula);
                 if (parseResult.isSuccess()) {
                     double value = parseResult.getFormula().evaluate(agentResult.aggregatedMetrics);

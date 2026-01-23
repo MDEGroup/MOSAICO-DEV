@@ -65,6 +65,9 @@ public class BenchmarkRun {
     @Column(name = "schedule_config_id")
     private String scheduleConfigId;
 
+    @Column(name = "langfuse_run_name")
+    private String langfuseRunName;
+
     @OneToMany(mappedBy = "benchmarkRun", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<BenchmarkResult> results = new ArrayList<>();
 
@@ -129,6 +132,9 @@ public class BenchmarkRun {
 
     public String getScheduleConfigId() { return scheduleConfigId; }
     public void setScheduleConfigId(String scheduleConfigId) { this.scheduleConfigId = scheduleConfigId; }
+
+    public String getLangfuseRunName() { return langfuseRunName; }
+    public void setLangfuseRunName(String langfuseRunName) { this.langfuseRunName = langfuseRunName; }
 
     public List<BenchmarkResult> getResults() { return results; }
     public void setResults(List<BenchmarkResult> results) { this.results = results; }

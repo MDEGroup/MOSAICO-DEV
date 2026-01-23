@@ -26,9 +26,11 @@ public class BenchmarkRunManagerImpl implements BenchmarkRunManager {
     }
 
     @Override
-    public BenchmarkRun createRun(String benchmarkId, String agentId, TriggerType triggerType, String triggeredBy) {
+    public BenchmarkRun createRun(String benchmarkId, String agentId, TriggerType triggerType, String triggeredBy,
+                                  String langfuseRunName) {
         BenchmarkRun run = new BenchmarkRun(benchmarkId, agentId, triggerType);
         run.setTriggeredByUser(triggeredBy);
+        run.setLangfuseRunName(langfuseRunName);
         run = repository.save(run);
         logger.info("Created benchmark run: {}", run.getId());
         return run;

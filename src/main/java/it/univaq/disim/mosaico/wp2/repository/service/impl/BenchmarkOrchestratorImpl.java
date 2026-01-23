@@ -76,9 +76,11 @@ public class BenchmarkOrchestratorImpl implements BenchmarkOrchestrator {
                 .orElseThrow(() -> new IllegalStateException("Agent not found: " + run.getAgentId()));
 
             // 2. Fetch traces from Langfuse
-            logger.debug("Fetching traces for benchmark run: {}", runId);
+            String langfuseRunName = resolveLangfuseRunName(run, benchmark);
+            logger.debug("Fetching traces for benchmark run {} using dataset={} runName={}",
+                runId, benchmark.getDatasetRef(), langfuseRunName);
             List<TraceWithFullDetails> traces = langfuseService.getRunBenchmarkTraces(
-                agent, benchmark.getDatasetRef(), benchmark.getRunName());
+                agent, benchmark.getDatasetRef(), langfuseRunName);
 
             if (traces.isEmpty()) {
                 logger.warn("No traces found for benchmark run: {}", runId);
@@ -136,7 +138,8 @@ public class BenchmarkOrchestratorImpl implements BenchmarkOrchestrator {
             failedRun.getBenchmarkId(),
             failedRun.getAgentId(),
             TriggerType.MANUAL,
-            "retry"
+            "retry",
+            failedRun.getLangfuseRunName()
         );
         newRun.setRetryCount(failedRun.getRetryCount() + 1);
 
@@ -207,6 +210,17 @@ public class BenchmarkOrchestratorImpl implements BenchmarkOrchestrator {
                 MetricSnapshot::getMetricKey,
                 java.util.stream.Collectors.averagingDouble(MetricSnapshot::getValue)
             ));
+    }
+
+    private String resolveLangfuseRunName(BenchmarkRun run, Benchmark benchmark) {
+        String runName = run.getLangfuseRunName();
+        if (runName == null || runName.isBlank()) {
+            runName = benchmark.getRunName();
+        }
+        if (runName == null || runName.isBlank()) {
+            throw new IllegalStateException("No Langfuse run name configured for benchmark " + benchmark.getId());
+        }
+        return runName;
     }
 
     @SuppressWarnings("unchecked")

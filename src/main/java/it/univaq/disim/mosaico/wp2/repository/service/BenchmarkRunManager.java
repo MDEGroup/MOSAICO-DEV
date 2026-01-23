@@ -15,7 +15,12 @@ public interface BenchmarkRunManager {
     /**
      * Creates a new benchmark run.
      */
-    BenchmarkRun createRun(String benchmarkId, String agentId, TriggerType triggerType, String triggeredBy);
+    default BenchmarkRun createRun(String benchmarkId, String agentId, TriggerType triggerType, String triggeredBy) {
+        return createRun(benchmarkId, agentId, triggerType, triggeredBy, null);
+    }
+
+    BenchmarkRun createRun(String benchmarkId, String agentId, TriggerType triggerType, String triggeredBy,
+                           String langfuseRunName);
 
     /**
      * Finds a run by ID.

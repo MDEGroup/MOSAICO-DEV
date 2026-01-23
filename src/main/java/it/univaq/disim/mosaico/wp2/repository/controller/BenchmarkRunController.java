@@ -36,12 +36,13 @@ public class BenchmarkRunController {
         String benchmarkId = request.get("benchmarkId");
         String agentId = request.get("agentId");
         String triggeredBy = request.getOrDefault("triggeredBy", "api");
+        String langfuseRunName = request.get("langfuseRunName");
 
         if (benchmarkId == null || agentId == null) {
             return ResponseEntity.badRequest().build();
         }
 
-        BenchmarkRun run = runManager.createRun(benchmarkId, agentId, TriggerType.MANUAL, triggeredBy);
+        BenchmarkRun run = runManager.createRun(benchmarkId, agentId, TriggerType.MANUAL, triggeredBy, langfuseRunName);
         logger.info("Created benchmark run: {}", run.getId());
 
         // Execute asynchronously
