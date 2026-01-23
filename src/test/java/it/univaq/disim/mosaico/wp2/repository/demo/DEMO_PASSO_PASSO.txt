@@ -1,0 +1,391 @@
+══════════════════════════════════════════════════════════════════════
+  MOSAICO BENCHMARKING SYSTEM - DEMO COMPLETA
+══════════════════════════════════════════════════════════════════════
+
+
+══════════════════════════════════════════════════════════════════════
+  STEP 1: CREAZIONE ENTITÀ BASE
+══════════════════════════════════════════════════════════════════════
+
+📦 1.1 Creazione di un Agent (rappresenta un agente AI da valutare):
+   Agent creato:
+   ├─ ID: agent-001
+   ├─ Nome: CustomerServiceBot
+   ├─ Descrizione: Agente AI per supporto clienti
+   ├─ Langfuse Project: proj-langfuse-123
+   └─ Langfuse URL: https://langfuse.example.com
+
+📊 1.2 Creazione di un Benchmark (definisce i criteri di valutazione):
+   Benchmark creato:
+   ├─ ID: bench-001
+   ├─ Dataset: dataset-customer-queries
+   ├─ Run Name: cs-quality-run
+   ├─ Task Def: Valuta qualità risposte supporto clienti
+   ├─ Features: accuracy,completeness,response_time
+   └─ Agents collegati: 1
+
+📈 1.3 Definizione KPI per il Benchmark:
+   Le formule KPI sono definite tramite DSL:
+   ├─ WEIGHTED_SUM(ACCURACY:0.4, PRECISION:0.3, RECALL:0.3)
+   ├─ AVERAGE(ROUGE, BLEU)
+   └─ THRESHOLD(ACCURACY, 0.8)
+
+──────────────────────────────────────────────────
+
+══════════════════════════════════════════════════════════════════════
+  STEP 2: CICLO DI VITA BENCHMARK RUN
+══════════════════════════════════════════════════════════════════════
+
+🔄 Stati possibili di un BenchmarkRun (RunStatus enum):
+   ├─ PENDING
+   ├─ RUNNING
+   ├─ COMPLETED
+   ├─ FAILED
+   ├─ CANCELLED
+
+   Transizioni tipiche:
+   PENDING → RUNNING → COMPLETED
+                    → FAILED
+                    → CANCELLED
+
+📝 2.1 Creazione di un nuovo BenchmarkRun:
+   Run creato:
+   ├─ ID: run-001
+   ├─ Benchmark: bench-001
+   ├─ Agent: agent-001
+   ├─ Trigger: MANUAL
+   └─ Status: PENDING
+
+▶️  2.2 Avvio del run (PENDING → RUNNING):
+   ├─ Status: RUNNING
+   └─ Started at: 2026-01-22T10:19:44.444777Z
+
+✅ 2.3 Completamento del run (RUNNING → COMPLETED):
+   ├─ Status: COMPLETED
+   ├─ Completed at: 2026-01-22T10:19:44.445763Z
+   ├─ Traces processed: 150
+   ├─ Metrics computed: 450
+   └─ Duration: 1ms
+
+❌ 2.4 Esempio di run fallito:
+   ├─ Status: FAILED
+   ├─ Error: Connection to Langfuse failed: timeout
+   └─ Retry count: 1
+
+🎯 2.5 TriggerType - Come viene attivato un run:
+   ├─ MANUAL
+   ├─ SCHEDULED
+   ├─ EVENT
+   ├─ WEBHOOK
+
+──────────────────────────────────────────────────
+
+══════════════════════════════════════════════════════════════════════
+  STEP 3: SISTEMA DI METRICHE
+══════════════════════════════════════════════════════════════════════
+
+📐 3.1 MetricType - Tipi di metriche supportate:
+   ├─ ROUGE
+   ├─ BLEU
+   ├─ ACCURACY
+   ├─ PRECISION
+   ├─ RECALL
+   ├─ F1_SCORE
+
+📊 3.2 MetricProvider - Calcola le metriche dalle trace:
+   Interface: MetricProvider<K extends MetricKey>
+   Metodi:
+   ├─ getMetricKey()     → Restituisce il tipo di metrica
+   ├─ computeMetric()    → Calcola il valore dalla trace
+   └─ supports()         → Verifica se supporta una trace
+
+🗃️  3.3 MetricProviderRegistry - Gestisce tutti i provider:
+   Funzionalità:
+   ├─ registerProvider()    → Registra un nuovo provider
+   ├─ getAllProviders()     → Ottiene tutti i provider
+   └─ getProvider(key)      → Ottiene provider per chiave
+
+🔢 3.4 Esempio di calcolo metriche per una trace:
+   Metriche calcolate dalla trace:
+   ├─ ACCURACY: 0.92
+   ├─ PRECISION: 0.88
+   ├─ RECALL: 0.9
+   ├─ F1_SCORE: 0.89
+   ├─ ROUGE: 0.85
+   ├─ BLEU: 0.78
+
+💾 3.5 BenchmarkResult - Persistenza dei risultati:
+   Ogni risultato contiene:
+   ├─ benchmarkRun     → Riferimento al run
+   ├─ traceId          → ID della trace Langfuse
+   ├─ metricType       → Tipo di metrica
+   ├─ metricValue      → Valore calcolato
+   └─ computedAt       → Timestamp del calcolo
+
+──────────────────────────────────────────────────
+
+══════════════════════════════════════════════════════════════════════
+  STEP 4: FORMULE KPI PROGRAMMATICHE
+══════════════════════════════════════════════════════════════════════
+
+🧮 4.1 KPIFormula Interface:
+   @FunctionalInterface
+   public interface KPIFormula {
+       double evaluate(Map<?, Double> metricValues);
+   }
+   
+   Supporta chiavi di tipo:
+   ├─ Class<? extends MetricKey>  → Type-safe references
+   └─ String                       → Nome metrica (per DSL)
+
+📊 Metriche di input per gli esempi:
+   ├─ ACCURACY: 0.92
+   ├─ PRECISION: 0.88
+   ├─ RECALL: 0.9
+
+📈 4.2 AverageFormula - Media semplice:
+   Formula: (ACCURACY + PRECISION + RECALL) / 3
+   Calcolo: (0.92 + 0.88 + 0.9) / 3
+   Risultato: 0,9000
+
+⚖️  4.3 WeightedSumFormula - Somma pesata:
+   Formula: 0.4*ACCURACY + 0.3*PRECISION + 0.3*RECALL
+   Calcolo: 0.4*0.92 + 0.3*0.88 + 0.3*0.9
+   Risultato: 0,9020
+
+🎯 4.4 ThresholdFormula - Verifica soglia:
+   Formula: ACCURACY > 0.9 ? 1.0 : 0.0
+   Calcolo: 0.92 > 0.9 → TRUE
+   Risultato: 1.0
+
+──────────────────────────────────────────────────
+
+══════════════════════════════════════════════════════════════════════
+  STEP 5: DSL (Domain Specific Language) PER KPI
+══════════════════════════════════════════════════════════════════════
+
+📝 5.1 Sintassi DSL supportata (DefaultKPIFormulaParser):
+   ┌────────────────────────────────────────────────────────────┐
+   │ AVERAGE(metric1, metric2, ...)                             │
+   │ WEIGHTED_SUM(metric1:weight1, metric2:weight2, ...)        │
+   │ MIN(metric1, metric2, ...)                                 │
+   │ MAX(metric1, metric2, ...)                                 │
+   │ THRESHOLD(metric, value)                                   │
+   └────────────────────────────────────────────────────────────┘
+
+📊 Metriche disponibili (MetricType enum):
+   ├─ ACCURACY: 0.92
+   ├─ PRECISION: 0.88
+   ├─ RECALL: 0.9
+   ├─ F1_SCORE: 0.89
+   ├─ ROUGE: 0.85
+   ├─ BLEU: 0.78
+
+🔹 5.2 Esempio AVERAGE:
+   Espressione: AVERAGE(ACCURACY, PRECISION)
+   Metriche referenziate: [ACCURACY, PRECISION]
+   Risultato: 0,9000
+
+🔹 5.3 Esempio WEIGHTED_SUM:
+   Espressione: WEIGHTED_SUM(ACCURACY:0.5, PRECISION:0.3, RECALL:0.2)
+   Metriche referenziate: [RECALL, ACCURACY, PRECISION]
+   Risultato: 0,9040
+
+🔹 5.4 Esempio MIN e MAX:
+   MIN(ACCURACY, PRECISION, RECALL)
+   Risultato MIN: 0,8800
+   MAX(ACCURACY, PRECISION, RECALL)
+   Risultato MAX: 0,9200
+
+🔹 5.5 Esempio THRESHOLD:
+   THRESHOLD(ACCURACY, 0.9) (ACCURACY >= 0.9?)
+   Risultato: 1.0 (1.0 = TRUE, 0.0 = FALSE)
+
+⚠️  5.6 Gestione errori DSL:
+   Espressione non valida: INVALID_FUNCTION(ACCURACY)
+   Errori: Unrecognized formula pattern. Supported: AVERAGE, WEIGHTED_SUM, MIN, MAX, THRESHOLD. Full DSL support will be provided by partner's xText implementation.
+
+📋 5.7 Metriche conosciute dal parser:
+   [BLEU, RECALL, ROUGE, ACCURACY, PRECISION, F1_SCORE]
+
+──────────────────────────────────────────────────
+
+══════════════════════════════════════════════════════════════════════
+  STEP 6: SISTEMA DI ALERTING
+══════════════════════════════════════════════════════════════════════
+
+🚨 6.1 AlertCondition - Condizioni disponibili:
+   ├─ LESS_THAN
+   ├─ GREATER_THAN
+   ├─ EQUALS
+   ├─ NOT_EQUALS
+   ├─ PERCENTAGE_DROP
+   ├─ PERCENTAGE_RISE
+   ├─ ANOMALY_DETECTED
+
+📊 6.2 Severity - Livelli di gravità:
+   ├─ INFO
+   ├─ WARNING
+   ├─ CRITICAL
+
+📬 6.3 NotificationChannel - Canali di notifica:
+   ├─ EMAIL
+   ├─ SLACK
+   ├─ TEAMS
+   ├─ WEBHOOK
+   ├─ IN_APP
+
+🔔 6.4 Esempio configurazione Alert:
+   ┌────────────────────────────────────────────────────────────┐
+   │ Alert: 'Low Accuracy Alert'                                │
+   │ Condizione: ACCURACY < 0.85                                │
+   │ Severità: WARNING                                          │
+   │ Canali: [EMAIL, SLACK]                                     │
+   │ Destinatari: [team@example.com]                            │
+   └────────────────────────────────────────────────────────────┘
+
+🔍 6.5 Esempio di valutazione alert:
+   Valore attuale ACCURACY: 0.82
+   Soglia: 0.85
+   Condizione: LESS_THAN
+   Alert triggered: ✅ SÌ
+
+   📧 Notifiche inviate a:
+      ├─ EMAIL → team@example.com
+      └─ SLACK → #benchmark-alerts
+
+──────────────────────────────────────────────────
+
+══════════════════════════════════════════════════════════════════════
+  STEP 7: SISTEMA DI SCHEDULING
+══════════════════════════════════════════════════════════════════════
+
+⏰ 7.1 ScheduleConfig Entity:
+   Entità JPA per configurare l'esecuzione schedulata dei benchmark.
+   
+   Campi principali:
+   ├─ name                    → Nome della schedulazione
+   ├─ benchmarkId             → ID del benchmark da eseguire
+   ├─ agentId                 → ID dell'agent da valutare
+   ├─ cronExpression          → Espressione cron
+   ├─ timezone                → Fuso orario (default: UTC)
+   ├─ enabled                 → Abilitato/disabilitato
+   ├─ lastRunAt               → Ultima esecuzione
+   ├─ nextRunAt               → Prossima esecuzione
+   ├─ consecutiveFailures     → Fallimenti consecutivi
+   └─ autoDisableOnFailure    → Disabilita dopo N fallimenti
+
+📅 7.2 Cron Expressions supportate:
+   ┌───────────────────────────────────────────────────────────┐
+   │ Campo     │ Valori permessi                               │
+   ├───────────┼───────────────────────────────────────────────┤
+   │ Secondi   │ 0-59                                          │
+   │ Minuti    │ 0-59                                          │
+   │ Ore       │ 0-23                                          │
+   │ Giorno    │ 1-31                                          │
+   │ Mese      │ 1-12 o JAN-DEC                                │
+   │ Weekday   │ 0-7 o SUN-SAT                                 │
+   └───────────────────────────────────────────────────────────┘
+
+📋 7.3 Esempi di scheduling:
+   ├─ '0 0 * * * *'      → Ogni ora
+   ├─ '0 0 0 * * *'      → Ogni giorno a mezzanotte
+   ├─ '0 0 9 * * MON'    → Ogni lunedì alle 9:00
+   ├─ '0 */30 * * * *'   → Ogni 30 minuti
+   └─ '0 0 9-17 * * *'   → Ogni ora dalle 9 alle 17
+
+⚙️  7.4 Esempio creazione ScheduleConfig:
+   ScheduleConfig creato:
+   ├─ Nome: Daily Quality Check
+   ├─ Benchmark ID: bench-001
+   ├─ Agent ID: agent-001
+   ├─ Cron: 0 0 9 * * *
+   ├─ Timezone: Europe/Rome
+   ├─ Enabled: true
+   ├─ Max consecutive failures: 5
+   └─ Auto-disable on failure: true
+
+📈 7.5 Gestione risultati run:
+   Dopo un run completato con successo:
+   ├─ Last Run ID: run-123
+   ├─ Last Run Status: COMPLETED
+   ├─ Run Count: 1
+   └─ Consecutive Failures: 0
+
+   Dopo un run fallito:
+   ├─ Last Run Status: FAILED
+   ├─ Run Count: 2
+   ├─ Failure Count: 1
+   └─ Consecutive Failures: 1
+
+🔄 7.6 Flusso di esecuzione schedulata:
+   1. BenchmarkScheduledTaskRunner.runScheduledBenchmarks() invocato
+   2. Cerca ScheduleConfig con enabled=true e nextRunAt <= now
+   3. Per ogni config, crea BenchmarkRun con TriggerType.SCHEDULED
+   4. Chiama orchestrator.executeBenchmarkRunAsync()
+   5. Aggiorna ScheduleConfig con recordRunSuccess/Failure
+   6. Calcola nextRunAt basandosi sulla cron expression
+
+──────────────────────────────────────────────────
+
+══════════════════════════════════════════════════════════════════════
+  STEP 8: FLUSSO COMPLETO END-TO-END
+══════════════════════════════════════════════════════════════════════
+
+🚀 Simulazione di un benchmark run completo:
+
+┌─ SETUP ─────────────────────────────────────────────────────┐
+│ Agent: CustomerServiceBot (agent-001)                       │
+│ Benchmark: Customer Support Quality (bench-001)             │
+│ KPI: Overall Quality = WEIGHTED_SUM(ACC:0.4, PREC:0.3, REC:0.3)│
+│ Alert: ACCURACY < 0.85 → WARNING                            │
+└──────────────────────────────────────────────────────────────┘
+
+📌 FASE 1: Creazione BenchmarkRun
+   → POST /api/v1/benchmark-runs
+   → Body: { benchmarkId: 'bench-001', triggerType: 'MANUAL' }
+   ← Response: { id: 'run-1769077184520', status: 'PENDING' }
+
+📌 FASE 2: Esecuzione Benchmark
+   → runManager.startRun('run-1769077184520')
+   ← Status: RUNNING
+
+📌 FASE 3: Raccolta Traces da Langfuse
+   → langfuseService.getRunBenchmarkTraces(agent, datasetRef, runName)
+   ← Trovate 150 traces
+
+📌 FASE 4: Calcolo Metriche per ogni Trace
+   → metricProviderRegistry.getAllProviders()
+   → Per ogni trace e provider: provider.computeMetric(trace)
+   ← Metriche aggregate (media di 150 traces):
+      ├─ ACCURACY: 0,89
+      ├─ PRECISION: 0,91
+      ├─ RECALL: 0,87
+
+📌 FASE 5: Calcolo KPI
+   → kpiFormulaParser.parse('WEIGHTED_SUM(ACCURACY:0.4, PRECISION:0.3, RECALL:0.3)')
+   ← KPI 'Overall Quality': 0,8900
+
+📌 FASE 6: Valutazione Alert
+   → alertEvaluationService.evaluateAlertsForRun('run-1769077184520')
+   ← ACCURACY (0.89) < 0.85? NO → Nessun alert
+
+📌 FASE 7: Completamento Run
+   → runManager.completeRun('run-1769077184520', 150, 450)
+   ← Status: COMPLETED
+
+┌─ RIEPILOGO FINALE ──────────────────────────────────────────┐
+│ Run ID: run-1769077184520                                 │
+│ Status: COMPLETED                                         │
+│ Duration: 2ms                                             │
+│ Traces: 150 processed                                     │
+│ Metrics: 450 computed                                     │
+│ KPI Score: 0,8900                                         │
+│ Alerts: 0 triggered                                       │
+└──────────────────────────────────────────────────────────────┘
+
+──────────────────────────────────────────────────
+
+══════════════════════════════════════════════════════════════════════
+  DEMO COMPLETATA
+══════════════════════════════════════════════════════════════════════

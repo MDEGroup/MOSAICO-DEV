@@ -17,9 +17,15 @@ public interface KPIFormula {
     /**
      * Evaluates the KPI formula given metric values.
      *
-     * @param metricValues Map of MetricKey classes to their computed values
+     * <p>The map keys can be either:</p>
+     * <ul>
+     *   <li>{@code Class<? extends MetricKey>} - for type-safe metric references</li>
+     *   <li>{@code String} - for string-based metric name lookups (used by DSL parser)</li>
+     * </ul>
+     *
+     * @param metricValues Map of metric identifiers to their computed values
      * @return The computed KPI value
      * @throws IllegalArgumentException if required metrics are missing
      */
-    double evaluate(Map<Class<? extends MetricKey>, Double> metricValues);
+    double evaluate(Map<?, Double> metricValues);
 }

@@ -1,0 +1,92 @@
+@startuml run-state-machine
+
+!theme plain
+title BenchmarkRun - State Machine
+
+skinparam state {
+    BackgroundColor<<pending>> LightBlue
+    BackgroundColor<<running>> LightGreen
+    BackgroundColor<<completed>> Green
+    BackgroundColor<<failed>> Red
+    BackgroundColor<<cancelled>> Orange
+}
+
+[*] --> PENDING : createRun()
+
+state PENDING <<pending>> {
+}
+
+state RUNNING <<running>> {
+}
+
+state COMPLETED <<completed>> {
+}
+
+state FAILED <<failed>> {
+}
+
+state CANCELLED <<cancelled>> {
+}
+
+PENDING --> RUNNING : start()
+note on link
+    Sets startedAt = now()
+end note
+
+RUNNING --> COMPLETED : complete()
+note on link
+    Sets completedAt = now()
+    Updates tracesProcessed
+    Updates metricsComputed
+end note
+
+RUNNING --> FAILED : fail(errorMessage)
+note on link
+    Sets completedAt = now()
+    Sets errorMessage
+end note
+
+RUNNING --> CANCELLED : cancel()
+note on link
+    Sets completedAt = now()
+end note
+
+FAILED --> PENDING : retry()
+note on link
+    Creates new run
+    Increments retryCount
+end note
+
+COMPLETED --> [*]
+FAILED --> [*]
+CANCELLED --> [*]
+
+note right of PENDING
+    Initial state after creation
+    Waiting for execution
+end note
+
+note right of RUNNING
+    Benchmark is executing:
+    - Collecting traces
+    - Computing metrics
+    - Calculating KPIs
+end note
+
+note right of COMPLETED
+    Successful completion
+    All data persisted
+end note
+
+note right of FAILED
+    Error occurred
+    Check errorMessage
+    Can be retried
+end note
+
+note right of CANCELLED
+    Manually cancelled
+    Partial data may exist
+end note
+
+@enduml

@@ -1,0 +1,236 @@
+@startuml benchmarking-architecture
+
+!theme plain
+skinparam linetype ortho
+skinparam packageStyle rectangle
+
+title MOSAICO Benchmarking System - Architecture
+
+' === REST LAYER ===
+package "REST Controllers" as REST #LightBlue {
+    class BenchmarkController {
+        +findAll()
+        +findById()
+        +create()
+    }
+    class BenchmarkRunController {
+        +create()
+        +getStatus()
+        +cancel()
+        +retry()
+    }
+    class ScheduleConfigController {
+        +create()
+        +update()
+        +delete()
+        +list()
+    }
+}
+
+' === ORCHESTRATION LAYER ===
+package "Orchestration" as ORCH #LightGreen {
+    interface BenchmarkOrchestrator {
+        +executeBenchmarkRun(runId)
+        +executeBenchmarkRunAsync(runId)
+        +cancelBenchmarkRun(runId)
+        +retryBenchmarkRun(runId)
+    }
+    class BenchmarkOrchestratorImpl
+
+    class BenchmarkScheduledTaskRunner {
+        +runScheduledBenchmarks()
+    }
+}
+
+' === SERVICE LAYER ===
+package "Services" as SVC #LightYellow {
+    interface BenchmarkRunManager {
+        +createRun()
+        +startRun()
+        +completeRun()
+        +failRun()
+        +cancelRun()
+    }
+    class BenchmarkRunManagerImpl
+
+    interface MetricProviderRegistry {
+        +registerProvider()
+        +getAllProviders()
+        +getProvider()
+    }
+    class MetricProviderRegistryImpl
+
+    interface AlertEvaluationService {
+        +evaluateAlertsForRun()
+    }
+    class AlertEvaluationServiceImpl
+
+    interface NotificationDispatcher {
+        +dispatch()
+    }
+    class NotificationDispatcherImpl
+
+    interface LangfuseService {
+        +getRunBenchmarkTraces()
+    }
+}
+
+' === DSL LAYER ===
+package "DSL / Formulas" as DSL #LightCoral {
+    interface KPIFormula <<Functional>> {
+        +evaluate(metricValues)
+    }
+
+    interface KPIFormulaParser {
+        +parse(expression)
+        +validate(expression)
+    }
+    class DefaultKPIFormulaParser
+
+    class DslParseResult {
+        +isSuccess()
+        +getFormula()
+        +getErrors()
+    }
+
+    class AverageFormula
+    class WeightedSumFormula
+    class ThresholdFormula
+
+    KPIFormula <|.. AverageFormula
+    KPIFormula <|.. WeightedSumFormula
+    KPIFormula <|.. ThresholdFormula
+}
+
+' === DATA LAYER ===
+package "Data Model" as DATA #LightGray {
+    entity Agent {
+        id : String
+        name : String
+        llangfuseProjectName : String
+        llangfuseUrl : String
+    }
+
+    entity Benchmark {
+        id : String
+        datasetRef : String
+        runName : String
+        taskDef : String
+    }
+
+    entity BenchmarkRun {
+        id : String
+        benchmarkId : String
+        agentId : String
+        status : RunStatus
+        triggeredBy : TriggerType
+    }
+
+    entity ScheduleConfig {
+        id : String
+        benchmarkId : String
+        cronExpression : String
+        enabled : Boolean
+    }
+
+    entity BenchmarkResult {
+        id : String
+        traceId : String
+        metricType : MetricType
+        metricValue : Double
+    }
+
+    enum RunStatus {
+        PENDING
+        RUNNING
+        COMPLETED
+        FAILED
+        CANCELLED
+    }
+
+    enum TriggerType {
+        MANUAL
+        SCHEDULED
+        EVENT
+        WEBHOOK
+    }
+
+    enum MetricType {
+        ROUGE
+        BLEU
+        ACCURACY
+        PRECISION
+        RECALL
+        F1_SCORE
+    }
+}
+
+' === REPOSITORIES ===
+package "Repositories" as REPO #Wheat {
+    interface BenchmarkRepository
+    interface BenchmarkRunRepository
+    interface ScheduleConfigRepository
+    interface BenchmarkResultRepository
+}
+
+' === EXTERNAL ===
+package "External" as EXT #LightPink {
+    component Langfuse
+    component EmailService
+    component SlackWebhook
+}
+
+' === RELATIONSHIPS ===
+
+' REST to Orchestration
+BenchmarkRunController --> BenchmarkOrchestrator
+ScheduleConfigController --> ScheduleConfigRepository
+
+' Orchestration implementations
+BenchmarkOrchestrator <|.. BenchmarkOrchestratorImpl
+BenchmarkScheduledTaskRunner --> BenchmarkOrchestrator
+BenchmarkScheduledTaskRunner --> ScheduleConfigRepository
+
+' Orchestrator dependencies
+BenchmarkOrchestratorImpl --> BenchmarkRunManager
+BenchmarkOrchestratorImpl --> MetricProviderRegistry
+BenchmarkOrchestratorImpl --> AlertEvaluationService
+BenchmarkOrchestratorImpl --> LangfuseService
+
+' Service implementations
+BenchmarkRunManager <|.. BenchmarkRunManagerImpl
+MetricProviderRegistry <|.. MetricProviderRegistryImpl
+AlertEvaluationService <|.. AlertEvaluationServiceImpl
+NotificationDispatcher <|.. NotificationDispatcherImpl
+
+' Alert to Notification
+AlertEvaluationServiceImpl --> NotificationDispatcher
+
+' DSL
+KPIFormulaParser <|.. DefaultKPIFormulaParser
+DefaultKPIFormulaParser --> DslParseResult
+DslParseResult --> KPIFormula
+BenchmarkOrchestratorImpl --> KPIFormulaParser
+
+' Data relationships
+Benchmark "1" --> "*" Agent : evaluates
+BenchmarkRun "*" --> "1" Benchmark
+BenchmarkRun "*" --> "1" Agent
+BenchmarkRun "1" --> "*" BenchmarkResult
+ScheduleConfig "*" --> "1" Benchmark
+ScheduleConfig "*" --> "1" Agent
+
+BenchmarkRun --> RunStatus
+BenchmarkRun --> TriggerType
+BenchmarkResult --> MetricType
+
+' Repositories
+BenchmarkRunManagerImpl --> BenchmarkRunRepository
+BenchmarkRunManagerImpl --> BenchmarkResultRepository
+
+' External
+LangfuseService --> Langfuse
+NotificationDispatcherImpl --> EmailService
+NotificationDispatcherImpl --> SlackWebhook
+
+@enduml

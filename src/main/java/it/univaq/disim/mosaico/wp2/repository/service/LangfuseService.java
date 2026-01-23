@@ -2,8 +2,10 @@ package it.univaq.disim.mosaico.wp2.repository.service;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,26 +18,20 @@ import com.langfuse.client.resources.commons.types.Dataset;
 import com.langfuse.client.resources.commons.types.DatasetItem;
 import com.langfuse.client.resources.commons.types.DatasetRunWithItems;
 import com.langfuse.client.resources.commons.types.Score;
-import com.langfuse.client.resources.commons.types.Trace;
-import com.langfuse.client.resources.commons.types.NumericScore;
 import com.langfuse.client.resources.commons.types.TraceWithDetails;
 import com.langfuse.client.resources.commons.types.TraceWithFullDetails;
 import com.langfuse.client.resources.datasetitems.types.CreateDatasetItemRequest;
 import com.langfuse.client.resources.datasets.types.CreateDatasetRequest;
-import com.langfuse.client.resources.datasets.types.PaginatedDatasets;
-import com.langfuse.client.resources.metrics.requests.GetMetricsRequest;
-import com.langfuse.client.resources.metrics.types.MetricsResponse;
 import com.langfuse.client.resources.projects.ProjectsClient;
 import com.langfuse.client.resources.projects.requests.CreateProjectRequest;
 import com.langfuse.client.resources.projects.types.Project;
-import com.langfuse.client.resources.scorev2.requests.GetScoresRequest;
-import com.langfuse.client.resources.scorev2.types.GetScoresResponse;
 import com.langfuse.client.resources.trace.requests.GetTracesRequest;
 import com.langfuse.client.resources.utils.pagination.types.MetaResponse;
 
 import it.univaq.disim.mosaico.wp2.repository.config.LangfuseProperties;
 import it.univaq.disim.mosaico.wp2.repository.data.Agent;
 import it.univaq.disim.mosaico.wp2.repository.data.Metric;
+import com.langfuse.client.resources.commons.types.ScoreV1;
 
 /**
  * Service for managing Langfuse projects.
@@ -83,7 +79,8 @@ public class LangfuseService {
             return pips.get().getData();
         } catch (LangfuseClientApiException error) {
             if (isNotFound(error)) {
-                logNotFound("listing Langfuse projects", error);
+                // TODO enable logging after demo
+                //logNotFound("listing Langfuse projects", error);
                 return Collections.emptyList();
             }
             logger.warn("Failed to load Langfuse projects: {}", error.getMessage());
@@ -117,7 +114,7 @@ public class LangfuseService {
             return project;
         } catch (LangfuseClientApiException ex) {
             if (isNotFound(ex)) {
-                logNotFound("fetching project " + projectId, ex);
+                // TODO enable logging after demo
                 return null;
             }
             throw ex;
@@ -136,26 +133,25 @@ public class LangfuseService {
             return Collections.emptyList();
         }
         try {
-            MetaResponse numb_of_pages = client.trace().list(GetTracesRequest.builder().name(agent.getLlangfuseProjectName()).build()).getMeta();
+            MetaResponse numb_of_pages = client.trace()
+                    .list(GetTracesRequest.builder().name(agent.getLlangfuseProjectName()).build()).getMeta();
             List<TraceWithDetails> traces = new ArrayList<>();
             for (int i = 1; i <= numb_of_pages.getTotalPages(); i++) {
-                traces.addAll(client.trace().list(GetTracesRequest.builder().page(i).name(agent.getLlangfuseProjectName()).build()).getData());
+                traces.addAll(client.trace()
+                        .list(GetTracesRequest.builder().page(i).name(agent.getLlangfuseProjectName()).build())
+                        .getData());
             }
 
             return traces;
         } catch (LangfuseClientApiException ex) {
             if (isNotFound(ex)) {
-                logNotFound("loading traces for project " + agent.getLlangfuseProjectName(), ex);
+                // TODO enable logging after demo
+                //logNotFound("loading traces for project " + agent.getLlangfuseProjectName(), ex);
                 return Collections.emptyList();
             }
             throw ex;
         }
     }
-
-
-
-
- 
 
     /**
      * Create a new project in Langfuse.
@@ -187,39 +183,40 @@ public class LangfuseService {
     }
 
     // public void getMetrics(Agent agent) {
-    //     if (agent == null) {
-    //         logger.warn("Cannot load Langfuse metrics: agent is null");
-    //         return;
-    //     }
+    // if (agent == null) {
+    // logger.warn("Cannot load Langfuse metrics: agent is null");
+    // return;
+    // }
 
-    //     LangfuseClient client = buildClient(agent.getLlangfuseUrl(), agent.getLlangfusePublicKey(),
-    //             agent.getLlangfuseSecretKey());
-    //     if (client == null) {
-    //         return;
-    //     }
-    //     String query = """
-    //             {
-    //               "view": "traces",
-    //               "metrics": [
-    //                 {"measure": "latency_sec", "aggregation": "count"}
-    //               ],
-    //               "dimensions": [
-    //                 {"field": "name"}
-    //               ],
-    //               "filters": [],
-    //               "fromTimestamp": "2025-05-01T00:00:00Z",
-    //               "toTimestamp": "2025-12-13T00:00:00Z"
-    //             }
-    //             """;
-    //     MetricsResponse response = client.metrics()
-    //             .metrics(GetMetricsRequest.builder().query(query).build());
-    //     List<Map<String, Object>> metricsData = response.getData();
-    //     for (Map<String, Object> row : metricsData) {
-    //         for (Map.Entry<String, Object> entry : row.entrySet()) {
-    //             logger.info(entry.getKey() + ": " + entry.getValue());
-    //         }
-    //     }
-    //     // TO BE IMPLEMENTED
+    // LangfuseClient client = buildClient(agent.getLlangfuseUrl(),
+    // agent.getLlangfusePublicKey(),
+    // agent.getLlangfuseSecretKey());
+    // if (client == null) {
+    // return;
+    // }
+    // String query = """
+    // {
+    // "view": "traces",
+    // "metrics": [
+    // {"measure": "latency_sec", "aggregation": "count"}
+    // ],
+    // "dimensions": [
+    // {"field": "name"}
+    // ],
+    // "filters": [],
+    // "fromTimestamp": "2025-05-01T00:00:00Z",
+    // "toTimestamp": "2025-12-13T00:00:00Z"
+    // }
+    // """;
+    // MetricsResponse response = client.metrics()
+    // .metrics(GetMetricsRequest.builder().query(query).build());
+    // List<Map<String, Object>> metricsData = response.getData();
+    // for (Map<String, Object> row : metricsData) {
+    // for (Map.Entry<String, Object> entry : row.entrySet()) {
+    // logger.info(entry.getKey() + ": " + entry.getValue());
+    // }
+    // }
+    // // TO BE IMPLEMENTED
     // }
 
     public List<Metric> getMetrics(Agent agent) {
@@ -246,7 +243,7 @@ public class LangfuseService {
                         metricRecord.setFloatValue(scoreValue.floatValue());
                         metrics.add(metricRecord);
                     });
-                     score.getBoolean().ifPresent(numericScore -> {
+                    score.getBoolean().ifPresent(numericScore -> {
                         String scoreName = numericScore.getName();
                         Double scoreValue = numericScore.getValue();
                         Metric metricRecord = new Metric();
@@ -257,7 +254,8 @@ public class LangfuseService {
                     if (isNotFound(ex)) {
                         logNotFound("loading score " + scoreId, ex);
                     } else {
-                        logger.warn("Failed to load score {} for trace {}: {}", scoreId, trace.getId(), ex.getMessage());
+                        logger.warn("Failed to load score {} for trace {}: {}", scoreId, trace.getId(),
+                                ex.getMessage());
                     }
                 }
             }
@@ -279,24 +277,24 @@ public class LangfuseService {
         List<TraceWithDetails> traces = getTraces(agent);
         List<Metric> metrics = new ArrayList<>();
         for (TraceWithDetails trace : traces) {
-            for(String scoreId : trace.getScores())
+            for (String scoreId : trace.getScores())
                 try {
                     Score score = client.scoreV2().getById(scoreId);
                     Metric metricRecord = new Metric();
-                    score.getNumeric().ifPresent(numericScore -> { 
+                    score.getNumeric().ifPresent(numericScore -> {
                         String scoreName = numericScore.getName();
                         Double scoreValue = numericScore.getValue();
-                        if(metric.equals(scoreName)){
+                        if (metric.equals(scoreName)) {
                             metricRecord.setName(scoreName);
                             metricRecord.setFloatValue(scoreValue.floatValue());
                         }
                     });
-                        score.getBoolean().ifPresent(numericScore -> {
+                    score.getBoolean().ifPresent(numericScore -> {
                         String scoreName = numericScore.getName();
                         Double scoreValue = numericScore.getValue();
-                        if(metric.equals(scoreName)){
+                        if (metric.equals(scoreName)) {
                             metricRecord.setName(scoreName);
-                            metricRecord.setBooleanValue(scoreValue.intValue() != 0);   
+                            metricRecord.setBooleanValue(scoreValue.intValue() != 0);
                         }
                     });
                     metrics.add(metricRecord);
@@ -311,9 +309,7 @@ public class LangfuseService {
         return metrics;
     }
 
-
     public List<TraceWithFullDetails> getRunBenchmarkTraces(Agent agent, String datasetName, String runName) {
-        // TO BE IMPLEMENTED
         LangfuseClient client = buildClient(agent.getLlangfuseUrl(), agent.getLlangfusePublicKey(),
                 agent.getLlangfuseSecretKey());
         List<TraceWithFullDetails> traces = new ArrayList<>();
@@ -321,7 +317,8 @@ public class LangfuseService {
             return traces;
         }
         try {
-            DatasetRunWithItems datasetRun = client.datasets().getRun(datasetName, runName, RequestOptions.builder().build());
+            DatasetRunWithItems datasetRun = client.datasets().getRun(datasetName, runName,
+                    RequestOptions.builder().build());
             datasetRun.getDatasetRunItems().forEach(item -> {
                 try {
                     DatasetItem datasetItem = client.datasetItems().get(item.getDatasetItemId());
@@ -345,7 +342,57 @@ public class LangfuseService {
             throw ex;
         }
     }
-    
+
+    public List<TraceData> fetchTracesFromRun(Agent agent, String runName, String datasetName) {
+        List<TraceData> result = new ArrayList<>();
+        LangfuseClient langfuseClient = buildClient(agent.getLlangfuseUrl(), agent.getLlangfusePublicKey(),
+                agent.getLlangfuseSecretKey());
+        if (langfuseClient == null) {
+            return result;
+        }
+        if (datasetName == null || datasetName.isBlank()) {
+            logger.warn("Dataset name is required to fetch Langfuse traces");
+            return result;
+        }
+        if (runName == null || runName.isBlank()) {
+            logger.warn("Run name is required to fetch Langfuse traces");
+            return result;
+        }
+        try {
+            DatasetRunWithItems datasetRun = langfuseClient.datasets()
+                    .getRun(datasetName, runName, RequestOptions.builder().build());
+
+            for (var item : datasetRun.getDatasetRunItems()) {
+                try {
+                    DatasetItem datasetItem = getDatasetItem(agent, item.getDatasetItemId());
+                    TraceWithFullDetails trace = getTraceWithFullDetails(agent, item.getTraceId());
+
+                    if (datasetItem == null || trace == null) {
+                        continue;
+                    }
+
+                    TraceData traceData = new TraceData();
+                    traceData.traceId = trace.getId();
+                    traceData.trace = trace;
+                    traceData.input = extractInput(datasetItem);
+                    traceData.expectedOutput = extractExpectedOutput(datasetItem);
+                    traceData.generatedOutput = extractGeneratedOutput(trace);
+
+                    // Fetch scores from Langfuse using generalized method
+                    traceData.langfuseScores = getScoresForTrace(trace);
+
+                    result.add(traceData);
+                } catch (LangfuseClientApiException ex) {
+                    logger.debug("Could not load trace item: {}", ex.getMessage());
+                }
+            }
+        } catch (LangfuseClientApiException ex) {
+            logger.warn("  Impossibile caricare run " + runName + ": " + ex.getMessage());
+        }
+
+        return result;
+    }
+
     public List<Dataset> getDatasets() {
         if (!isEnabled()) {
             logger.warn("Langfuse is not enabled, returning empty dataset list");
@@ -368,6 +415,7 @@ public class LangfuseService {
         }
 
     }
+
     public Dataset getDataset(String dataset) {
         if (!isEnabled()) {
             logger.warn("Langfuse is not enabled, returning empty dataset list");
@@ -432,7 +480,8 @@ public class LangfuseService {
             return dataset;
         } catch (LangfuseClientApiException ex) {
             if (isNotFound(ex)) {
-                logNotFound("creating dataset " + datasetName, ex);
+                // TODO enable logging after demo
+                //logNotFound("creating dataset " + datasetName, ex);
                 return null;
             }
             throw ex;
@@ -464,5 +513,202 @@ public class LangfuseService {
 
     private void logNotFound(String action, LangfuseClientApiException ex) {
         logger.info("Langfuse returned 404 while {}: {}", action, ex.getMessage());
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // DATA EXTRACTION UTILITIES
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Extract input text from a DatasetItem.
+     * Handles both Map and simple object inputs.
+     *
+     * @param item DatasetItem to extract input from
+     * @return Extracted input as string, or empty string if null
+     */
+    public String extractInput(DatasetItem item) {
+        if (item == null) {
+            return "";
+        }
+        Object input = item.getInput();
+        if (input instanceof Map) {
+            return ((Map<?, ?>) input).values().stream()
+                    .map(Object::toString)
+                    .collect(java.util.stream.Collectors.joining(" "));
+        }
+        if(input instanceof Optional) {
+            Optional<?> optionalInput = (Optional<?>) input;
+            if(optionalInput.isPresent()) {
+                Object unwrappedInput = optionalInput.get();
+                if(unwrappedInput instanceof Map) {
+                    var value = ((Map<?, ?>) unwrappedInput).values().stream()
+                            .map(Object::toString)
+                            .collect(java.util.stream.Collectors.joining(" "));
+                    return value;
+                } else {
+                    return unwrappedInput.toString();
+                }
+            } else {
+                return "";
+            }
+        }
+        return input != null ? input.toString() : "";
+    }
+
+    /**
+     * Extract expected output from a DatasetItem.
+     * Handles both Map and simple object outputs.
+     *
+     * @param item DatasetItem to extract expected output from
+     * @return Extracted expected output as string, or empty string if null/absent
+     */
+    public String extractExpectedOutput(DatasetItem item) {
+        if (item == null) {
+            return "";
+        }
+        Object expected = item.getExpectedOutput().orElse(null);
+        if (expected instanceof Map) {
+            return ((Map<?, ?>) expected).values().stream()
+                    .map(Object::toString)
+                    .collect(java.util.stream.Collectors.joining(" "));
+        }
+        if(expected instanceof Optional) {
+            Optional<?> optionalExpected = (Optional<?>) expected;
+            if(optionalExpected.isPresent()) {
+                Object unwrappedExpected = optionalExpected.get();
+                if(unwrappedExpected instanceof Map) {
+                    var value = ((Map<?, ?>) unwrappedExpected).values().stream()
+                            .map(Object::toString)
+                            .collect(java.util.stream.Collectors.joining(" "));
+                    return value;
+                } else {
+                    return unwrappedExpected.toString();
+                }
+            } else {
+                return "";
+            }
+        }
+        return expected != null ? expected.toString() : "";
+    }
+
+    /**
+     * Extract generated output from a TraceWithFullDetails.
+     *
+     * @param trace Trace to extract output from
+     * @return Generated output as string, or empty string if null
+     */
+    public String extractGeneratedOutput(TraceWithFullDetails trace) {
+        if (trace == null || trace.getOutput() == null) {
+            return "";
+        }
+        Object output = trace.getOutput();
+        if(output instanceof Optional) {
+            Optional<?> optionalOutput = (Optional<?>) output;
+            if(optionalOutput.isPresent()) {
+                Object unwrappedOutput = optionalOutput.get();
+                if(unwrappedOutput instanceof Map) {
+                    var value = ((Map<?, ?>) unwrappedOutput).values().stream()
+                            .map(Object::toString)
+                            .collect(java.util.stream.Collectors.joining(" "));
+                    return value;
+                } else {
+                    return unwrappedOutput.toString();
+                }
+            } else {
+                return "";
+            }
+        }
+        return trace.getOutput().toString();
+    }
+
+    /**
+     * Extract all scores from a TraceWithFullDetails as a map.
+     * Handles both numeric and boolean ScoreV1 union types.
+     *
+     * @param trace Trace to extract scores from
+     * @return Map of score name to value (Double)
+     */
+    public Map<String, Double> getScoresForTrace(TraceWithFullDetails trace) {
+        Map<String, Double> scores = new java.util.LinkedHashMap<>();
+        if (trace == null || trace.getScores() == null) {
+            return scores;
+        }
+
+        for (ScoreV1 scoreV1 : trace.getScores()) {
+            try {
+                scoreV1.getNumeric()
+                        .ifPresent(numericScore -> scores.put(numericScore.getName(), numericScore.getValue()));
+                scoreV1.getBoolean().ifPresent(boolScore -> scores.put(boolScore.getName(), boolScore.getValue()));
+            } catch (Exception ex) {
+                logger.debug("Could not process score: {}", ex.getMessage());
+            }
+        }
+
+        return scores;
+    }
+
+    /**
+     * Get a specific DatasetItem by ID.
+     *
+     * @param agent  Agent with Langfuse credentials
+     * @param itemId DatasetItem ID
+     * @return DatasetItem or null if not found
+     */
+    public DatasetItem getDatasetItem(Agent agent, String itemId) {
+        if (agent == null || itemId == null) {
+            return null;
+        }
+        LangfuseClient client = buildClient(agent.getLlangfuseUrl(), agent.getLlangfusePublicKey(),
+                agent.getLlangfuseSecretKey());
+        if (client == null) {
+            return null;
+        }
+        try {
+            return client.datasetItems().get(itemId);
+        } catch (LangfuseClientApiException ex) {
+            if (isNotFound(ex)) {
+                // TODO enable logging after demo
+                //logNotFound("fetching dataset item " + itemId, ex);
+                return null;
+            }
+            throw ex;
+        }
+    }
+
+    /**
+     * Get a specific trace with full details by ID.
+     *
+     * @param agent   Agent with Langfuse credentials
+     * @param traceId Trace ID
+     * @return TraceWithFullDetails or null if not found
+     */
+    public TraceWithFullDetails getTraceWithFullDetails(Agent agent, String traceId) {
+        if (agent == null || traceId == null) {
+            return null;
+        }
+        LangfuseClient client = buildClient(agent.getLlangfuseUrl(), agent.getLlangfusePublicKey(),
+                agent.getLlangfuseSecretKey());
+        if (client == null) {
+            return null;
+        }
+        try {
+            return client.trace().get(traceId);
+        } catch (LangfuseClientApiException ex) {
+            if (isNotFound(ex)) {
+                // TODO enable logging after demo
+                //logNotFound("fetching trace " + traceId, ex);
+                return null;
+            }
+            throw ex;
+        }
+    }
+
+    public static class TraceData {
+        public String traceId;
+        public TraceWithFullDetails trace;
+        public String input;
+        public String expectedOutput;
+        public String generatedOutput;
+        public Map<String, Double> langfuseScores = new LinkedHashMap<>();
     }
 }

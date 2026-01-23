@@ -27,7 +27,7 @@ public class WeightedSumFormula implements KPIFormula {
     }
 
     @Override
-    public double evaluate(Map<Class<? extends MetricKey>, Double> metricValues) {
+    public double evaluate(Map<?, Double> metricValues) {
         if (metricValues == null || metricValues.isEmpty()) {
             throw new IllegalArgumentException("No metric values provided");
         }

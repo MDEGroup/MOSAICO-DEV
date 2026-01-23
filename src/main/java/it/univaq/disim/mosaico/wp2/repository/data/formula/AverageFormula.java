@@ -1,7 +1,6 @@
 package it.univaq.disim.mosaico.wp2.repository.data.formula;
 
 import it.univaq.disim.mosaico.wp2.repository.data.KPIFormula;
-import it.univaq.disim.mosaico.wp2.repository.data.MetricKey;
 
 import java.util.Map;
 
@@ -11,7 +10,7 @@ import java.util.Map;
  */
 public class AverageFormula implements KPIFormula {
     @Override
-    public double evaluate(Map<Class<? extends MetricKey>, Double> metricValues) {
+    public double evaluate(Map<?, Double> metricValues) {
         if (metricValues == null || metricValues.isEmpty()) {
             throw new IllegalArgumentException("No metric values provided for average calculation");
         }

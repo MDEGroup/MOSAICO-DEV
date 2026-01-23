@@ -1,0 +1,84 @@
+@startuml benchmark-run-sequence
+
+!theme plain
+title Benchmark Run - Sequence Diagram
+
+actor User
+participant "REST\nController" as Controller
+participant "Benchmark\nOrchestrator" as Orchestrator
+participant "BenchmarkRun\nManager" as RunManager
+participant "Langfuse\nService" as Langfuse
+participant "Metric\nRegistry" as Metrics
+participant "KPI Formula\nParser" as Parser
+participant "Alert\nService" as Alerts
+participant "Notification\nDispatcher" as Notifier
+database "Database" as DB
+
+== 1. Create Run ==
+User -> Controller: POST /benchmark-runs
+Controller -> RunManager: createRun(benchmarkId, agentId, MANUAL)
+RunManager -> DB: save(BenchmarkRun[PENDING])
+RunManager --> Controller: runId
+Controller --> User: { id: runId, status: PENDING }
+
+== 2. Execute Run ==
+User -> Controller: POST /benchmark-runs/{id}/execute
+Controller -> Orchestrator: executeBenchmarkRun(runId)
+
+Orchestrator -> RunManager: startRun(runId)
+RunManager -> DB: update(status=RUNNING)
+RunManager --> Orchestrator: BenchmarkRun
+
+Orchestrator -> DB: findBenchmark(benchmarkId)
+Orchestrator -> DB: findAgent(agentId)
+
+alt Benchmark or Agent not found
+    Orchestrator -> RunManager: failRun(runId, "Not found")
+    RunManager -> DB: update(status=FAILED)
+    Orchestrator --> Controller: BenchmarkRun[FAILED]
+    Controller --> User: { status: FAILED }
+end
+
+== 3. Collect Traces ==
+Orchestrator -> Langfuse: getRunBenchmarkTraces(agent, datasetRef, runName)
+Langfuse --> Orchestrator: List<Trace>
+
+== 4. Compute Metrics ==
+loop for each Trace
+    Orchestrator -> Metrics: getAllProviders()
+    loop for each MetricProvider
+        Orchestrator -> Metrics: computeMetric(trace)
+        Metrics --> Orchestrator: metricValue
+        Orchestrator -> DB: save(MetricSnapshot)
+    end
+end
+
+== 5. Calculate KPIs ==
+loop for each KPIDefinition
+    Orchestrator -> Parser: parse(formulaExpression)
+    Parser --> Orchestrator: KPIFormula
+    Orchestrator -> Orchestrator: formula.evaluate(metrics)
+    Orchestrator -> DB: save(KPIHistory)
+end
+
+== 6. Evaluate Alerts ==
+Orchestrator -> Alerts: evaluateAlertsForRun(runId)
+Alerts -> DB: findAlertsByBenchmark(benchmarkId)
+
+loop for each Alert
+    Alerts -> Alerts: evaluateCondition(value, threshold)
+    alt Alert triggered
+        Alerts -> Notifier: dispatch(alert, metricName, value)
+        Notifier -> Notifier: send via EMAIL/SLACK/WEBHOOK
+    end
+end
+
+== 7. Complete Run ==
+Orchestrator -> RunManager: completeRun(runId, totalTraces, processedTraces)
+RunManager -> DB: update(status=COMPLETED)
+RunManager --> Orchestrator: BenchmarkRun[COMPLETED]
+
+Orchestrator --> Controller: BenchmarkRun
+Controller --> User: { status: COMPLETED, ... }
+
+@enduml

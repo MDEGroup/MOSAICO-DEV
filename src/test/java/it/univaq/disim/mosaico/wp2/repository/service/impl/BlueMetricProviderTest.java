@@ -26,8 +26,8 @@ class BlueMetricProviderTest {
         Metric metric = provider.compute(agent, "Hello World", "Hello World", null);
 
         assertNotNull(metric);
-        assertEquals("ROUGE Score", metric.getName());
-        assertEquals(MetricType.ROUGE, metric.getType());
+        assertEquals("BLEU Score", metric.getName());
+        assertEquals(MetricType.BLEU, metric.getType());
         assertEquals("score", metric.getUnit());
         assertEquals(1.0f, metric.getFloatValue().orElseThrow(), 1e-5f);
     }

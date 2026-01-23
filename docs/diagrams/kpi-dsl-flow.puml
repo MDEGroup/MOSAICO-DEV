@@ -1,0 +1,102 @@
+@startuml kpi-dsl-flow
+
+!theme plain
+title KPI Formula DSL - Processing Flow
+
+skinparam activity {
+    BackgroundColor #LightYellow
+    BorderColor #DarkGoldenRod
+    DiamondBackgroundColor #LightGreen
+}
+
+start
+
+:Receive DSL Expression;
+note right
+    Examples:
+    * AVERAGE(ACCURACY, PRECISION)
+    * WEIGHTED_SUM(ACC:0.4, PREC:0.3, REC:0.3)
+    * THRESHOLD(ACCURACY, 0.8)
+end note
+
+:KPIFormulaParser.parse(expression);
+
+partition "Pattern Matching" {
+    if (matches AVERAGE pattern?) then (yes)
+        :Extract metric names;
+        :Create AverageFormula lambda;
+    elseif (matches WEIGHTED_SUM pattern?) then (yes)
+        :Extract metric:weight pairs;
+        :Validate weights present;
+        :Create WeightedSumFormula lambda;
+    elseif (matches MIN pattern?) then (yes)
+        :Extract metric names;
+        :Create MinFormula lambda;
+    elseif (matches MAX pattern?) then (yes)
+        :Extract metric names;
+        :Create MaxFormula lambda;
+    elseif (matches THRESHOLD pattern?) then (yes)
+        :Extract metric and threshold;
+        :Create ThresholdFormula lambda;
+    else (no match)
+        :Return DslParseResult.failure();
+        stop
+    endif
+}
+
+:Validate referenced metrics;
+note right
+    Check against
+    known MetricType enum
+end note
+
+if (unknown metrics?) then (yes)
+    :Return DslParseResult.failure(errors);
+    stop
+else (no)
+endif
+
+:Create DslParseResult.success(formula, metrics);
+
+partition "Evaluation" {
+    :Receive Map<String, Double> metricValues;
+    :KPIFormula.evaluate(metricValues);
+
+    if (formula type?) then (AVERAGE)
+        :sum = 0;
+        repeat
+            :sum += metricValue;
+        repeat while (more metrics?)
+        :return sum / count;
+    elseif (formula type?) then (WEIGHTED_SUM)
+        :sum = 0;
+        repeat
+            :sum += metricValue * weight;
+        repeat while (more metrics?)
+        :return sum;
+    elseif (formula type?) then (MIN)
+        :min = MAX_VALUE;
+        repeat
+            :if (value < min) min = value;
+        repeat while (more metrics?)
+        :return min;
+    elseif (formula type?) then (MAX)
+        :max = MIN_VALUE;
+        repeat
+            :if (value > max) max = value;
+        repeat while (more metrics?)
+        :return max;
+    else (THRESHOLD)
+        if (value >= threshold?) then (yes)
+            :return 1.0;
+        else (no)
+            :return 0.0;
+        endif
+    endif
+}
+
+:Return computed KPI value;
+
+stop
+
+@enduml
