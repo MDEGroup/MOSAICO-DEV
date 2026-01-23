@@ -20,7 +20,7 @@ public class BlueMetricProvider implements MetricProvider<BlueMetric> {
     public Metric compute(Agent agent, String referenceText, String generatedText, TraceWithFullDetails trace) {
         float rougeScore = computeRougeLScore(referenceText, generatedText);
         Metric rougeMetric = new Metric();
-        rougeMetric.setName("ROUGE Score");
+        rougeMetric.setName("BLUE Score");
         rougeMetric.setType(MetricType.ROUGE);
         rougeMetric.setFloatValue(rougeScore);
         rougeMetric.setUnit("score");

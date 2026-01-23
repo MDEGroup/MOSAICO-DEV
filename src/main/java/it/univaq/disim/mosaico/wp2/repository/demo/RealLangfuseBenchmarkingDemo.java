@@ -7,8 +7,8 @@ import it.univaq.disim.mosaico.wp2.repository.dsl.DslParseResult;
 import it.univaq.disim.mosaico.wp2.repository.dsl.KPIFormulaParser;
 import it.univaq.disim.mosaico.wp2.repository.service.LangfuseService;
 import it.univaq.disim.mosaico.wp2.repository.service.LangfuseService.TraceData;
-import it.univaq.disim.mosaico.wp2.repository.service.MetricProvider;
-import it.univaq.disim.mosaico.wp2.repository.service.impl.MetricProviderRegistry;
+import it.univaq.disim.mosaico.wp2.repository.service.impl.BenchmarkRunService;
+import it.univaq.disim.mosaico.wp2.repository.service.impl.TraceMetricsAggregator;
 import it.univaq.disim.mosaico.wp2.repository.config.LangfuseProperties;
 
 import org.slf4j.Logger;
@@ -84,7 +84,8 @@ class BenchmarkDemoRunner implements CommandLineRunner {
     private final LangfuseService langfuseService;
     private final LangfuseProperties langfuseProperties;
     private final KPIFormulaParser kpiParser;
-    private final MetricProviderRegistry metricProviderRegistry;
+    private final TraceMetricsAggregator traceMetricsAggregator;
+    private final BenchmarkRunService benchmarkRunService;
 
     
 
@@ -98,11 +99,13 @@ class BenchmarkDemoRunner implements CommandLineRunner {
             LangfuseService langfuseService,
             LangfuseProperties langfuseProperties,
             KPIFormulaParser kpiParser,
-            MetricProviderRegistry metricProviderRegistry) {
+            TraceMetricsAggregator traceMetricsAggregator,
+            BenchmarkRunService benchmarkRunService) {
         this.langfuseService = langfuseService;
         this.langfuseProperties = langfuseProperties;
         this.kpiParser = kpiParser;
-        this.metricProviderRegistry = metricProviderRegistry;
+        this.traceMetricsAggregator = traceMetricsAggregator;
+        this.benchmarkRunService = benchmarkRunService;
     }
 
     @Override
@@ -381,7 +384,7 @@ class BenchmarkDemoRunner implements CommandLineRunner {
             print("  Run name: " + runName);
 
             try {
-                List<TraceData> traces = langfuseService.fetchTracesFromRun(agentResult.agent, runName);
+                List<TraceData> traces = langfuseService.fetchTracesFromRun(agentResult.agent, runName, benchmark.getDatasetRef());
                 agentResult.traces = traces;
                 print("  Traces recuperate: " + traces.size());
 
@@ -413,8 +416,6 @@ class BenchmarkDemoRunner implements CommandLineRunner {
     private void step4_ComputeMetrics() {
         printStep(4, "CALCOLO METRICHE PER OGNI AGENTE");
 
-        Collection<MetricProvider<?>> providers = metricProviderRegistry.getAllProviders();
-
         for (AgentBenchmarkResult agentResult : agentResults.values()) {
             print("\nAgent: " + agentResult.agent.getName());
             print("Traces da processare: " + agentResult.traces.size());
@@ -423,7 +424,7 @@ class BenchmarkDemoRunner implements CommandLineRunner {
                 print("  Nessuna trace disponibile, uso metriche simulate");
                 agentResult.aggregatedMetrics = generateSimulatedMetrics(agentResult.agent.getId());
             } else {
-                Map<String, Double> aggregated = aggregateMetricsWithProviders(agentResult, providers);
+                Map<String, Double> aggregated = traceMetricsAggregator.aggregate(agentResult.agent, agentResult.traces);
                 if (aggregated.isEmpty()) {
                     print("  Nessuna metrica disponibile da Langfuse o provider, uso metriche simulate");
                     aggregated = generateSimulatedMetrics(agentResult.agent.getId());
@@ -445,90 +446,8 @@ class BenchmarkDemoRunner implements CommandLineRunner {
         printEndStep();
     }
 
-    private Map<String, Double> aggregateMetricsWithProviders(AgentBenchmarkResult agentResult, Collection<MetricProvider<?>> providers) {
-        Map<String, List<Double>> metricValues = new LinkedHashMap<>();
-
-        for (TraceData trace : agentResult.traces) {
-            collectLangfuseScores(metricValues, trace.langfuseScores);
-
-            if (trace.expectedOutput == null || trace.generatedOutput == null) {
-                continue;
-            }
-
-            for (MetricProvider<?> provider : providers) {
-                try {
-                    Metric metric = provider.compute(agentResult.agent, trace.expectedOutput, trace.generatedOutput, trace.trace);
-                    if (metric == null) {
-                        continue;
-                    }
-                    metric.getFloatValue().ifPresent(value -> addMetricValue(metricValues, deriveMetricName(metric), value));
-                } catch (Exception ex) {
-                    logger.debug("Metric provider {} skipped: {}", provider.getClass().getSimpleName(), ex.getMessage());
-                }
-            }
-        }
-
-        Map<String, Double> aggregated = new LinkedHashMap<>();
-        for (Map.Entry<String, List<Double>> entry : metricValues.entrySet()) {
-            double avg = entry.getValue().stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
-            aggregated.put(entry.getKey(), avg);
-        }
-
-        return normalizeAggregatedMetrics(aggregated);
-    }
-
-    private void collectLangfuseScores(Map<String, List<Double>> accumulator, Map<String, Double> scores) {
-        if (scores == null || scores.isEmpty()) {
-            return;
-        }
-        scores.forEach((name, value) -> {
-            if (value != null) {
-                addMetricValue(accumulator, normalizeMetricKey(name), value);
-            }
-        });
-    }
-
-    private void addMetricValue(Map<String, List<Double>> accumulator, String metricName, double value) {
-        if (metricName == null) {
-            return;
-        }
-        accumulator.computeIfAbsent(metricName, k -> new ArrayList<>()).add(value);
-    }
-
-    private String deriveMetricName(Metric metric) {
-        if (metric == null) {
-            return null;
-        }
-        if (metric.getType() != null) {
-            return metric.getType().name();
-        }
-        return normalizeMetricKey(metric.getName());
-    }
-
-    private String normalizeMetricKey(String metricName) {
-        if (metricName == null) {
-            return null;
-        }
-        return metricName.toUpperCase().replace("-", "_").replace(" ", "_");
-    }
-
-    private Map<String, Double> normalizeAggregatedMetrics(Map<String, Double> aggregated) {
-        Map<String, Double> normalized = new LinkedHashMap<>(aggregated);
-        if (normalized.containsKey("ROUGE1_F")) {
-            normalized.put("ROUGE", normalized.get("ROUGE1_F"));
-        }
-        if (normalized.containsKey("ROUGEL_F")) {
-            normalized.putIfAbsent("ROUGE", normalized.get("ROUGEL_F"));
-        }
-        if (normalized.containsKey("COSINE_PRED_GOLD")) {
-            normalized.put("ACCURACY", normalized.get("COSINE_PRED_GOLD"));
-        }
-        if (!normalized.containsKey("BLEU") && normalized.containsKey("ROUGE")) {
-            normalized.put("BLEU", normalized.get("ROUGE") * 0.85);
-        }
-        return normalized;
-    }
-
+    //VERIFICARE SE QUESTO è il posto giusto per questi metodi. Vedere se si può generalizzare in (LangfuseService, MetricService, BenchmarkService o simili)
+    // DA QUI
     private Map<String, Double> generateSimulatedMetrics(String agentId) {
         // Generate realistic simulated metrics based on agent type
         Map<String, Double> metrics = new LinkedHashMap<>();
@@ -579,6 +498,8 @@ class BenchmarkDemoRunner implements CommandLineRunner {
             default -> MetricType.ACCURACY;
         };
     }
+    //FINO A QUI
+
 
     // ═══════════════════════════════════════════════════════════════════════════
     // STEP 5: CALCULATE KPIs
@@ -633,8 +554,7 @@ class BenchmarkDemoRunner implements CommandLineRunner {
             print(MINI_SEP);
 
             // Create BenchmarkRun
-            BenchmarkRun run = new BenchmarkRun(benchmark.getId(), agentResult.agent.getId(), TriggerType.MANUAL);
-            run.setId("run-" + UUID.randomUUID().toString().substring(0, 8));
+            BenchmarkRun run = benchmarkRunService.createRun(benchmark, agentResult.agent);
             agentResult.benchmarkRun = run;
 
             print("\n1. Creazione BenchmarkRun:");
@@ -646,7 +566,7 @@ class BenchmarkDemoRunner implements CommandLineRunner {
 
             // Start run
             print("\n2. Avvio run (PENDING -> RUNNING):");
-            run.start();
+            benchmarkRunService.startRun(run);
             print("   ├─ Status: " + run.getStatus());
             print("   └─ Started at: " + run.getStartedAt());
 
@@ -659,30 +579,25 @@ class BenchmarkDemoRunner implements CommandLineRunner {
 
             // Create BenchmarkResults
             print("\n4. Creazione BenchmarkResult per ogni trace:");
-            List<BenchmarkResult> results = new ArrayList<>();
-            for (TraceData trace : agentResult.traces) {
-                BenchmarkResult result = new BenchmarkResult(run, trace.traceId);
-                result.setExpectedText(truncate(trace.expectedOutput, 100));
-                result.setGeneratedText(truncate(trace.generatedOutput, 100));
-                result.setKpiValues(agentResult.kpiValues);
-                results.add(result);
-            }
+            List<BenchmarkResult> results = benchmarkRunService.buildBenchmarkResults(
+                run,
+                agentResult.traces,
+                agentResult.kpiValues
+            );
             agentResult.benchmarkResults = results;
             print("   └─ BenchmarkResults creati: " + results.size());
 
             // Simulate alert evaluation
             print("\n5. Valutazione Alert:");
-            double rougeValue = agentResult.aggregatedMetrics.getOrDefault("ROUGE", 0.0);
-            boolean alertTriggered = rougeValue < 0.3;
+            double rougeValue = benchmarkRunService.getMetricValue(agentResult.aggregatedMetrics, "ROUGE");
+            boolean alertTriggered = benchmarkRunService.isAlertTriggered(rougeValue, 0.3);
             print("   ├─ Condizione: ROUGE < 0.3");
             print("   ├─ Valore ROUGE: " + String.format("%.4f", rougeValue));
             print("   └─ Alert triggered: " + (alertTriggered ? "SI" : "NO"));
 
             // Complete run
             print("\n6. Completamento run (RUNNING -> COMPLETED):");
-            run.setTracesProcessed(tracesProcessed);
-            run.setMetricsComputed(metricsComputed);
-            run.complete();
+            benchmarkRunService.completeRun(run, tracesProcessed, metricsComputed);
             print("   ├─ Status: " + run.getStatus());
             print("   ├─ Completed at: " + run.getCompletedAt());
             print("   └─ Duration: " + run.getDurationMillis() + "ms");
@@ -822,11 +737,6 @@ class BenchmarkDemoRunner implements CommandLineRunner {
 
     private String formatValue(Double value) {
         return value != null ? String.format("%.4f", value) : "N/A";
-    }
-
-    private String truncate(String text, int maxLen) {
-        if (text == null) return "";
-        return text.length() > maxLen ? text.substring(0, maxLen) + "..." : text;
     }
 
     private void printHeader(String title) {

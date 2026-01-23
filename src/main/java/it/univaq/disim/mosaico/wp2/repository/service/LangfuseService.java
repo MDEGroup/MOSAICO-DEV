@@ -348,7 +348,7 @@ public class LangfuseService {
         }
     }
 
-    public List<TraceData> fetchTracesFromRun(Agent agent, String runName) {
+    public List<TraceData> fetchTracesFromRun(Agent agent, String runName, String datasetName) {
         List<TraceData> result = new ArrayList<>();
         LangfuseClient langfuseClient = buildClient(agent.getLlangfuseUrl(), agent.getLlangfusePublicKey(),
                 agent.getLlangfuseSecretKey());
