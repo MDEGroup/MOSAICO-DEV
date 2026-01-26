@@ -1,5 +1,6 @@
 package it.univaq.disim.mosaico.wp2.repository.data;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 
 import java.time.Instant;
@@ -27,6 +28,7 @@ public class BenchmarkResult {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "run_id", nullable = false)
+    @JsonBackReference
     private BenchmarkRun benchmarkRun;
 
     @Column(name = "trace_id")

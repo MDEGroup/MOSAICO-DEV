@@ -26,28 +26,28 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * Demo che utilizza dati reali da Langfuse per eseguire il benchmark su 3 agenti
- * di summarization (generazione descrizioni GitHub da README files).
+ * Demo that uses real data from Langfuse to run benchmarks on 3 summarization agents
+ * (GitHub description generation from README files).
  *
- * Agenti valutati:
- * 1. sum_agent (baseline) - llama3.2:3b con temperature=0
- * 2. variant1 - llama3.1:8b con temperature=0.8 (creative)
- * 3. variant2 - mistral:7b con temperature=0.2 (deterministic)
+ * Evaluated agents:
+ * 1. sum_agent (baseline) - llama3.2:3b with temperature=0
+ * 2. variant1 - llama3.1:8b with temperature=0.8 (creative)
+ * 3. variant2 - mistral:7b with temperature=0.2 (deterministic)
  *
- * Il flusso completo include:
- * - Creazione entita' Agent e Benchmark
- * - Recupero traces da Langfuse
- * - Calcolo metriche (ROUGE, BLEU, cosine similarity)
- * - Valutazione KPI tramite DSL
- * - Confronto performance tra agenti
- * - Esecuzione benchmark run completo
+ * The complete flow includes:
+ * - Agent and Benchmark entity creation
+ * - Trace retrieval from Langfuse
+ * - Metrics calculation (ROUGE, BLEU, cosine similarity)
+ * - KPI evaluation via DSL
+ * - Performance comparison between agents
+ * - Complete benchmark run execution
  *
- * NOTA: Per eseguire questa demo, Langfuse deve essere raggiungibile
- * con le credenziali specificate in application.properties
+ * NOTE: To run this demo, Langfuse must be reachable
+ * with the credentials specified in application.properties
  *
- * Esecuzione:
+ * Execution:
  *   mvn spring-boot:run -Dspring-boot.run.profiles=demo-benchmark
- * oppure:
+ * or:
  *   java -jar target/repository.jar --spring.profiles.active=demo-benchmark
  */
 @SpringBootApplication
@@ -60,7 +60,7 @@ public class RealLangfuseBenchmarkingDemo {
 }
 
 /**
- * Runner component che esegue la demo quando il profilo "demo-benchmark" e' attivo.
+ * Runner component that executes the demo when the "demo-benchmark" profile is active.
  */
 @Component
 @Profile("demo-benchmark")
@@ -89,7 +89,7 @@ class BenchmarkDemoRunner implements CommandLineRunner {
 
     
 
-    // Results storage (in-memory, no DB persistence)
+    // Results storage (in-memory, no database persistence)
     private final Map<String, AgentBenchmarkResult> agentResults = new LinkedHashMap<>();
 
     // Benchmark reference
@@ -114,8 +114,8 @@ class BenchmarkDemoRunner implements CommandLineRunner {
     }
 
     public void runFullDemo() {
-        printHeader("MOSAICO BENCHMARKING SYSTEM - DEMO CON DATI REALI LANGFUSE");
-        print("Data esecuzione: " + Instant.now());
+        printHeader("MOSAICO BENCHMARKING SYSTEM - DEMO WITH REAL LANGFUSE DATA");
+        print("Execution date: " + Instant.now());
         print("Dataset: " + DATASET_NAME);
         print("");
 
@@ -145,7 +145,7 @@ class BenchmarkDemoRunner implements CommandLineRunner {
         // Step 7: Compare agents and generate report
         step7_CompareAgentsAndReport();
 
-        printHeader("DEMO COMPLETATA");
+        printHeader("DEMO COMPLETED");
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -153,16 +153,16 @@ class BenchmarkDemoRunner implements CommandLineRunner {
     // ═══════════════════════════════════════════════════════════════════════════
 
     private void step1_CreateAgentEntities() {
-        printStep(1, "CREAZIONE ENTITA' AGENT");
+        printStep(1, "AGENT ENTITY CREATION");
 
-        print("\nCreo 3 istanze Agent che rappresentano i 3 agenti di summarization:");
+        print("\nCreating 3 Agent instances representing the 3 summarization agents:");
         print("");
 
         // Agent 1: Baseline (sum_agent.py)
         Agent baselineAgent = createAgent(
             "agent-baseline",
             "SummarizationBot Baseline",
-            "Agente baseline per generazione descrizioni GitHub. Usa llama3.2:3b con temperature=0 per output deterministici.",
+            "Baseline agent for GitHub description generation. Uses llama3.2:3b with temperature=0 for deterministic output.",
             "llama3.2:3b",
             Map.of("temperature", 0.0, "top_p", 1.0, "num_predict", 512)
         );
@@ -172,7 +172,7 @@ class BenchmarkDemoRunner implements CommandLineRunner {
         Agent creativeAgent = createAgent(
             "agent-variant1-creative",
             "SummarizationBot Creative",
-            "Variante creativa con llama3.1:8b e temperature=0.8 per output piu' variati e creativi.",
+            "Creative variant with llama3.1:8b and temperature=0.8 for more varied and creative output.",
             "llama3.1:8b",
             Map.of("temperature", 0.8, "top_p", 0.95, "top_k", 50, "num_predict", 512)
         );
@@ -182,14 +182,14 @@ class BenchmarkDemoRunner implements CommandLineRunner {
         Agent deterministicAgent = createAgent(
             "agent-variant2-deterministic",
             "SummarizationBot Deterministic",
-            "Variante deterministica con mistral:7b e temperature=0.2 per output precisi e consistenti.",
+            "Deterministic variant with mistral:7b and temperature=0.2 for precise and consistent output.",
             "mistral:7b",
             Map.of("temperature", 0.2, "top_p", 0.8, "top_k", 20, "num_predict", 256, "repeat_penalty", 1.1)
         );
         agentResults.put(deterministicAgent.getId(), new AgentBenchmarkResult(deterministicAgent));
 
         print("");
-        print("Agent creati: " + agentResults.size());
+        print("Agents created: " + agentResults.size());
         agentResults.values().forEach(r -> {
             Agent a = r.agent;
             print("  - " + a.getName() + " [" + a.getId() + "]");
@@ -208,7 +208,7 @@ class BenchmarkDemoRunner implements CommandLineRunner {
         agent.setLlangfusePublicKey(langfuseProperties.getPublicKey());
         agent.setLlangfuseSecretKey(langfuseProperties.getSecretKey());
         agent.setLlangfuseProjectName("mosaic-test-project");
-        agent.setObjective("Generare descrizioni concise e accurate per repository GitHub basandosi sui README files");
+        agent.setObjective("Generate concise and accurate descriptions for GitHub repositories based on README files");
         agent.setRole("Summarization Agent");
         agent.setDeployment(buildDeployment(model));
         agent.setSkills(buildSkills(id, model));
@@ -236,7 +236,7 @@ class BenchmarkDemoRunner implements CommandLineRunner {
         Skill summarization = new Skill(
             null,
             "Summarization",
-            "Sintetizza README in descrizioni curate (" + model + ")",
+            "Summarizes README into curated descriptions (" + model + ")",
             ProficiencyLevel.EXPERT,
             now,
             List.of("TASK_SUMMARY", agentId + "_README")
@@ -244,7 +244,7 @@ class BenchmarkDemoRunner implements CommandLineRunner {
         Skill evaluation = new Skill(
             null,
             "Self-Eval",
-            "Valuta la coerenza con le metriche ROUGE/BLEU",
+            "Evaluates coherence with ROUGE/BLEU metrics",
             ProficiencyLevel.ADVANCED,
             now,
             List.of("TASK_EVAL")
@@ -256,7 +256,7 @@ class BenchmarkDemoRunner implements CommandLineRunner {
         Tool langfuseTool = new Tool(
             null,
             "Langfuse API",
-            "Recupera traces e metriche per il modello " + model,
+            "Retrieves traces and metrics for the model " + model,
             "API_KEY",
             "traces.read,metrics.read",
             "120 rpm",
@@ -265,7 +265,7 @@ class BenchmarkDemoRunner implements CommandLineRunner {
         Tool githubTool = new Tool(
             null,
             "GitHub Ingestor",
-            "Scarica README e metadati repository",
+            "Downloads README and repository metadata",
             "OAUTH_APP",
             "repo.read",
             "5 rps",
@@ -296,14 +296,14 @@ class BenchmarkDemoRunner implements CommandLineRunner {
             "REST_CALLBACK",
             "1.0",
             langfuseProperties.getBaseUrl() + "/api/public/trace",
-            "Riceve notifiche di completamento trace"
+            "Receives trace completion notifications"
         );
         InteractionProtocol webhook = new InteractionProtocol(
             null,
             "LangfuseDatasetRun",
             "0.9",
             langfuseProperties.getBaseUrl() + "/api/public/datasets",
-            "Pubblica risultati benchmark"
+            "Publishes benchmark results"
         );
         return List.of(rest, webhook);
     }
@@ -333,25 +333,25 @@ class BenchmarkDemoRunner implements CommandLineRunner {
     // ═══════════════════════════════════════════════════════════════════════════
 
     private void step2_CreateBenchmarkDefinition() {
-        printStep(2, "CREAZIONE DEFINIZIONE BENCHMARK");
+        printStep(2, "BENCHMARK DEFINITION CREATION");
 
         benchmark = new Benchmark();
         benchmark.setId("bench-summarization-001");
         benchmark.setMetadata("{\"name\": \"GitHub Description Generation Benchmark\", \"version\": \"1.0\", \"task\": \"summarization\"}");
         benchmark.setDatasetRef(DATASET_NAME);
-        benchmark.setTaskDef("Genera una descrizione concisa (3-6 frasi) per un repository GitHub partendo dal README file");
+        benchmark.setTaskDef("Generate a concise description (3-6 sentences) for a GitHub repository from the README file");
         benchmark.setFeatures("accuracy,fluency,conciseness,relevance");
         benchmark.setProtocolVersion("1.0");
         benchmark.setEvaluates(new ArrayList<>(agentResults.values().stream().map(r -> r.agent).toList()));
 
-        print("\nBenchmark creato:");
+        print("\nBenchmark created:");
         print("  ├─ ID: " + benchmark.getId());
         print("  ├─ Dataset: " + benchmark.getDatasetRef());
         print("  ├─ Task: " + benchmark.getTaskDef());
         print("  ├─ Features: " + benchmark.getFeatures());
-        print("  └─ Agenti valutati: " + benchmark.getEvaluates().size());
+        print("  └─ Evaluated agents: " + benchmark.getEvaluates().size());
 
-        print("\nKPI Formule definite:");
+        print("\nDefined KPI Formulas:");
         print("  ├─ Overall Quality: WEIGHTED_SUM(ROUGE:0.4, BLEU:0.3, ACCURACY:0.3)");
         print("  ├─ Text Similarity: AVERAGE(ROUGE, BLEU)");
         print("  ├─ Min Performance: MIN(ROUGE, BLEU, ACCURACY)");
@@ -365,9 +365,9 @@ class BenchmarkDemoRunner implements CommandLineRunner {
     // ═══════════════════════════════════════════════════════════════════════════
 
     private void step3_FetchLangfuseData() {
-        printStep(3, "RECUPERO DATI REALI DA LANGFUSE");
+        printStep(3, "FETCHING REAL DATA FROM LANGFUSE");
 
-        print("\nConnessione a Langfuse: " + langfuseProperties.getBaseUrl());
+        print("\nConnecting to Langfuse: " + langfuseProperties.getBaseUrl());
         print("Dataset: " + DATASET_NAME);
         print("");
 
@@ -380,7 +380,7 @@ class BenchmarkDemoRunner implements CommandLineRunner {
 
         for (AgentBenchmarkResult agentResult : agentResults.values()) {
             String runName = agentRunMapping.get(agentResult.agent.getId());
-            print("Recupero traces per: " + agentResult.agent.getName());
+            print("Fetching traces for: " + agentResult.agent.getName());
             print("  Run name: " + runName);
 
             try {
@@ -390,18 +390,18 @@ class BenchmarkDemoRunner implements CommandLineRunner {
                     runName
                 );
                 agentResult.traces = traces;
-                print("  Traces recuperate: " + traces.size());
+                print("  Traces retrieved: " + traces.size());
 
                 // Show sample of metrics from Langfuse scores
                 if (!traces.isEmpty()) {
                     TraceData sample = traces.get(0);
-                    print("  Esempio metriche (prima trace):");
+                    print("  Sample metrics (first trace):");
                     sample.langfuseScores.forEach((name, value) ->
                         print("    ├─ " + name + ": " + String.format("%.4f", value))
                     );
                 }
             } catch (Exception e) {
-                print("  ERRORE nel recupero traces: " + e.getMessage());
+                print("  ERROR fetching traces: " + e.getMessage());
                 logger.error("Error fetching traces for agent {}: {}", agentResult.agent.getId(), e.getMessage(), e);
                 agentResult.traces = new ArrayList<>();
             }
@@ -418,40 +418,40 @@ class BenchmarkDemoRunner implements CommandLineRunner {
     // ═══════════════════════════════════════════════════════════════════════════
 
     private void step4_ComputeMetrics() {
-        printStep(4, "CALCOLO METRICHE PER OGNI AGENTE");
+        printStep(4, "COMPUTING METRICS FOR EACH AGENT");
 
         for (AgentBenchmarkResult agentResult : agentResults.values()) {
             print("\nAgent: " + agentResult.agent.getName());
-            print("Traces da processare: " + agentResult.traces.size());
+            print("Traces to process: " + agentResult.traces.size());
 
             if (agentResult.traces.isEmpty()) {
-                print("  Nessuna trace disponibile, uso metriche simulate");
+                print("  No traces available, using simulated metrics");
                 agentResult.aggregatedMetrics = generateSimulatedMetrics(agentResult.agent.getId());
             } else {
                 Map<String, Double> aggregated = traceMetricsAggregator.aggregate(agentResult.agent, agentResult.traces);
                 if (aggregated.isEmpty()) {
-                    print("  Nessuna metrica disponibile da Langfuse o provider, uso metriche simulate");
+                    print("  No metrics available from Langfuse or providers, using simulated metrics");
                     aggregated = generateSimulatedMetrics(agentResult.agent.getId());
                 }
                 agentResult.aggregatedMetrics = aggregated;
             }
 
             // Print metrics
-            print("  Metriche aggregate:");
+            print("  Aggregated metrics:");
             agentResult.aggregatedMetrics.forEach((metric, value) ->
                 print("    ├─ " + metric + ": " + String.format("%.4f", value))
             );
 
             // Store as MetricSnapshots
             agentResult.metricSnapshots = createMetricSnapshots(agentResult);
-            print("  MetricSnapshots creati: " + agentResult.metricSnapshots.size());
+            print("  MetricSnapshots created: " + agentResult.metricSnapshots.size());
         }
 
         printEndStep();
     }
 
-    //VERIFICARE SE QUESTO è il posto giusto per questi metodi. Vedere se si può generalizzare in (LangfuseService, MetricService, BenchmarkService o simili)
-    // DA QUI
+    // TODO: Verify if this is the right place for these methods. Consider generalizing in (LangfuseService, MetricService, BenchmarkService or similar)
+    // FROM HERE
     private Map<String, Double> generateSimulatedMetrics(String agentId) {
         // Generate realistic simulated metrics based on agent type
         Map<String, Double> metrics = new LinkedHashMap<>();
@@ -502,7 +502,7 @@ class BenchmarkDemoRunner implements CommandLineRunner {
             default -> MetricType.ACCURACY;
         };
     }
-    //FINO A QUI
+    // TO HERE
 
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -510,7 +510,7 @@ class BenchmarkDemoRunner implements CommandLineRunner {
     // ═══════════════════════════════════════════════════════════════════════════
 
     private void step5_CalculateKPIs() {
-        printStep(5, "CALCOLO KPI TRAMITE DSL");
+        printStep(5, "KPI CALCULATION VIA DSL");
 
         // Define KPI formulas
         Map<String, String> kpiFormulas = new LinkedHashMap<>();
@@ -519,7 +519,7 @@ class BenchmarkDemoRunner implements CommandLineRunner {
         kpiFormulas.put("Min Performance", "MIN(ROUGE, BLEU, ACCURACY)");
         kpiFormulas.put("Quality Threshold", "THRESHOLD(ROUGE, 0.3)");
 
-        print("\nFormule KPI da valutare:");
+        print("\nKPI Formulas to evaluate:");
         kpiFormulas.forEach((name, formula) -> print("  ├─ " + name + ": " + formula));
         print("");
 
@@ -530,14 +530,14 @@ class BenchmarkDemoRunner implements CommandLineRunner {
             for (Map.Entry<String, String> kpi : kpiFormulas.entrySet()) {
                 String kpiName = kpi.getKey();
                 String formula = kpi.getValue();
-    
+
                 DslParseResult parseResult = kpiParser.parse(formula);
                 if (parseResult.isSuccess()) {
                     double value = parseResult.getFormula().evaluate(agentResult.aggregatedMetrics);
                     agentResult.kpiValues.put(kpiName, value);
                     print("  ├─ " + kpiName + ": " + String.format("%.4f", value));
                 } else {
-                    print("  ├─ " + kpiName + ": ERRORE - " + parseResult.getErrorsAsString());
+                    print("  ├─ " + kpiName + ": ERROR - " + parseResult.getErrorsAsString());
                 }
             }
         }
@@ -550,18 +550,18 @@ class BenchmarkDemoRunner implements CommandLineRunner {
     // ═══════════════════════════════════════════════════════════════════════════
 
     private void step6_ExecuteBenchmarkRun() {
-        printStep(6, "ESECUZIONE BENCHMARK RUN COMPLETO");
+        printStep(6, "COMPLETE BENCHMARK RUN EXECUTION");
 
         for (AgentBenchmarkResult agentResult : agentResults.values()) {
             print("\n" + MINI_SEP);
-            print("BENCHMARK RUN per: " + agentResult.agent.getName());
+            print("BENCHMARK RUN for: " + agentResult.agent.getName());
             print(MINI_SEP);
 
             // Create BenchmarkRun
             BenchmarkRun run = benchmarkRunService.createRun(benchmark, agentResult.agent);
             agentResult.benchmarkRun = run;
 
-            print("\n1. Creazione BenchmarkRun:");
+            print("\n1. BenchmarkRun Creation:");
             print("   ├─ Run ID: " + run.getId());
             print("   ├─ Benchmark: " + run.getBenchmarkId());
             print("   ├─ Agent: " + run.getAgentId());
@@ -569,38 +569,38 @@ class BenchmarkDemoRunner implements CommandLineRunner {
             print("   └─ Status: " + run.getStatus());
 
             // Start run
-            print("\n2. Avvio run (PENDING -> RUNNING):");
+            print("\n2. Starting run (PENDING -> RUNNING):");
             benchmarkRunService.startRun(run);
             print("   ├─ Status: " + run.getStatus());
             print("   └─ Started at: " + run.getStartedAt());
 
             // Process traces
-            print("\n3. Elaborazione traces:");
+            print("\n3. Processing traces:");
             int tracesProcessed = agentResult.traces.size();
             int metricsComputed = agentResult.metricSnapshots.size();
-            print("   ├─ Traces processate: " + tracesProcessed);
-            print("   └─ Metriche calcolate: " + metricsComputed);
+            print("   ├─ Traces processed: " + tracesProcessed);
+            print("   └─ Metrics computed: " + metricsComputed);
 
             // Create BenchmarkResults
-            print("\n4. Creazione BenchmarkResult per ogni trace:");
+            print("\n4. Creating BenchmarkResult for each trace:");
             List<BenchmarkResult> results = benchmarkRunService.buildBenchmarkResults(
                 run,
                 agentResult.traces,
                 agentResult.kpiValues
             );
             agentResult.benchmarkResults = results;
-            print("   └─ BenchmarkResults creati: " + results.size());
+            print("   └─ BenchmarkResults created: " + results.size());
 
             // Simulate alert evaluation
-            print("\n5. Valutazione Alert:");
+            print("\n5. Alert Evaluation:");
             double rougeValue = benchmarkRunService.getMetricValue(agentResult.aggregatedMetrics, "ROUGE");
             boolean alertTriggered = benchmarkRunService.isAlertTriggered(rougeValue, 0.3);
-            print("   ├─ Condizione: ROUGE < 0.3");
-            print("   ├─ Valore ROUGE: " + String.format("%.4f", rougeValue));
-            print("   └─ Alert triggered: " + (alertTriggered ? "SI" : "NO"));
+            print("   ├─ Condition: ROUGE < 0.3");
+            print("   ├─ ROUGE value: " + String.format("%.4f", rougeValue));
+            print("   └─ Alert triggered: " + (alertTriggered ? "YES" : "NO"));
 
             // Complete run
-            print("\n6. Completamento run (RUNNING -> COMPLETED):");
+            print("\n6. Completing run (RUNNING -> COMPLETED):");
             benchmarkRunService.completeRun(run, tracesProcessed, metricsComputed);
             print("   ├─ Status: " + run.getStatus());
             print("   ├─ Completed at: " + run.getCompletedAt());
@@ -615,16 +615,16 @@ class BenchmarkDemoRunner implements CommandLineRunner {
     // ═══════════════════════════════════════════════════════════════════════════
 
     private void step7_CompareAgentsAndReport() {
-        printStep(7, "CONFRONTO AGENTI E REPORT FINALE");
+        printStep(7, "AGENT COMPARISON AND FINAL REPORT");
 
         print("\n" + SECTION_SEP);
-        print("                    RISULTATI BENCHMARK - CONFRONTO AGENTI");
+        print("                    BENCHMARK RESULTS - AGENT COMPARISON");
         print(SECTION_SEP);
 
         // Print comparison table header
         print("");
         print(String.format("%-35s | %-15s | %-15s | %-15s",
-            "Metrica/KPI", "Baseline", "Creative", "Deterministic"));
+            "Metric/KPI", "Baseline", "Creative", "Deterministic"));
         print("─".repeat(90));
 
         // Get agent results
@@ -638,7 +638,7 @@ class BenchmarkDemoRunner implements CommandLineRunner {
         allMetrics.addAll(creative.aggregatedMetrics.keySet());
         allMetrics.addAll(deterministic.aggregatedMetrics.keySet());
 
-        print("\nMETRICHE:");
+        print("\nMETRICS:");
         for (String metric : allMetrics) {
             if (metric.equals("ROUGE") || metric.equals("BLEU") || metric.equals("ACCURACY") ||
                 metric.equals("ROUGE1_F") || metric.equals("COSINE_PRED_GOLD")) {
@@ -668,7 +668,7 @@ class BenchmarkDemoRunner implements CommandLineRunner {
         print("─".repeat(90));
 
         // Determine winner
-        print("\nANALISI COMPARATIVA:");
+        print("\nCOMPARATIVE ANALYSIS:");
         print("");
 
         String overallQualityKpi = "Overall Quality";
@@ -686,25 +686,25 @@ class BenchmarkDemoRunner implements CommandLineRunner {
             winner = "Creative (llama3.1:8b)";
         }
 
-        print("  Migliore Overall Quality: " + winner + " con score " + String.format("%.4f", maxQuality));
+        print("  Best Overall Quality: " + winner + " with score " + String.format("%.4f", maxQuality));
         print("");
 
         // Summary
         print("  Baseline (llama3.2:3b, temp=0):");
-        print("    - Pro: Risultati consistenti e riproducibili");
-        print("    - Contro: Potrebbe mancare di varieta' nelle descrizioni");
+        print("    - Pro: Consistent and reproducible results");
+        print("    - Con: May lack variety in descriptions");
         print("");
         print("  Creative (llama3.1:8b, temp=0.8):");
-        print("    - Pro: Descrizioni piu' varie e potenzialmente creative");
-        print("    - Contro: Maggiore variabilita' nei risultati");
+        print("    - Pro: More varied and potentially creative descriptions");
+        print("    - Con: Greater variability in results");
         print("");
         print("  Deterministic (mistral:7b, temp=0.2):");
-        print("    - Pro: Buon bilanciamento tra consistenza e qualita'");
-        print("    - Contro: Output piu' brevi (num_predict=256)");
+        print("    - Pro: Good balance between consistency and quality");
+        print("    - Con: Shorter output (num_predict=256)");
 
         // Run statistics
         print("\n" + SECTION_SEP);
-        print("                           STATISTICHE ESECUZIONE");
+        print("                           EXECUTION STATISTICS");
         print(SECTION_SEP);
         print("");
 
@@ -714,17 +714,17 @@ class BenchmarkDemoRunner implements CommandLineRunner {
             print("  ├─ Run ID: " + run.getId());
             print("  ├─ Status: " + run.getStatus());
             print("  ├─ Traces: " + run.getTracesProcessed());
-            print("  ├─ Metriche: " + run.getMetricsComputed());
-            print("  └─ Durata: " + run.getDurationMillis() + "ms");
+            print("  ├─ Metrics: " + run.getMetricsComputed());
+            print("  └─ Duration: " + run.getDurationMillis() + "ms");
             print("");
         }
 
         print(SECTION_SEP);
-        print("                              NOTA IMPORTANTE");
+        print("                              IMPORTANT NOTE");
         print(SECTION_SEP);
         print("");
-        print("Questa demo NON ha persistito i dati nel database.");
-        print("Per abilitare la persistenza, integrare con i repository:");
+        print("This demo did NOT persist data to the database.");
+        print("To enable persistence, integrate with the repositories:");
         print("  - BenchmarkRunRepository");
         print("  - BenchmarkResultRepository");
         print("  - MetricSnapshotRepository");
@@ -770,7 +770,6 @@ class BenchmarkDemoRunner implements CommandLineRunner {
     /**
      * Container for trace data including Langfuse scores
      */
- 
 
     /**
      * Container for agent benchmark results (in-memory, no persistence)

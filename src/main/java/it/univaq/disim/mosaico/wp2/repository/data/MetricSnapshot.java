@@ -1,5 +1,6 @@
 package it.univaq.disim.mosaico.wp2.repository.data;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import it.univaq.disim.mosaico.wp2.repository.data.enums.MetricType;
 import jakarta.persistence.*;
 
@@ -28,6 +29,7 @@ public class MetricSnapshot {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "result_id")
+    @JsonBackReference
     private BenchmarkResult benchmarkResult;
 
     @Enumerated(EnumType.STRING)

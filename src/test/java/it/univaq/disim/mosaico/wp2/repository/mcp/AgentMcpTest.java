@@ -16,6 +16,10 @@ import io.modelcontextprotocol.spec.McpSchema.ResourceContents;
 import io.modelcontextprotocol.spec.McpSchema.TextResourceContents;
 import it.univaq.disim.mosaico.wp2.repository.data.Agent;
 import it.univaq.disim.mosaico.wp2.repository.data.Provider;
+import it.univaq.disim.mosaico.wp2.repository.repository.BenchmarkRunRepository;
+import it.univaq.disim.mosaico.wp2.repository.service.AgentService;
+import it.univaq.disim.mosaico.wp2.repository.service.BenchmarkService;
+import it.univaq.disim.mosaico.wp2.repository.service.SkillService;
 
 /**
  * Plain unit tests that instantiate AgentMCP directly (no Spring context).
@@ -27,7 +31,9 @@ class AgentMcpTest {
     @Test
     void listAllAgents_returnsReadResourceResultWithJsonArray() throws Exception {
         // create mock AgentService
-        var agentService = mock(it.univaq.disim.mosaico.wp2.repository.service.AgentService.class);
+        AgentService agentService = mock(it.univaq.disim.mosaico.wp2.repository.service.AgentService.class);
+        BenchmarkService benchmarkService = mock(it.univaq.disim.mosaico.wp2.repository.service.BenchmarkService.class);
+        SkillService skillService = mock(it.univaq.disim.mosaico.wp2.repository.service.SkillService.class);
         ObjectMapper mapper = new ObjectMapper();
 
         // prepare test data
@@ -53,7 +59,7 @@ class AgentMcpTest {
         a1.setId("agent1");
         when(agentService.findAll()).thenReturn(List.of(a1));
 
-        AgentMCP agentMCP = new AgentMCP(agentService, mapper);
+        AgentMCP agentMCP = new AgentMCP(agentService, mapper, benchmarkService, skillService, mock(BenchmarkRunRepository.class));
 
         ReadResourceResult res = agentMCP.listAllAgents();
         assertThat(res).isNotNull();
@@ -92,7 +98,7 @@ class AgentMcpTest {
         a1.setId("agent1");
         when(agentService.findById("agent1")).thenReturn(java.util.Optional.of(a1));
 
-        AgentMCP agentMCP = new AgentMCP(agentService, mapper);
+        AgentMCP agentMCP = new AgentMCP(agentService, mapper, mock(BenchmarkService.class), mock(SkillService.class), mock(BenchmarkRunRepository.class));
 
         ReadResourceResult res = agentMCP.getAgent("agent1");
         assertThat(res).isNotNull();

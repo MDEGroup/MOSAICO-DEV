@@ -18,8 +18,10 @@ import io.modelcontextprotocol.spec.McpSchema.ReadResourceResult;
 import io.modelcontextprotocol.spec.McpSchema.TextResourceContents;
 import it.univaq.disim.mosaico.wp2.repository.data.Agent;
 import it.univaq.disim.mosaico.wp2.repository.data.Benchmark;
+import it.univaq.disim.mosaico.wp2.repository.data.BenchmarkRun;
 import it.univaq.disim.mosaico.wp2.repository.data.Skill;
 import it.univaq.disim.mosaico.wp2.repository.dto.AgentSearchResult;
+import it.univaq.disim.mosaico.wp2.repository.repository.BenchmarkRunRepository;
 import it.univaq.disim.mosaico.wp2.repository.service.AgentService;
 import it.univaq.disim.mosaico.wp2.repository.service.BenchmarkService;
 import it.univaq.disim.mosaico.wp2.repository.service.SkillService;
@@ -38,15 +40,17 @@ public class AgentMCP {
     private final ObjectMapper objectMapper;
     private final BenchmarkService benchmarkService;
     private final SkillService skillService;
+    private final BenchmarkRunRepository benchmarkRunRepository;
     Logger logger = LoggerFactory.getLogger(AgentMCP.class);
 
     // Constructor injection makes the class easier to test (we can pass a mock
     // AgentService)
-    public AgentMCP(AgentService agentService, ObjectMapper objectMapper, BenchmarkService benchmarkService, SkillService skillService) {
+    public AgentMCP(AgentService agentService, ObjectMapper objectMapper, BenchmarkService benchmarkService, SkillService skillService, BenchmarkRunRepository benchmarkRunRepository) {
         this.agentService = agentService;
         this.objectMapper = objectMapper;
         this.benchmarkService = benchmarkService;
         this.skillService = skillService;
+        this.benchmarkRunRepository = benchmarkRunRepository;
     }
 
     @McpResource(name = "agents", description = "MOSAICO Agents exposed via MCP", uri = "document/agents")
@@ -196,5 +200,26 @@ public class AgentMCP {
         logger.info(json);
         return json;
 
+    }
+
+    @McpTool(name = "AgentBenchmarkResultsTool", description = "Tool to list all benchmark results for a given agent")
+    public String getAgentBenchmarkResults(@McpToolParam String agentId) {
+
+        if (agentId == null || agentId.isBlank()) {
+            throw new IllegalArgumentException("agentId must not be empty");
+        }
+        logger.info("Fetching benchmark results for agent: {}", agentId);
+
+        List<BenchmarkRun> runs = benchmarkRunRepository.findByAgentIdOrderByStartedAtDesc(agentId);
+        logger.info("Found {} benchmark runs for agent {}", runs.size(), agentId);
+
+        String json;
+        try {
+            json = objectMapper.writeValueAsString(runs);
+        } catch (JsonProcessingException e) {
+            json = "[]";
+        }
+        logger.info(json);
+        return json;
     }
 }

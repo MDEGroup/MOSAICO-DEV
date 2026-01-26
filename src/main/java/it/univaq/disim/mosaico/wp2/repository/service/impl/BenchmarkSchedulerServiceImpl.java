@@ -33,6 +33,33 @@ public class BenchmarkSchedulerServiceImpl implements BenchmarkSchedulerService 
     public ScheduleConfig createSchedule(ScheduleConfig config) {
         logger.info("Creating schedule for benchmark {} and agent {}", config.getBenchmarkId(), config.getAgentId());
         validateCronExpression(config.getCronExpression());
+
+        // Initialize default values if not set (when created via REST API)
+        if (config.getCreatedAt() == null) {
+            config.setCreatedAt(Instant.now());
+        }
+        if (config.getTimezone() == null) {
+            config.setTimezone("UTC");
+        }
+        if (config.getEnabled() == null) {
+            config.setEnabled(true);
+        }
+        if (config.getRunCount() == null) {
+            config.setRunCount(0);
+        }
+        if (config.getFailureCount() == null) {
+            config.setFailureCount(0);
+        }
+        if (config.getConsecutiveFailures() == null) {
+            config.setConsecutiveFailures(0);
+        }
+        if (config.getMaxConsecutiveFailures() == null) {
+            config.setMaxConsecutiveFailures(3);
+        }
+        if (config.getAutoDisableOnFailure() == null) {
+            config.setAutoDisableOnFailure(true);
+        }
+
         calculateNextRunTime(config);
         return repository.save(config);
     }
