@@ -115,7 +115,8 @@ public class BenchmarkOrchestratorImpl implements BenchmarkOrchestrator {
             return runManager.completeRun(runId, tracesProcessed, metricsComputed);
 
         } catch (Exception e) {
-            logger.error("Benchmark execution failed for run: {}", runId, e);
+            logger.error("Benchmark execution failed for run: {}", runId);
+            logger.debug("Error: ", e.getMessage());
             return runManager.failRun(runId, e.getMessage());
         }
     }

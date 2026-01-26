@@ -106,9 +106,9 @@ class LangfuseMetricProviderIntegrationTest {
         }
 
         // Print results
-        log.info("\n=== Computed Metrics ===");
+        log.debug("\n=== Computed Metrics ===");
         for (Metric metric : metrics) {
-            log.info("{}: {} {}",
+            log.debug("{}: {} {}",
                 metric.getName(),
                 String.format("%.4f", metric.getFloatValue().orElse(0f)),
                 metric.getUnit() != null ? metric.getUnit() : ""
