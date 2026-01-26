@@ -701,6 +701,200 @@ tail -f logs/app.log | grep -i benchmark
 
 ---
 
+## Step 7: Using MCP (Model Context Protocol) Integration
+
+MOSAICO exposes its Agent, Benchmark, and Skill data via the **Model Context Protocol (MCP)**, allowing AI assistants and other MCP-compatible clients to interact with the repository programmatically.
+
+### MCP Server Configuration
+
+The MCP server is automatically enabled when running the application. Configuration in `application.properties`:
+
+```properties
+# === MCP SERVER CONFIG ===
+spring.ai.mcp.server.enabled=true
+spring.ai.mcp.server.name=mosaico-repository
+spring.ai.mcp.server.version=0.0.1
+spring.ai.mcp.server.protocol=STREAMABLE
+spring.ai.mcp.server.capabilities.tool=true
+spring.ai.mcp.server.capabilities.resource=true
+```
+
+### Connecting to the MCP Server
+
+**MCP Endpoint:** `http://localhost:8080/mcp`
+
+**Transport Type:** Streamable HTTP
+
+#### Using MCP Inspector (for testing)
+
+1. Start the MCP Inspector:
+   ```bash
+   npx @modelcontextprotocol/inspector
+   ```
+
+2. Open the inspector in your browser: `http://localhost:6274`
+
+3. Configure the connection:
+   - **Transport Type:** Streamable HTTP
+   - **URL:** `http://localhost:8080/mcp`
+   - **Authentication:** Use the session token from the terminal, or set `DANGEROUSLY_OMIT_AUTH=true` to disable authentication
+
+### Available MCP Resources
+
+| Resource Name | URI | Description |
+|---------------|-----|-------------|
+| `agents` | `document/agents` | List all MOSAICO agents |
+| `agent` | `document/agents/{id}` | Get a specific agent by ID |
+| `skills` | `document/skills` | List all skills |
+| `skill` | `document/skills/{id}` | Get a specific skill by ID |
+| `benchmarks` | `document/benchmarks` | List all benchmarks |
+| `benchmark` | `document/benchmarks/{id}` | Get a specific benchmark by ID |
+
+#### Example: Reading All Agents via MCP
+
+When an MCP client requests the `document/agents` resource, it receives:
+
+```json
+[
+  {
+    "id": "agent-baseline",
+    "name": "SummarizationBot Baseline",
+    "description": "Baseline agent for GitHub description generation...",
+    "version": "1.0",
+    "role": "Summarization Agent",
+    ...
+  },
+  {
+    "id": "agent-variant1-creative",
+    "name": "SummarizationBot Creative",
+    ...
+  }
+]
+```
+
+### Available MCP Tools
+
+| Tool Name | Parameters | Description |
+|-----------|------------|-------------|
+| `AgentMCPTool` | `query` (string), `topK` (int) | Semantic search for agents matching a query |
+| `AgentBenchmarkResultsTool` | `agentId` (string) | Get benchmark run summaries for an agent |
+| `AgentLastBenchmarkRunTool` | `agentId` (string) | Get the last benchmark run and its summary |
+
+#### Tool 1: Search Agents (Semantic Search)
+
+Search for agents using natural language queries with vector-based semantic search.
+
+**Parameters:**
+- `query`: Search query string (e.g., "summarization agents with high accuracy")
+- `topK`: Number of top results to return
+
+**Example Response:**
+```json
+[
+  {
+    "agent": {
+      "id": "agent-baseline",
+      "name": "SummarizationBot Baseline",
+      ...
+    },
+    "score": 0.89
+  },
+  {
+    "agent": {
+      "id": "agent-variant2-deterministic",
+      "name": "SummarizationBot Deterministic",
+      ...
+    },
+    "score": 0.85
+  }
+]
+```
+
+#### Tool 2: Get Agent Benchmark Results
+
+Retrieve lightweight summaries of all benchmark runs for a specific agent.
+
+**Parameters:**
+- `agentId`: The agent identifier (e.g., "agent-baseline")
+
+**Example Response:**
+```json
+[
+  {
+    "runId": "550e8400-e29b-41d4-a716-446655440000",
+    "benchmarkId": "bench-summarization-001",
+    "status": "COMPLETED",
+    "startedAt": "2026-01-23T10:30:00Z",
+    "completedAt": "2026-01-23T10:35:42Z",
+    "tracesProcessed": 150
+  }
+]
+```
+
+#### Tool 3: Get Last Benchmark Run
+
+Get the most recent benchmark run for an agent with full details.
+
+**Parameters:**
+- `agentId`: The agent identifier (e.g., "agent-baseline")
+
+**Example Response:**
+```json
+{
+  "benchmarkRun": {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "benchmarkId": "bench-summarization-001",
+    "agentId": "agent-baseline",
+    "status": "COMPLETED",
+    "triggeredBy": "MANUAL",
+    "langfuseRunName": "experiment_00 - 2026-01-22T10:44:46.144492Z",
+    ...
+  },
+  "summary": {
+    "runId": "550e8400-e29b-41d4-a716-446655440000",
+    "status": "COMPLETED",
+    "tracesProcessed": 150
+  }
+}
+```
+
+### Configuring Claude Code / Claude Desktop for MCP
+
+To use MOSAICO as an MCP server with Claude Code or Claude Desktop, add the following to your MCP configuration:
+
+**For Claude Code** (`~/.claude/claude_code_config.json` or project `.mcp.json`):
+```json
+{
+  "mcpServers": {
+    "mosaico": {
+      "type": "streamableHttp",
+      "url": "http://localhost:8080/mcp"
+    }
+  }
+}
+```
+
+**For Claude Desktop** (`claude_desktop_config.json`):
+```json
+{
+  "mcpServers": {
+    "mosaico": {
+      "type": "streamableHttp",
+      "url": "http://localhost:8080/mcp"
+    }
+  }
+}
+```
+
+### MCP Use Cases
+
+1. **AI-Assisted Agent Discovery**: Use semantic search to find agents matching specific criteria
+2. **Automated Monitoring**: Query benchmark results programmatically from AI assistants
+3. **Integration with AI Workflows**: Allow LLMs to access agent metadata and performance data
+4. **Interactive Exploration**: Browse agents, skills, and benchmarks through natural conversation
+
+---
+
 ## Complete API Reference
 
 | Method | Endpoint | Description |
@@ -738,6 +932,25 @@ tail -f logs/app.log | grep -i benchmark
 | `POST` | `/api/schedules/{id}/enable` | Enable schedule |
 | `POST` | `/api/schedules/{id}/disable` | Disable schedule |
 | `GET` | `/api/schedules/due` | Schedules due for execution |
+
+### MCP Resources (via `/mcp` endpoint)
+
+| Resource URI | Description |
+|--------------|-------------|
+| `document/agents` | List all MOSAICO agents |
+| `document/agents/{id}` | Get a specific agent by ID |
+| `document/skills` | List all skills |
+| `document/skills/{id}` | Get a specific skill by ID |
+| `document/benchmarks` | List all benchmarks |
+| `document/benchmarks/{id}` | Get a specific benchmark by ID |
+
+### MCP Tools (via `/mcp` endpoint)
+
+| Tool Name | Parameters | Description |
+|-----------|------------|-------------|
+| `AgentMCPTool` | `query` (string), `topK` (int) | Semantic search for agents |
+| `AgentBenchmarkResultsTool` | `agentId` (string) | Get benchmark run summaries for an agent |
+| `AgentLastBenchmarkRunTool` | `agentId` (string) | Get the last benchmark run and summary |
 
 ---
 
