@@ -7,6 +7,7 @@ import it.univaq.disim.mosaico.wp2.repository.dsl.KPIFormulaDslService;
 import it.univaq.disim.mosaico.wp2.repository.repository.BenchmarkResultRepository;
 import it.univaq.disim.mosaico.wp2.repository.repository.KPIHistoryRepository;
 import it.univaq.disim.mosaico.wp2.repository.repository.MetricSnapshotRepository;
+import it.univaq.disim.mosaico.wp2.repository.repository.PerformanceKPIRepository;
 import it.univaq.disim.mosaico.wp2.repository.service.*;
 import it.univaq.disim.mosaico.wp2.repository.service.LangfuseService.TraceData;
 
@@ -40,6 +41,7 @@ public class BenchmarkOrchestratorImpl implements BenchmarkOrchestrator {
     private final BenchmarkResultRepository resultRepository;
     private final MetricSnapshotRepository metricSnapshotRepository;
     private final KPIHistoryRepository kpiHistoryRepository;
+    private final PerformanceKPIRepository performanceKPIRepository;
 
     public BenchmarkOrchestratorImpl(
             BenchmarkRunManager runManager,
@@ -51,7 +53,8 @@ public class BenchmarkOrchestratorImpl implements BenchmarkOrchestrator {
             AlertEvaluationService alertEvaluationService,
             BenchmarkResultRepository resultRepository,
             MetricSnapshotRepository metricSnapshotRepository,
-            KPIHistoryRepository kpiHistoryRepository) {
+            KPIHistoryRepository kpiHistoryRepository,
+            PerformanceKPIRepository performanceKPIRepository) {
         this.runManager = runManager;
         this.benchmarkService = benchmarkService;
         this.agentService = agentService;
@@ -62,6 +65,7 @@ public class BenchmarkOrchestratorImpl implements BenchmarkOrchestrator {
         this.resultRepository = resultRepository;
         this.metricSnapshotRepository = metricSnapshotRepository;
         this.kpiHistoryRepository = kpiHistoryRepository;
+        this.performanceKPIRepository = performanceKPIRepository;
     }
 
     @Override
@@ -174,19 +178,28 @@ public class BenchmarkOrchestratorImpl implements BenchmarkOrchestrator {
     }
 
     private void computeAndPersistKPIs(BenchmarkRun run, Benchmark benchmark, Agent agent) {
-        List<PerformanceKPI> kpis = benchmark.getMeasures();
+        // Load KPIs from database instead of using @Transient field
+        List<PerformanceKPI> kpis = performanceKPIRepository.findByBenchmarkId(benchmark.getId());
         if (kpis == null || kpis.isEmpty()) {
+            logger.debug("No KPIs configured for benchmark {}", benchmark.getId());
             return;
         }
+        logger.info("Found {} KPIs for benchmark {}", kpis.size(), benchmark.getId());
 
         // Get aggregated metrics for KPI computation
         Map<String, Double> aggregatedMetrics = aggregateMetricsForRun(run.getId());
+
+        // Collect all computed KPI values
+        Map<String, Double> computedKpiValues = new java.util.HashMap<>();
 
         for (PerformanceKPI kpi : kpis) {
             try {
                 KPIFormula formula = kpiFormulaDslService.buildFromSpecification(kpi.getSpecification());
                 // Convert string keys to class keys if needed
                 double kpiValue = evaluateKpiFormula(formula, aggregatedMetrics);
+
+                // Store computed KPI value for later assignment to results
+                computedKpiValues.put(kpi.getDescription(), kpiValue);
 
                 KPIHistory history = new KPIHistory(
                     benchmark.getId(),
@@ -203,6 +216,17 @@ public class BenchmarkOrchestratorImpl implements BenchmarkOrchestrator {
             } catch (Exception e) {
                 logger.warn("Failed to compute KPI {}: {}", kpi.getDescription(), e.getMessage());
             }
+        }
+
+        // Update all BenchmarkResults for this run with the computed KPI values
+        if (!computedKpiValues.isEmpty()) {
+            List<BenchmarkResult> results = resultRepository.findByRunId(run.getId());
+            for (BenchmarkResult result : results) {
+                result.setKpiValues(new java.util.HashMap<>(computedKpiValues));
+                resultRepository.save(result);
+            }
+            logger.debug("Updated {} benchmark results with {} KPI values for run {}",
+                results.size(), computedKpiValues.size(), run.getId());
         }
     }
 

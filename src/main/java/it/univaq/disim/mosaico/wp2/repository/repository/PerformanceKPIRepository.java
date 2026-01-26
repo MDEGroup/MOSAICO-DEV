@@ -1,5 +1,7 @@
 package it.univaq.disim.mosaico.wp2.repository.repository;
 
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import it.univaq.disim.mosaico.wp2.repository.data.PerformanceKPI;
@@ -9,6 +11,8 @@ import it.univaq.disim.mosaico.wp2.repository.data.PerformanceKPI;
  */
 @Repository
 public interface PerformanceKPIRepository extends JpaRepository<PerformanceKPI, String> {
-    
+
     PerformanceKPI findByDescription(String description);
+
+    List<PerformanceKPI> findByBenchmarkId(String benchmarkId);
 }

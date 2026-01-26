@@ -21,6 +21,10 @@ public class PerformanceKPI {
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id", nullable = false)
     private String id;
+
+    @Column(name = "benchmark_id")
+    private String benchmarkId;
+
     @Column(columnDefinition = "text")
     private String description;
     @Transient
@@ -41,4 +45,6 @@ public class PerformanceKPI {
     public void setId(String id) { this.id = id; }
     public String getDescription() {return description;}
     public void setDescription(String description) {this.description = description;}
+    public String getBenchmarkId() { return benchmarkId; }
+    public void setBenchmarkId(String benchmarkId) { this.benchmarkId = benchmarkId; }
 }

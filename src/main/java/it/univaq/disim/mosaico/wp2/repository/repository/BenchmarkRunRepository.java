@@ -37,4 +37,7 @@ public interface BenchmarkRunRepository extends JpaRepository<BenchmarkRun, Stri
 
     @Query("SELECT COUNT(br) FROM BenchmarkRun br WHERE br.benchmarkId = :benchmarkId AND br.status = :status")
     long countByBenchmarkIdAndStatus(@Param("benchmarkId") String benchmarkId, @Param("status") RunStatus status);
+
+    @Query("SELECT br FROM BenchmarkRun br WHERE br.agentId = :agentId ORDER BY br.startedAt DESC LIMIT 1")
+    BenchmarkRun findTopByAgentIdOrderByStartedAtDesc(@Param("agentId") String agentId);
 }

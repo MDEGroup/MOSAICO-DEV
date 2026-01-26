@@ -21,6 +21,8 @@ import it.univaq.disim.mosaico.wp2.repository.data.Benchmark;
 import it.univaq.disim.mosaico.wp2.repository.data.BenchmarkRun;
 import it.univaq.disim.mosaico.wp2.repository.data.Skill;
 import it.univaq.disim.mosaico.wp2.repository.dto.AgentSearchResult;
+import it.univaq.disim.mosaico.wp2.repository.dto.BenchmarkRunSummary;
+import it.univaq.disim.mosaico.wp2.repository.dto.LastBenchmarkRunResponse;
 import it.univaq.disim.mosaico.wp2.repository.repository.BenchmarkRunRepository;
 import it.univaq.disim.mosaico.wp2.repository.service.AgentService;
 import it.univaq.disim.mosaico.wp2.repository.service.BenchmarkService;
@@ -202,7 +204,7 @@ public class AgentMCP {
 
     }
 
-    @McpTool(name = "AgentBenchmarkResultsTool", description = "Tool to list all benchmark results for a given agent")
+    @McpTool(name = "AgentBenchmarkResultsTool", description = "Tool to list benchmark run summaries for a given agent. Returns lightweight summaries without full result details.")
     public String getAgentBenchmarkResults(@McpToolParam String agentId) {
 
         if (agentId == null || agentId.isBlank()) {
@@ -213,13 +215,45 @@ public class AgentMCP {
         List<BenchmarkRun> runs = benchmarkRunRepository.findByAgentIdOrderByStartedAtDesc(agentId);
         logger.info("Found {} benchmark runs for agent {}", runs.size(), agentId);
 
+        // Convert to lightweight summaries to avoid serializing huge result lists
+        List<BenchmarkRunSummary> summaries = runs.stream()
+            .map(BenchmarkRunSummary::from)
+            .toList();
+
         String json;
         try {
-            json = objectMapper.writeValueAsString(runs);
+            json = objectMapper.writeValueAsString(summaries);
         } catch (JsonProcessingException e) {
             json = "[]";
         }
-        logger.info(json);
+        logger.info("Returning {} benchmark run summaries", summaries.size());
+        return json;
+    }
+
+    @McpTool(name = "AgentLastBenchmarkRunTool", description = "Tool to get the last BenchmarkRun and its summary for a given agent. Returns the full BenchmarkRun entity along with a lightweight summary.")
+    public String getLastBenchmarkRun(@McpToolParam String agentId) {
+
+        if (agentId == null || agentId.isBlank()) {
+            throw new IllegalArgumentException("agentId must not be empty");
+        }
+        logger.info("Fetching last benchmark run for agent: {}", agentId);
+
+        BenchmarkRun lastRun = benchmarkRunRepository.findTopByAgentIdOrderByStartedAtDesc(agentId);
+
+        if (lastRun == null) {
+            logger.info("No benchmark runs found for agent {}", agentId);
+            return "{}";
+        }
+
+        LastBenchmarkRunResponse response = LastBenchmarkRunResponse.from(lastRun);
+        logger.info("Found last benchmark run {} for agent {}", lastRun.getId(), agentId);
+
+        String json;
+        try {
+            json = objectMapper.writeValueAsString(response);
+        } catch (JsonProcessingException e) {
+            json = "{}";
+        }
         return json;
     }
 }

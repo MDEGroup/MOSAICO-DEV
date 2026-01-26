@@ -23,10 +23,10 @@ This guide walks you through step by step in creating and executing a benchmark 
 ## Flow Overview
 
 ```
-┌─────────────┐    ┌─────────────┐    ┌─────────────────┐    ┌─────────────┐
-│  1. Create  │───▶│  2. Create  │───▶│  3. Execute     │───▶│ 4. View     │
-│   3 Agents  │    │  Benchmark  │    │  Benchmark Run  │    │  Results    │
-└─────────────┘    └─────────────┘    └─────────────────┘    └─────────────┘
+┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────────┐    ┌─────────────┐
+│  1. Create  │───▶│  2. Create  │───▶│ 2.1 Config  │───▶│  3. Execute     │───▶│ 4. View     │
+│   3 Agents  │    │  Benchmark  │    │    KPIs     │    │  Benchmark Run  │    │  Results    │
+└─────────────┘    └─────────────┘    └─────────────┘    └─────────────────┘    └─────────────┘
 ```
 
 ---
@@ -238,6 +238,154 @@ curl -X POST http://localhost:8080/api/benchmarks \
 ### Verify
 ```bash
 curl http://localhost:8080/api/benchmarks/bench-summarization-001
+```
+
+---
+
+## Step 2.1: Configure Performance KPIs for the Benchmark
+
+**IMPORTANT**: Before executing benchmark runs, you must configure the KPIs (Key Performance Indicators) that will be computed for each run. Without KPIs, the benchmark will only collect raw metrics but won't compute aggregated performance scores.
+
+### API Endpoint
+```
+POST /api/performance-kpis
+```
+
+### 2.1.1 Create "Overall Quality" KPI (Weighted Sum)
+
+```json
+{
+  "benchmarkId": "bench-summarization-001",
+  "description": "Overall Quality",
+  "dslText": "WEIGHTED_SUM(ROUGE: 0.4, BLEU: 0.3, ACCURACY: 0.3)",
+  "formulaType": "WEIGHTED_SUM"
+}
+```
+
+```bash
+curl -X POST http://localhost:8080/api/performance-kpis \
+  -H "Content-Type: application/json" \
+  -d '{
+    "benchmarkId": "bench-summarization-001",
+    "description": "Overall Quality",
+    "dslText": "WEIGHTED_SUM(ROUGE: 0.4, BLEU: 0.3, ACCURACY: 0.3)",
+    "formulaType": "WEIGHTED_SUM"
+  }'
+```
+
+### 2.1.2 Create "Text Similarity" KPI (Average)
+
+```json
+{
+  "benchmarkId": "bench-summarization-001",
+  "description": "Text Similarity",
+  "dslText": "AVERAGE(ROUGE, BLEU)",
+  "formulaType": "AVERAGE"
+}
+```
+
+```bash
+curl -X POST http://localhost:8080/api/performance-kpis \
+  -H "Content-Type: application/json" \
+  -d '{
+    "benchmarkId": "bench-summarization-001",
+    "description": "Text Similarity",
+    "dslText": "AVERAGE(ROUGE, BLEU)",
+    "formulaType": "AVERAGE"
+  }'
+```
+
+### 2.1.3 Create "Min Performance" KPI (Minimum)
+
+```json
+{
+  "benchmarkId": "bench-summarization-001",
+  "description": "Min Performance",
+  "dslText": "MIN(ROUGE, BLEU, ACCURACY)",
+  "formulaType": "MIN"
+}
+```
+
+```bash
+curl -X POST http://localhost:8080/api/performance-kpis \
+  -H "Content-Type: application/json" \
+  -d '{
+    "benchmarkId": "bench-summarization-001",
+    "description": "Min Performance",
+    "dslText": "MIN(ROUGE, BLEU, ACCURACY)",
+    "formulaType": "MIN"
+  }'
+```
+
+### 2.1.4 Create "Quality Threshold" KPI (Threshold)
+
+```json
+{
+  "benchmarkId": "bench-summarization-001",
+  "description": "Quality Threshold",
+  "dslText": "THRESHOLD(ROUGE, 0.3)",
+  "formulaType": "THRESHOLD"
+}
+```
+
+```bash
+curl -X POST http://localhost:8080/api/performance-kpis \
+  -H "Content-Type: application/json" \
+  -d '{
+    "benchmarkId": "bench-summarization-001",
+    "description": "Quality Threshold",
+    "dslText": "THRESHOLD(ROUGE, 0.3)",
+    "formulaType": "THRESHOLD"
+  }'
+```
+
+### Expected Response (HTTP 200)
+```json
+{
+  "id": "generated-uuid",
+  "benchmarkId": "bench-summarization-001",
+  "description": "Overall Quality",
+  "includes": null,
+  "specification": {
+    "formulaType": "WEIGHTED_SUM",
+    "formulaConfig": null,
+    "dslText": "WEIGHTED_SUM(ROUGE: 0.4, BLEU: 0.3, ACCURACY: 0.3)",
+    "dslVersion": "1.0",
+    "formula": null
+  }
+}
+```
+
+### Verify KPIs for Benchmark
+```bash
+curl http://localhost:8080/api/performance-kpis/benchmark/bench-summarization-001
+```
+
+### List All KPIs
+```bash
+curl http://localhost:8080/api/performance-kpis
+```
+
+### Delete a KPI
+```bash
+curl -X DELETE http://localhost:8080/api/performance-kpis/{kpiId}
+```
+
+### Validate a DSL Formula (without creating)
+```bash
+curl -X POST http://localhost:8080/api/performance-kpis/validate \
+  -H "Content-Type: application/json" \
+  -d '{"dslText": "AVERAGE(ROUGE, BLEU)"}'
+```
+
+### Get DSL Syntax Help
+```bash
+curl http://localhost:8080/api/performance-kpis/dsl/help
+```
+
+### Get Available Metrics
+```bash
+curl http://localhost:8080/api/performance-kpis/dsl/metrics
 ```
 
 ---
@@ -573,6 +721,15 @@ tail -f logs/app.log | grep -i benchmark
 | `GET` | `/api/benchmark-runs?agentId=X` | Runs by agent |
 | `POST` | `/api/benchmark-runs/{id}/cancel` | Cancel run |
 | `POST` | `/api/benchmark-runs/{id}/retry` | Retry failed run |
+| `GET` | `/api/performance-kpis` | List all KPIs |
+| `POST` | `/api/performance-kpis` | Create a new KPI |
+| `GET` | `/api/performance-kpis/{id}` | KPI details |
+| `GET` | `/api/performance-kpis/benchmark/{benchmarkId}` | KPIs for a benchmark |
+| `PUT` | `/api/performance-kpis/{id}` | Update KPI |
+| `DELETE` | `/api/performance-kpis/{id}` | Delete KPI |
+| `POST` | `/api/performance-kpis/validate` | Validate DSL formula |
+| `GET` | `/api/performance-kpis/dsl/help` | DSL syntax help |
+| `GET` | `/api/performance-kpis/dsl/metrics` | Available metrics |
 | `POST` | `/api/schedules` | Create schedule |
 | `GET` | `/api/schedules/{id}` | Schedule details |
 | `GET` | `/api/schedules` | List schedules |
