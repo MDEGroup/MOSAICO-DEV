@@ -8,6 +8,7 @@ import it.univaq.disim.mosaico.wp2.repository.dsl.KPIFormulaDslService;
 import it.univaq.disim.mosaico.wp2.repository.repository.BenchmarkResultRepository;
 import it.univaq.disim.mosaico.wp2.repository.repository.KPIHistoryRepository;
 import it.univaq.disim.mosaico.wp2.repository.repository.MetricSnapshotRepository;
+import it.univaq.disim.mosaico.wp2.repository.repository.PerformanceKPIRepository;
 import it.univaq.disim.mosaico.wp2.repository.service.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -65,6 +66,8 @@ class BenchmarkOrchestratorImplTest {
     private MetricSnapshotRepository metricSnapshotRepository;
     @Mock
     private KPIHistoryRepository kpiHistoryRepository;
+    @Mock
+    private PerformanceKPIRepository performanceKPIRepository;
 
     @InjectMocks
     private BenchmarkOrchestratorImpl orchestrator;
