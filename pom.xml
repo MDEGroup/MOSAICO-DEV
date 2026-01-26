@@ -151,6 +151,9 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+				<configuration>
+					<mainClass>it.univaq.disim.mosaico.wp2.repository.RepositoryApplication</mainClass>
+				</configuration>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>

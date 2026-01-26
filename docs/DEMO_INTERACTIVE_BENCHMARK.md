@@ -1,41 +1,41 @@
-# MOSAICO - Demo Interattiva Benchmarking via Swagger API
+# MOSAICO - Interactive Benchmarking Demo via Swagger API
 
-Questa guida ti accompagna passo passo nella creazione e esecuzione di un benchmark utilizzando le API REST esposte dall'applicazione MOSAICO.
+This guide walks you through step by step in creating and executing a benchmark using the REST APIs exposed by the MOSAICO application.
 
-## Prerequisiti
+## Prerequisites
 
-1. **Avviare l'applicazione** con il profilo `dev`:
+1. **Start the application** with the `dev` profile:
    ```bash
    ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
    ```
 
-2. **Swagger UI** disponibile all'indirizzo:
+2. **Swagger UI** available at:
    ```
    http://localhost:8080/swagger-ui.html
    ```
 
-3. **Langfuse** deve essere raggiungibile (default: `http://localhost:3000`)
+3. **Langfuse** must be reachable (default: `http://localhost:3000`)
 
-4. **Database PostgreSQL** attivo e configurato
+4. **PostgreSQL Database** active and configured
 
 ---
 
-## Panoramica del Flusso
+## Flow Overview
 
 ```
 ┌─────────────┐    ┌─────────────┐    ┌─────────────────┐    ┌─────────────┐
-│  1. Creare  │───▶│  2. Creare  │───▶│  3. Eseguire    │───▶│ 4. Vedere   │
-│   3 Agent   │    │  Benchmark  │    │  Benchmark Run  │    │  Risultati  │
+│  1. Create  │───▶│  2. Create  │───▶│  3. Execute     │───▶│ 4. View     │
+│   3 Agents  │    │  Benchmark  │    │  Benchmark Run  │    │  Results    │
 └─────────────┘    └─────────────┘    └─────────────────┘    └─────────────┘
 ```
 
 ---
 
-## Step 1: Creare i 3 Agent
+## Step 1: Create the 3 Agents
 
-Creiamo 3 agenti di summarization con configurazioni diverse per confrontare le performance.
+We create 3 summarization agents with different configurations to compare performance.
 
-### 1.1 Agent Baseline (llama3.2:3b, temperature=0)
+### 1.1 Baseline Agent (llama3.2:3b, temperature=0)
 f714f29f-a531-42a2-b4aa-f79c00d4870b"
 ```
 POST /api/agents
@@ -45,10 +45,10 @@ POST /api/agents
 {
   "id": "agent-baseline",
   "name": "SummarizationBot Baseline",
-  "description": "Agente baseline per generazione descrizioni GitHub. Usa llama3.2:3b con temperature=0 per output deterministici.",
+  "description": "Baseline agent for GitHub description generation. Uses llama3.2:3b with temperature=0 for deterministic output.",
   "version": "1.0",
   "role": "Summarization Agent",
-  "objective": "Generare descrizioni concise e accurate per repository GitHub basandosi sui README files",
+  "objective": "Generate concise and accurate descriptions for GitHub repositories based on README files",
   "llangfuseUrl": "http://localhost:3000",
   "llangfusePublicKey": "pk-lf-ac9f73f8-88b5-4dd8-bea8-2f45ecd186ae",
   "llangfuseSecretKey": "sk-lf-23527443-2406-42cb-b8a2-d745bdad1f08",
@@ -66,10 +66,10 @@ curl -X POST http://localhost:8080/api/agents \
   -d '{
     "id": "agent-baseline",
     "name": "SummarizationBot Baseline",
-    "description": "Agente baseline per generazione descrizioni GitHub. Usa llama3.2:3b con temperature=0 per output deterministici.",
+    "description": "Baseline agent for GitHub description generation. Uses llama3.2:3b with temperature=0 for deterministic output.",
     "version": "1.0",
     "role": "Summarization Agent",
-    "objective": "Generare descrizioni concise e accurate per repository GitHub basandosi sui README files",
+    "objective": "Generate concise and accurate descriptions for GitHub repositories based on README files",
     "llangfuseUrl": "http://localhost:3000",
     "llangfusePublicKey": "pk-lf-ac9f73f8-88b5-4dd8-bea8-2f45ecd186ae",
     "llangfuseSecretKey": "sk-lf-23527443-2406-42cb-b8a2-d745bdad1f08",
@@ -81,16 +81,16 @@ curl -X POST http://localhost:8080/api/agents \
   }'
 ```
 
-### 1.2 Agent Creative (llama3.1:8b, temperature=0.8)
+### 1.2 Creative Agent (llama3.1:8b, temperature=0.8)
   "id": "437ac1c8-72b1-43ef-b1a7-3523f060740a",
 ```json
 {
   "id": "agent-variant1-creative",
   "name": "SummarizationBot Creative",
-  "description": "Variante creativa con llama3.1:8b e temperature=0.8 per output piu' variati e creativi.",
+  "description": "Creative variant with llama3.1:8b and temperature=0.8 for more varied and creative output.",
   "version": "1.0",
   "role": "Summarization Agent",
-  "objective": "Generare descrizioni concise e accurate per repository GitHub basandosi sui README files",
+  "objective": "Generate concise and accurate descriptions for GitHub repositories based on README files",
   "llangfuseUrl": "http://localhost:3000",
   "llangfusePublicKey": "pk-lf-ac9f73f8-88b5-4dd8-bea8-2f45ecd186ae",
   "llangfuseSecretKey": "sk-lf-23527443-2406-42cb-b8a2-d745bdad1f08",
@@ -108,10 +108,10 @@ curl -X POST http://localhost:8080/api/agents \
   -d '{
     "id": "agent-variant1-creative",
     "name": "SummarizationBot Creative",
-    "description": "Variante creativa con llama3.1:8b e temperature=0.8 per output piu variati e creativi.",
+    "description": "Creative variant with llama3.1:8b and temperature=0.8 for more varied and creative output.",
     "version": "1.0",
     "role": "Summarization Agent",
-    "objective": "Generare descrizioni concise e accurate per repository GitHub basandosi sui README files",
+    "objective": "Generate concise and accurate descriptions for GitHub repositories based on README files",
     "llangfuseUrl": "http://localhost:3000",
     "llangfusePublicKey": "pk-lf-ac9f73f8-88b5-4dd8-bea8-2f45ecd186ae",
     "llangfuseSecretKey": "sk-lf-23527443-2406-42cb-b8a2-d745bdad1f08",
@@ -123,16 +123,16 @@ curl -X POST http://localhost:8080/api/agents \
   }'
 ```
 
-### 1.3 Agent Deterministic (mistral:7b, temperature=0.2)
+### 1.3 Deterministic Agent (mistral:7b, temperature=0.2)
   "id": "b8acccbd-e1f0-4653-8ea5-a381dcab89bb",
 ```json
 {
   "id": "agent-variant2-deterministic",
   "name": "SummarizationBot Deterministic",
-  "description": "Variante deterministica con mistral:7b e temperature=0.2 per output precisi e consistenti.",
+  "description": "Deterministic variant with mistral:7b and temperature=0.2 for precise and consistent output.",
   "version": "1.0",
   "role": "Summarization Agent",
-  "objective": "Generare descrizioni concise e accurate per repository GitHub basandosi sui README files",
+  "objective": "Generate concise and accurate descriptions for GitHub repositories based on README files",
   "llangfuseUrl": "http://localhost:3000",
   "llangfusePublicKey": "pk-lf-ac9f73f8-88b5-4dd8-bea8-2f45ecd186ae",
   "llangfuseSecretKey": "sk-lf-23527443-2406-42cb-b8a2-d745bdad1f08",
@@ -150,10 +150,10 @@ curl -X POST http://localhost:8080/api/agents \
   -d '{
     "id": "agent-variant2-deterministic",
     "name": "SummarizationBot Deterministic",
-    "description": "Variante deterministica con mistral:7b e temperature=0.2 per output precisi e consistenti.",
+    "description": "Deterministic variant with mistral:7b and temperature=0.2 for precise and consistent output.",
     "version": "1.0",
     "role": "Summarization Agent",
-    "objective": "Generare descrizioni concise e accurate per repository GitHub basandosi sui README files",
+    "objective": "Generate concise and accurate descriptions for GitHub repositories based on README files",
     "llangfuseUrl": "http://localhost:3000",
     "llangfusePublicKey": "pk-lf-ac9f73f8-88b5-4dd8-bea8-2f45ecd186ae",
     "llangfuseSecretKey": "sk-lf-23527443-2406-42cb-b8a2-d745bdad1f08",
@@ -165,13 +165,13 @@ curl -X POST http://localhost:8080/api/agents \
   }'
 ```
 
-### Verifica Agent Creati
+### Verify Created Agents
 
 ```bash
-# Lista tutti gli agent
+# List all agents
 curl http://localhost:8080/api/agents
 
-# Verifica singolo agent
+# Verify individual agent
 curl http://localhost:8080/api/agents/agent-baseline
 curl http://localhost:8080/api/agents/agent-variant1-creative
 curl http://localhost:8080/api/agents/agent-variant2-deterministic
@@ -179,7 +179,7 @@ curl http://localhost:8080/api/agents/agent-variant2-deterministic
 
 ---
 
-## Step 2: Creare il Benchmark
+## Step 2: Create the Benchmark
 
 ### API Endpoint
 ```
@@ -192,7 +192,7 @@ POST /api/benchmarks
   "id": "bench-summarization-001",
   "metadata": "{\"name\": \"GitHub Description Generation Benchmark\", \"version\": \"1.0\", \"task\": \"summarization\"}",
   "datasetRef": "ause_train",
-  "taskDef": "Genera una descrizione concisa (3-6 frasi) per un repository GitHub partendo dal README file",
+  "taskDef": "Generate a concise description (3-6 sentences) for a GitHub repository from the README file",
   "features": "accuracy,fluency,conciseness,relevance",
   "protocolVersion": "1.0",
   "evaluates": [
@@ -211,7 +211,7 @@ curl -X POST http://localhost:8080/api/benchmarks \
     "id": "bench-summarization-001",
     "metadata": "{\"name\": \"GitHub Description Generation Benchmark\", \"version\": \"1.0\", \"task\": \"summarization\"}",
     "datasetRef": "ause_train",
-    "taskDef": "Genera una descrizione concisa (3-6 frasi) per un repository GitHub partendo dal README file",
+    "taskDef": "Generate a concise description (3-6 sentences) for a GitHub repository from the README file",
     "features": "accuracy,fluency,conciseness,relevance",
     "protocolVersion": "1.0",
     "evaluates": [
@@ -222,29 +222,29 @@ curl -X POST http://localhost:8080/api/benchmarks \
   }'
 ```
 
-### Response Attesa (HTTP 200)
+### Expected Response (HTTP 200)
 ```json
 {
   "id": "bench-summarization-001",
   "metadata": "{\"name\": \"GitHub Description Generation Benchmark\", \"version\": \"1.0\", \"task\": \"summarization\"}",
   "datasetRef": "ause_train",
-  "taskDef": "Genera una descrizione concisa (3-6 frasi) per un repository GitHub partendo dal README file",
+  "taskDef": "Generate a concise description (3-6 sentences) for a GitHub repository from the README file",
   "features": "accuracy,fluency,conciseness,relevance",
   "protocolVersion": "1.0",
   "evaluates": [...]
 }
 ```
 
-### Verifica
+### Verify
 ```bash
 curl http://localhost:8080/api/benchmarks/bench-summarization-001
 ```
 
 ---
 
-## Step 3: Eseguire i Benchmark Run (uno per ogni Agent)
+## Step 3: Execute Benchmark Runs (one for each Agent)
 
-### 3.1 Run per Agent Baseline
+### 3.1 Run for Baseline Agent
 
 ```
 POST /api/benchmark-runs
@@ -270,7 +270,7 @@ curl -X POST http://localhost:8080/api/benchmark-runs \
   }'
 ```
 
-### 3.2 Run per Agent Creative
+### 3.2 Run for Creative Agent
 
 ```json
 {
@@ -292,7 +292,7 @@ curl -X POST http://localhost:8080/api/benchmark-runs \
   }'
 ```
 
-### 3.3 Run per Agent Deterministic
+### 3.3 Run for Deterministic Agent
 
 ```json
 {
@@ -314,7 +314,7 @@ curl -X POST http://localhost:8080/api/benchmark-runs \
   }'
 ```
 
-### Response Attesa (HTTP 202 Accepted)
+### Expected Response (HTTP 202 Accepted)
 ```json
 {
   "id": "550e8400-e29b-41d4-a716-446655440000",
@@ -328,11 +328,11 @@ curl -X POST http://localhost:8080/api/benchmark-runs \
 }
 ```
 
-> **Nota**: Il run viene eseguito in modo asincrono. Lo status passerà da `PENDING` → `RUNNING` → `COMPLETED` (o `FAILED`).
+> **Note**: The run is executed asynchronously. Status will transition from `PENDING` → `RUNNING` → `COMPLETED` (or `FAILED`).
 
 ---
 
-## Step 4: Monitorare lo Stato del Run
+## Step 4: Monitor Run Status
 
 ### API Endpoint
 ```
@@ -341,11 +341,11 @@ GET /api/benchmark-runs/{runId}
 
 ### curl Command
 ```bash
-# Sostituire {runId} con l'ID ricevuto nello step precedente
+# Replace {runId} with the ID received in the previous step
 curl http://localhost:8080/api/benchmark-runs/{runId}
 ```
 
-### Response - Run in corso (RUNNING)
+### Response - Run in progress (RUNNING)
 ```json
 {
   "id": "550e8400-e29b-41d4-a716-446655440000",
@@ -357,7 +357,7 @@ curl http://localhost:8080/api/benchmark-runs/{runId}
 }
 ```
 
-### Response - Run completato (COMPLETED)
+### Response - Run completed (COMPLETED)
 ```json
 {
   "id": "550e8400-e29b-41d4-a716-446655440000",
@@ -374,84 +374,84 @@ curl http://localhost:8080/api/benchmark-runs/{runId}
 
 ---
 
-## Step 5: Ottenere lo Storico dei Run
+## Step 5: Get Run History
 
-### Lista run per benchmark
+### List runs by benchmark
 ```bash
 curl "http://localhost:8080/api/benchmark-runs?benchmarkId=bench-github-summarization-demo"
 ```
 
-### Lista run per agent
+### List runs by agent
 ```bash
 curl "http://localhost:8080/api/benchmark-runs?agentId=agent-demo-summarizer"
 ```
 
-### Storico run (ultimi 10)
+### Run history (last 10)
 ```bash
 curl "http://localhost:8080/api/benchmark-runs/bench-github-summarization-demo/agent-demo-summarizer/history?limit=10"
 ```
 
 ---
 
-## Operazioni Aggiuntive
+## Additional Operations
 
-### Cancellare un Run in Corso
+### Cancel a Running Run
 ```bash
 curl -X POST http://localhost:8080/api/benchmark-runs/{runId}/cancel
 ```
 
-### Ripetere un Run Fallito
+### Retry a Failed Run
 ```bash
 curl -X POST http://localhost:8080/api/benchmark-runs/{runId}/retry
 ```
 
-### Response del Retry
+### Retry Response
 ```json
 {
-  "runId": "nuovo-run-id-generato"
+  "runId": "new-generated-run-id"
 }
 ```
 
 ---
 
-## Demo con BenchmarkDemoPersistenceRunner
+## Demo with BenchmarkDemoPersistenceRunner
 
-Per eseguire la demo completa automatica che mostra tutti i 7 step del processo di benchmarking:
+To run the complete automatic demo that shows all 7 steps of the benchmarking process:
 
-### Avvio con profilo demo
+### Start with demo profile
 ```bash
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev,demo-benchmark-persistence
 ```
 
-### Cosa fa il Runner
+### What the Runner Does
 
-Il `BenchmarkDemoPersistenceRunner` esegue automaticamente:
+The `BenchmarkDemoPersistenceRunner` automatically executes:
 
-| Step | Descrizione |
+| Step | Description |
 |------|-------------|
-| **1** | Crea e persiste 3 Agent (Baseline, Creative, Deterministic) |
-| **2** | Crea e persiste il Benchmark con riferimento al dataset `ause_train` |
-| **3** | Recupera le traces reali da Langfuse per ogni agent |
-| **4** | Calcola le metriche aggregate (ROUGE, BLEU, ACCURACY, etc.) |
-| **5** | Valuta i KPI tramite DSL (Overall Quality, Text Similarity, etc.) |
-| **6** | Esegue e persiste i BenchmarkRun per ogni agent |
-| **7** | Genera il report comparativo finale |
+| **1** | Creates and persists 3 Agents (Baseline, Creative, Deterministic) |
+| **2** | Creates and persists the Benchmark with reference to the `ause_train` dataset |
+| **3** | Retrieves real traces from Langfuse for each agent |
+| **4** | Calculates aggregated metrics (ROUGE, BLEU, ACCURACY, etc.) |
+| **5** | Evaluates KPIs via DSL (Overall Quality, Text Similarity, etc.) |
+| **6** | Executes and persists BenchmarkRuns for each agent |
+| **7** | Generates the final comparative report |
 
-### Output Atteso
+### Expected Output
 
 ```
 ════════════════════════════════════════════════════════════════════════════════
-  MOSAICO BENCHMARKING SYSTEM - DEMO CON PERSISTENZA
+  MOSAICO BENCHMARKING SYSTEM - DEMO WITH PERSISTENCE
 ════════════════════════════════════════════════════════════════════════════════
 
-Data esecuzione: 2026-01-23T...
+Execution date: 2026-01-23T...
 Dataset: ause_train
 
 ════════════════════════════════════════════════════════════════════════════════
-  STEP 1: CREAZIONE & PERSISTENZA AGENT
+  STEP 1: AGENT CREATION & PERSISTENCE
 ════════════════════════════════════════════════════════════════════════════════
 
-Agent persistiti: 3
+Persisted agents: 3
   - SummarizationBot Baseline [agent-baseline]
   - SummarizationBot Creative [agent-variant1-creative]
   - SummarizationBot Deterministic [agent-variant2-deterministic]
@@ -459,13 +459,13 @@ Agent persistiti: 3
 ...
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-                    RISULTATI BENCHMARK - CONFRONTO AGENTI
+                    BENCHMARK RESULTS - AGENT COMPARISON
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Metrica/KPI                         | Baseline        | Creative        | Deterministic
+Metric/KPI                          | Baseline        | Creative        | Deterministic
 ──────────────────────────────────────────────────────────────────────────────────────────
 
-METRICHE:
+METRICS:
 ROUGE                               | 0.3842          | 0.3521          | 0.4102
 ROUGE1_F                            | 0.4012          | 0.3689          | 0.4287
 ...
@@ -475,25 +475,25 @@ Overall Quality                     | 0.4215          | 0.3987          | 0.4532
 Text Similarity                     | 0.3756          | 0.3412          | 0.3987
 ...
 
-ANALISI COMPARATIVA:
-  Migliore Overall Quality: Deterministic (mistral:7b) con score 0.4532
+COMPARATIVE ANALYSIS:
+  Best Overall Quality: Deterministic (mistral:7b) with score 0.4532
 ```
 
 ---
 
-## Configurazione Agenti - Riepilogo
+## Agent Configuration - Summary
 
-| Agent ID | Nome | Modello | Temperature | Caratteristiche |
-|----------|------|---------|-------------|-----------------|
-| `agent-baseline` | SummarizationBot Baseline | llama3.2:3b | 0.0 | Output deterministici e riproducibili |
-| `agent-variant1-creative` | SummarizationBot Creative | llama3.1:8b | 0.8 | Output variati e creativi |
-| `agent-variant2-deterministic` | SummarizationBot Deterministic | mistral:7b | 0.2 | Bilanciamento tra consistenza e qualità |
+| Agent ID | Name | Model | Temperature | Characteristics |
+|----------|------|-------|-------------|-----------------|
+| `agent-baseline` | SummarizationBot Baseline | llama3.2:3b | 0.0 | Deterministic and reproducible output |
+| `agent-variant1-creative` | SummarizationBot Creative | llama3.1:8b | 0.8 | Varied and creative output |
+| `agent-variant2-deterministic` | SummarizationBot Deterministic | mistral:7b | 0.2 | Balance between consistency and quality |
 
 ---
 
-## Run Name Langfuse per la Demo
+## Langfuse Run Names for the Demo
 
-Questi sono i run name configurati per recuperare le traces da Langfuse:
+These are the run names configured to retrieve traces from Langfuse:
 
 | Agent ID | Langfuse Run Name |
 |----------|-------------------|
@@ -503,19 +503,19 @@ Questi sono i run name configurati per recuperare le traces da Langfuse:
 
 ---
 
-## KPI e Metriche Calcolate
+## Calculated KPIs and Metrics
 
-Il sistema calcola le seguenti metriche per ogni agent:
+The system calculates the following metrics for each agent:
 
-### Metriche Base (da Langfuse)
-- `ROUGE` / `ROUGE1_F` / `ROUGEL_F` - Similarità con gold standard
-- `BLEU` - Qualità della generazione
-- `ACCURACY` - Accuratezza generale
-- `COSINE_PRED_GOLD` - Similarità coseno predizione vs gold
-- `COSINE_PRED_SOURCE` - Similarità coseno predizione vs source
-- `LEN_RATIO` - Rapporto lunghezza output/input
+### Base Metrics (from Langfuse)
+- `ROUGE` / `ROUGE1_F` / `ROUGEL_F` - Similarity with gold standard
+- `BLEU` - Generation quality
+- `ACCURACY` - General accuracy
+- `COSINE_PRED_GOLD` - Cosine similarity prediction vs gold
+- `COSINE_PRED_SOURCE` - Cosine similarity prediction vs source
+- `LEN_RATIO` - Output/input length ratio
 
-### KPI Calcolati (via DSL)
+### Calculated KPIs (via DSL)
 ```
 Overall Quality:    WEIGHTED_SUM(ROUGE:0.4, BLEU:0.3, ACCURACY:0.3)
 Text Similarity:    AVERAGE(ROUGE, BLEU)
@@ -527,49 +527,334 @@ Quality Threshold:  THRESHOLD(ROUGE, 0.3)
 
 ## Troubleshooting
 
-### Errore: Agent non trovato
+### Error: Agent not found
 ```json
 {"status": 404, "error": "Not Found"}
 ```
-**Soluzione**: Verificare che l'agent sia stato creato correttamente allo Step 1.
+**Solution**: Verify that the agent was created correctly in Step 1.
 
-### Errore: Benchmark non trovato
-**Soluzione**: Verificare che il benchmark sia stato creato e che contenga l'agent nella lista `evaluates`.
+### Error: Benchmark not found
+**Solution**: Verify that the benchmark was created and contains the agent in the `evaluates` list.
 
-### Run bloccato in PENDING
-**Possibili cause**:
-- Langfuse non raggiungibile
-- Credenziali Langfuse non valide
-- Dataset non trovato
+### Run stuck in PENDING
+**Possible causes**:
+- Langfuse not reachable
+- Invalid Langfuse credentials
+- Dataset not found
 
-**Verifica i log**:
+**Check the logs**:
 ```bash
 tail -f logs/app.log | grep -i benchmark
 ```
 
-### Metriche a zero
-**Causa**: Le traces di Langfuse non contengono scores.
-**Soluzione**: Il sistema userà metriche simulate per la demo.
+### Metrics at zero
+**Cause**: Langfuse traces don't contain scores.
+**Solution**: The system will use simulated metrics for the demo.
 
 ---
 
-## Riferimenti API Completi
+## Complete API Reference
 
-| Metodo | Endpoint | Descrizione |
+| Method | Endpoint | Description |
 |--------|----------|-------------|
-| `GET` | `/api/agents` | Lista tutti gli agent |
-| `POST` | `/api/agents` | Crea un nuovo agent |
-| `GET` | `/api/agents/{id}` | Dettaglio agent |
-| `PUT` | `/api/agents/{id}` | Aggiorna agent |
-| `DELETE` | `/api/agents/{id}` | Elimina agent |
-| `GET` | `/api/benchmarks` | Lista tutti i benchmark |
-| `POST` | `/api/benchmarks` | Crea un nuovo benchmark |
-| `GET` | `/api/benchmarks/{id}` | Dettaglio benchmark |
-| `PUT` | `/api/benchmarks/{id}` | Aggiorna benchmark |
-| `DELETE` | `/api/benchmarks/{id}` | Elimina benchmark |
-| `POST` | `/api/benchmark-runs` | Avvia un benchmark run |
-| `GET` | `/api/benchmark-runs/{id}` | Stato del run |
-| `GET` | `/api/benchmark-runs?benchmarkId=X` | Run per benchmark |
-| `GET` | `/api/benchmark-runs?agentId=X` | Run per agent |
-| `POST` | `/api/benchmark-runs/{id}/cancel` | Cancella run |
-| `POST` | `/api/benchmark-runs/{id}/retry` | Riprova run fallito |
+| `GET` | `/api/agents` | List all agents |
+| `POST` | `/api/agents` | Create a new agent |
+| `GET` | `/api/agents/{id}` | Agent details |
+| `PUT` | `/api/agents/{id}` | Update agent |
+| `DELETE` | `/api/agents/{id}` | Delete agent |
+| `GET` | `/api/benchmarks` | List all benchmarks |
+| `POST` | `/api/benchmarks` | Create a new benchmark |
+| `GET` | `/api/benchmarks/{id}` | Benchmark details |
+| `PUT` | `/api/benchmarks/{id}` | Update benchmark |
+| `DELETE` | `/api/benchmarks/{id}` | Delete benchmark |
+| `POST` | `/api/benchmark-runs` | Start a benchmark run |
+| `GET` | `/api/benchmark-runs/{id}` | Run status |
+| `GET` | `/api/benchmark-runs?benchmarkId=X` | Runs by benchmark |
+| `GET` | `/api/benchmark-runs?agentId=X` | Runs by agent |
+| `POST` | `/api/benchmark-runs/{id}/cancel` | Cancel run |
+| `POST` | `/api/benchmark-runs/{id}/retry` | Retry failed run |
+| `POST` | `/api/schedules` | Create schedule |
+| `GET` | `/api/schedules/{id}` | Schedule details |
+| `GET` | `/api/schedules` | List schedules |
+| `PUT` | `/api/schedules/{id}` | Update schedule |
+| `DELETE` | `/api/schedules/{id}` | Delete schedule |
+| `POST` | `/api/schedules/{id}/enable` | Enable schedule |
+| `POST` | `/api/schedules/{id}/disable` | Disable schedule |
+| `GET` | `/api/schedules/due` | Schedules due for execution |
+
+---
+
+## Step 6: Create a Scheduled BenchmarkRun
+
+In addition to manual BenchmarkRun execution, you can configure automatic executions through the **Scheduler**. This allows running benchmarks periodically (e.g., every day, every week) without manual intervention.
+
+### How the Scheduler Works
+
+1. Create a `ScheduleConfig` that defines:
+   - Which benchmark to execute
+   - On which agent
+   - At what frequency (cron expression)
+   - Retry options and auto-disable on failure
+
+2. The system automatically executes a `BenchmarkRun` at the defined times
+
+3. The created `BenchmarkRun` will have:
+   - `triggeredBy: SCHEDULED` (instead of `MANUAL`)
+   - `scheduleConfigId` populated with the schedule ID
+
+### 6.1 Create a Schedule for the Baseline Agent (every day at 06:00)
+
+```
+POST /api/schedules
+```
+
+```json
+{
+  "name": "Daily Baseline Benchmark",
+  "description": "Executes the benchmark on the baseline agent every day at 06:00 UTC",
+  "benchmarkId": "bench-summarization-001",
+  "agentId": "agent-baseline",
+  "cronExpression": "0 0 6 * * ?",//"0 */2 * * * ?"
+  "timezone": "UTC",
+  "enabled": true,
+  "langfuseRunName": "scheduled_baseline_daily",
+  "maxConsecutiveFailures": 3,
+  "autoDisableOnFailure": true
+}
+```
+
+```bash
+curl -X POST http://localhost:8080/api/schedules \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Daily Baseline Benchmark",
+    "description": "Executes the benchmark on the baseline agent every day at 06:00 UTC",
+    "benchmarkId": "bench-summarization-001",
+    "agentId": "agent-baseline",
+    "cronExpression": "0 0 6 * * ?",
+    "timezone": "UTC",
+    "enabled": true,
+    "langfuseRunName": "scheduled_baseline_daily",
+    "maxConsecutiveFailures": 3,
+    "autoDisableOnFailure": true
+  }'
+```
+
+### Expected Response (HTTP 200)
+```json
+{
+  "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "name": "Daily Baseline Benchmark",
+  "description": "Executes the benchmark on the baseline agent every day at 06:00 UTC",
+  "benchmarkId": "bench-summarization-001",
+  "agentId": "agent-baseline",
+  "cronExpression": "0 0 6 * * ?",
+  "timezone": "UTC",
+  "enabled": true,
+  "nextRunAt": "2026-01-24T06:00:00Z",
+  "runCount": 0,
+  "failureCount": 0,
+  "consecutiveFailures": 0,
+  "maxConsecutiveFailures": 3,
+  "autoDisableOnFailure": true,
+  "createdAt": "2026-01-23T12:00:00Z"
+}
+```
+
+### 6.2 Schedule for the Creative Agent (every Monday at 08:00)
+
+```json
+{
+  "name": "Weekly Creative Benchmark",
+  "description": "Executes the benchmark on the creative agent every Monday at 08:00",
+  "benchmarkId": "bench-summarization-001",
+  "agentId": "agent-variant1-creative",
+  "cronExpression": "0 0 8 ? * MON",
+  "timezone": "Europe/Rome",
+  "enabled": true,
+  "langfuseRunName": "scheduled_creative_weekly",
+  "maxConsecutiveFailures": 5,
+  "autoDisableOnFailure": true
+}
+```
+
+```bash
+curl -X POST http://localhost:8080/api/schedules \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Weekly Creative Benchmark",
+    "description": "Executes the benchmark on the creative agent every Monday at 08:00",
+    "benchmarkId": "bench-summarization-001",
+    "agentId": "agent-variant1-creative",
+    "cronExpression": "0 0 8 ? * MON",
+    "timezone": "Europe/Rome",
+    "enabled": true,
+    "langfuseRunName": "scheduled_creative_weekly",
+    "maxConsecutiveFailures": 5,
+    "autoDisableOnFailure": true
+  }'
+```
+
+### 6.3 Schedule for the Deterministic Agent (every 6 hours)
+
+```json
+{
+  "name": "Frequent Deterministic Benchmark",
+  "description": "Executes the benchmark on the deterministic agent every 6 hours for continuous monitoring",
+  "benchmarkId": "bench-summarization-001",
+  "agentId": "agent-variant2-deterministic",
+  "cronExpression": "0 0 */6 * * ?",
+  "timezone": "UTC",
+  "enabled": true,
+  "langfuseRunName": "scheduled_deterministic_6h",
+  "maxConsecutiveFailures": 2,
+  "autoDisableOnFailure": false
+}
+```
+
+```bash
+curl -X POST http://localhost:8080/api/schedules \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Frequent Deterministic Benchmark",
+    "description": "Executes the benchmark on the deterministic agent every 6 hours for continuous monitoring",
+    "benchmarkId": "bench-summarization-001",
+    "agentId": "agent-variant2-deterministic",
+    "cronExpression": "0 0 */6 * * ?",
+    "timezone": "UTC",
+    "enabled": true,
+    "langfuseRunName": "scheduled_deterministic_6h",
+    "maxConsecutiveFailures": 2,
+    "autoDisableOnFailure": false
+  }'
+```
+
+---
+
+## Schedule Management
+
+### Verify Active Schedules
+
+```bash
+# List all enabled schedules
+curl "http://localhost:8080/api/schedules?enabled=true"
+
+# Schedules for a specific benchmark
+curl "http://localhost:8080/api/schedules?benchmarkId=bench-summarization-001"
+
+# Schedule details
+curl http://localhost:8080/api/schedules/{scheduleId}
+```
+
+### View Schedules Ready for Execution
+
+```bash
+# Schedules that need to be executed (nextRunAt <= now)
+curl http://localhost:8080/api/schedules/due
+```
+
+### Enable/Disable a Schedule
+
+```bash
+# Temporarily disable a schedule
+curl -X POST http://localhost:8080/api/schedules/{scheduleId}/disable
+
+# Re-enable the schedule
+curl -X POST http://localhost:8080/api/schedules/{scheduleId}/enable
+```
+
+### Update a Schedule
+
+```bash
+# Change execution frequency
+curl -X PUT http://localhost:8080/api/schedules/{scheduleId} \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Daily Baseline Benchmark",
+    "benchmarkId": "bench-summarization-001",
+    "agentId": "agent-baseline",
+    "cronExpression": "0 0 7 * * ?",
+    "timezone": "Europe/Rome",
+    "enabled": true
+  }'
+```
+
+### Delete a Schedule
+
+```bash
+curl -X DELETE http://localhost:8080/api/schedules/{scheduleId}
+```
+
+---
+
+## Cron Expression Reference
+
+Cron expressions use the standard 6-field format:
+
+```
+┌───────────── seconds (0-59)
+│ ┌───────────── minutes (0-59)
+│ │ ┌───────────── hours (0-23)
+│ │ │ ┌───────────── day of month (1-31)
+│ │ │ │ ┌───────────── month (1-12)
+│ │ │ │ │ ┌───────────── day of week (0-7, 0 or 7 = Sunday)
+│ │ │ │ │ │
+* * * * * *
+```
+
+### Common Examples
+
+| Cron Expression | Description |
+|-----------------|-------------|
+| `0 0 6 * * ?` | Every day at 06:00 |
+| `0 0 */6 * * ?` | Every 6 hours |
+| `0 0 8 ? * MON` | Every Monday at 08:00 |
+| `0 0 0 1 * ?` | First of every month at midnight |
+| `0 30 9 ? * MON-FRI` | Every weekday at 09:30 |
+| `0 0 */2 * * ?` | Every 2 hours |
+| `0 0 12 ? * SUN` | Every Sunday at noon |
+
+---
+
+## Monitor Scheduled Runs
+
+When a schedule is executed, it creates a `BenchmarkRun` with `triggeredBy: SCHEDULED`:
+
+```bash
+# Filter runs to see only scheduled ones
+curl "http://localhost:8080/api/benchmark-runs?benchmarkId=bench-summarization-001" | jq '.[] | select(.triggeredBy == "SCHEDULED")'
+```
+
+### Scheduled Run Response
+```json
+{
+  "id": "run-abc123",
+  "benchmarkId": "bench-summarization-001",
+  "agentId": "agent-baseline",
+  "status": "COMPLETED",
+  "triggeredBy": "SCHEDULED",
+  "scheduleConfigId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "langfuseRunName": "scheduled_baseline_daily",
+  "startedAt": "2026-01-24T06:00:00Z",
+  "completedAt": "2026-01-24T06:05:32Z",
+  "tracesProcessed": 150,
+  "metricsComputed": 8
+}
+```
+
+### Schedule Statistics
+
+The schedule tracks executions:
+
+```json
+{
+  "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "name": "Daily Baseline Benchmark",
+  "runCount": 15,
+  "failureCount": 1,
+  "consecutiveFailures": 0,
+  "lastRunAt": "2026-01-24T06:00:00Z",
+  "lastRunId": "run-abc123",
+  "lastRunStatus": "COMPLETED",
+  "nextRunAt": "2026-01-25T06:00:00Z"
+}
