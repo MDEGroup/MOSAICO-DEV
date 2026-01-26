@@ -39,10 +39,11 @@ The MOSAICO benchmarking system allows evaluating AI agent performance through i
 ## 2. Architettura
 
 ```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                           REST Controllers                               │
-│   BenchmarkController │ BenchmarkRunController │ ScheduleConfigController│
-└───────────────────────────────┬─────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                              REST Controllers                                    │
+│ BenchmarkController │ BenchmarkRunController │ ScheduleConfigController │        │
+│ PerformanceKPIController │ AlertConfigController                                │
+└───────────────────────────────────┬─────────────────────────────────────────────┘
                                 │
 ┌───────────────────────────────▼─────────────────────────────────────────┐
 │                        Orchestration Layer                               │
@@ -77,6 +78,7 @@ The MOSAICO benchmarking system allows evaluating AI agent performance through i
 | `KPIFormulaParser` | DSL formula parsing | `dsl/DefaultKPIFormulaParser.java` |
 | `AlertEvaluationService` | Alert condition evaluation | `service/impl/AlertEvaluationServiceImpl.java` |
 | `BenchmarkScheduledTaskRunner` | Scheduled execution | `scheduling/BenchmarkScheduledTaskRunner.java` |
+| `PerformanceKPIController` | REST API for KPI CRUD operations | `controller/PerformanceKPIController.java` |
 
 ---
 
@@ -180,7 +182,38 @@ public class ScheduleConfig {
 
 **File**: `src/main/java/it/univaq/disim/mosaico/wp2/repository/data/ScheduleConfig.java`
 
-### 3.5 Enumerations
+### 3.5 PerformanceKPI
+Defines KPI formulas for benchmark evaluation.
+
+```java
+@Entity
+@Table(name = "performance_kpis")
+public class PerformanceKPI {
+    private String id;
+    private String benchmarkId;           // Associated benchmark
+    private String description;           // KPI name/description
+    private KPISpecification specification; // Formula specification (embedded)
+}
+```
+
+**File**: `src/main/java/it/univaq/disim/mosaico/wp2/repository/data/PerformanceKPI.java`
+
+### 3.6 KPISpecification
+Embedded specification for KPI formula computation.
+
+```java
+@Embeddable
+public class KPISpecification {
+    private String formulaType;    // AVERAGE, WEIGHTED_SUM, MIN, MAX, THRESHOLD
+    private String formulaConfig;  // JSON configuration (optional)
+    private String dslText;        // DSL formula expression
+    private String dslVersion;     // DSL grammar version (default: "1.0")
+}
+```
+
+**File**: `src/main/java/it/univaq/disim/mosaico/wp2/repository/data/KPISpecification.java`
+
+### 3.7 Enumerations
 
 ```java
 // Run states
@@ -712,6 +745,54 @@ POST /api/v1/benchmarks
     "runName": "quality-run"
 }
 ```
+
+### 9.4 PerformanceKPI Endpoints
+
+```http
+# List all KPIs
+GET /api/performance-kpis
+
+# Get KPI by ID
+GET /api/performance-kpis/{id}
+
+# Get KPIs for a specific benchmark
+GET /api/performance-kpis/benchmark/{benchmarkId}
+
+# Create a new KPI
+POST /api/performance-kpis
+{
+    "benchmarkId": "bench-001",
+    "description": "Overall Quality",
+    "dslText": "WEIGHTED_SUM(ROUGE: 0.4, BLEU: 0.3, ACCURACY: 0.3)",
+    "formulaType": "WEIGHTED_SUM"
+}
+
+# Update KPI
+PUT /api/performance-kpis/{id}
+{
+    "benchmarkId": "bench-001",
+    "description": "Updated Quality Score",
+    "dslText": "AVERAGE(ROUGE, BLEU)",
+    "formulaType": "AVERAGE"
+}
+
+# Delete KPI
+DELETE /api/performance-kpis/{id}
+
+# Validate DSL formula (without creating)
+POST /api/performance-kpis/validate
+{
+    "dslText": "AVERAGE(ROUGE, BLEU)"
+}
+
+# Get DSL syntax help
+GET /api/performance-kpis/dsl/help
+
+# Get available metrics for DSL
+GET /api/performance-kpis/dsl/metrics
+```
+
+**Important**: KPIs must be configured for a benchmark before executing runs. Without KPIs, benchmark runs will only collect raw metrics but won't compute aggregated performance scores.
 
 ---
 
