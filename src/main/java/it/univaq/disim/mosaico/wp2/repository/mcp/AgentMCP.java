@@ -17,8 +17,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.modelcontextprotocol.spec.McpSchema.ReadResourceResult;
 import io.modelcontextprotocol.spec.McpSchema.TextResourceContents;
 import it.univaq.disim.mosaico.wp2.repository.data.Agent;
+import it.univaq.disim.mosaico.wp2.repository.data.Benchmark;
+import it.univaq.disim.mosaico.wp2.repository.data.Skill;
 import it.univaq.disim.mosaico.wp2.repository.dto.AgentSearchResult;
 import it.univaq.disim.mosaico.wp2.repository.service.AgentService;
+import it.univaq.disim.mosaico.wp2.repository.service.BenchmarkService;
+import it.univaq.disim.mosaico.wp2.repository.service.SkillService;
 
 /**
  * AgentMCP provides a lightweight, non-invasive MCP-compatible adapter for
@@ -32,13 +36,17 @@ public class AgentMCP {
 
     private final AgentService agentService;
     private final ObjectMapper objectMapper;
+    private final BenchmarkService benchmarkService;
+    private final SkillService skillService;
     Logger logger = LoggerFactory.getLogger(AgentMCP.class);
 
     // Constructor injection makes the class easier to test (we can pass a mock
     // AgentService)
-    public AgentMCP(AgentService agentService, ObjectMapper objectMapper) {
+    public AgentMCP(AgentService agentService, ObjectMapper objectMapper, BenchmarkService benchmarkService, SkillService skillService) {
         this.agentService = agentService;
         this.objectMapper = objectMapper;
+        this.benchmarkService = benchmarkService;
+        this.skillService = skillService;
     }
 
     @McpResource(name = "agents", description = "MOSAICO Agents exposed via MCP", uri = "document/agents")
@@ -53,6 +61,44 @@ public class AgentMCP {
 
         TextResourceContents contents = new TextResourceContents(
                 "document://agents",
+                "application/json",
+                json
+        );
+
+        return new ReadResourceResult(List.of(contents));
+    }
+
+    @McpResource(name = "skills", description = "MOSAICO Skills exposed via MCP", uri = "document/skills")
+    public ReadResourceResult listAllSkills() {
+        List<Skill> skills = skillService.findAll();
+        String json;
+        try {
+            json = objectMapper.writeValueAsString(skills);
+        } catch (JsonProcessingException e) {
+            json = "[]"; // Fall back to empty list on serialization errors
+        }
+
+        TextResourceContents contents = new TextResourceContents(
+                "document://skills",
+                "application/json",
+                json
+        );
+
+        return new ReadResourceResult(List.of(contents));
+    }
+
+    @McpResource(name = "benchmarks", description = "MOSAICO Benchmarks exposed via MCP", uri = "document/benchmarks")
+    public ReadResourceResult listAllBenchmarks() {
+        List<Benchmark> benchmarks = benchmarkService.findAll();
+        String json;
+        try {
+            json = objectMapper.writeValueAsString(benchmarks);
+        } catch (JsonProcessingException e) {
+            json = "[]"; // Fall back to empty list on serialization errors
+        }
+
+        TextResourceContents contents = new TextResourceContents(
+                "document://benchmarks",
                 "application/json",
                 json
         );
@@ -76,6 +122,50 @@ public class AgentMCP {
 
         TextResourceContents contents = new TextResourceContents(
                 "document://agents/" + id,
+                "application/json",
+                json
+        );
+        return new ReadResourceResult(List.of(contents));
+
+    }
+    @McpResource(name = "skills", description = "MOSAICO Skill exposed via MCP", uri = "document/skills/{id}")
+    public ReadResourceResult getSkill(String id) {
+        Optional<Skill> skill = skillService.findById(id);
+        if (skill.isEmpty()) {
+            return new ReadResourceResult(List.of());
+        }
+
+        String json;
+        try {
+            json = objectMapper.writeValueAsString(skill.get());
+        } catch (JsonProcessingException e) {
+            json = "{}"; // Fall back to empty object on serialization errors
+        }
+
+        TextResourceContents contents = new TextResourceContents(
+                "document://skills/" + id,
+                "application/json",
+                json
+        );
+        return new ReadResourceResult(List.of(contents));
+
+    }
+    @McpResource(name = "benchmark", description = "MOSAICO benchmark exposed via MCP", uri = "document/benchmarks/{id}")
+    public ReadResourceResult getBenchmark(String id) {
+        Optional<Benchmark> benchmark = benchmarkService.findById(id);
+        if (benchmark.isEmpty()) {
+            return new ReadResourceResult(List.of());
+        }
+
+        String json;
+        try {
+            json = objectMapper.writeValueAsString(benchmark.get());
+        } catch (JsonProcessingException e) {
+            json = "{}"; // Fall back to empty object on serialization errors
+        }
+
+        TextResourceContents contents = new TextResourceContents(
+                "document://benchmarks/" + id,
                 "application/json",
                 json
         );
