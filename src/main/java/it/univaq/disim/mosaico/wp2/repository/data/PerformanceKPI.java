@@ -1,10 +1,14 @@
 package it.univaq.disim.mosaico.wp2.repository.data;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import java.util.List;
@@ -22,8 +26,10 @@ public class PerformanceKPI {
     @Column(name = "id", nullable = false)
     private String id;
 
-    @Column(name = "benchmark_id")
-    private String benchmarkId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "benchmark_id")
+    @JsonBackReference
+    private Benchmark benchmark;
 
     @Column(columnDefinition = "text")
     private String description;
@@ -45,6 +51,6 @@ public class PerformanceKPI {
     public void setId(String id) { this.id = id; }
     public String getDescription() {return description;}
     public void setDescription(String description) {this.description = description;}
-    public String getBenchmarkId() { return benchmarkId; }
-    public void setBenchmarkId(String benchmarkId) { this.benchmarkId = benchmarkId; }
+    public Benchmark getBenchmark() { return benchmark; }
+    public void setBenchmark(Benchmark benchmark) { this.benchmark = benchmark; }
 }

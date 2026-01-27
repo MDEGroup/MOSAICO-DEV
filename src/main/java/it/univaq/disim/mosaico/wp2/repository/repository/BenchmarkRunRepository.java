@@ -40,4 +40,7 @@ public interface BenchmarkRunRepository extends JpaRepository<BenchmarkRun, Stri
 
     @Query("SELECT br FROM BenchmarkRun br WHERE br.agentId = :agentId ORDER BY br.startedAt DESC LIMIT 1")
     BenchmarkRun findTopByAgentIdOrderByStartedAtDesc(@Param("agentId") String agentId);
+
+    @Query("SELECT br FROM BenchmarkRun br WHERE br.benchmarkId = :benchmarkId AND br.agentId = :agentId ORDER BY br.startedAt DESC")
+    List<BenchmarkRun> findByBenchmarkIdAndAgentIdOrderByStartedAtDesc(@Param("benchmarkId") String benchmarkId, @Param("agentId") String agentId);
 }

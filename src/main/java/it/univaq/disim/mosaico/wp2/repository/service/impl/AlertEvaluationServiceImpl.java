@@ -1,6 +1,9 @@
 package it.univaq.disim.mosaico.wp2.repository.service.impl;
 
+import it.univaq.disim.mosaico.wp2.repository.data.Agent;
 import it.univaq.disim.mosaico.wp2.repository.data.AlertConfig;
+import it.univaq.disim.mosaico.wp2.repository.data.Benchmark;
+import it.univaq.disim.mosaico.wp2.repository.data.BenchmarkResult;
 import it.univaq.disim.mosaico.wp2.repository.data.BenchmarkRun;
 import it.univaq.disim.mosaico.wp2.repository.data.KPIHistory;
 import it.univaq.disim.mosaico.wp2.repository.data.enums.AlertCondition;
@@ -8,6 +11,7 @@ import it.univaq.disim.mosaico.wp2.repository.repository.AlertConfigRepository;
 import it.univaq.disim.mosaico.wp2.repository.repository.BenchmarkRunRepository;
 import it.univaq.disim.mosaico.wp2.repository.repository.KPIHistoryRepository;
 import it.univaq.disim.mosaico.wp2.repository.service.AlertEvaluationService;
+import it.univaq.disim.mosaico.wp2.repository.service.BenchmarkService;
 import it.univaq.disim.mosaico.wp2.repository.service.NotificationDispatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -28,16 +33,19 @@ public class AlertEvaluationServiceImpl implements AlertEvaluationService {
     private final KPIHistoryRepository kpiHistoryRepository;
     private final BenchmarkRunRepository benchmarkRunRepository;
     private final NotificationDispatcher notificationDispatcher;
+    private final BenchmarkService benchmarkService;
 
     public AlertEvaluationServiceImpl(
             AlertConfigRepository alertConfigRepository,
             KPIHistoryRepository kpiHistoryRepository,
             BenchmarkRunRepository benchmarkRunRepository,
-            NotificationDispatcher notificationDispatcher) {
+            NotificationDispatcher notificationDispatcher,
+            BenchmarkService benchmarkService) {
         this.alertConfigRepository = alertConfigRepository;
         this.kpiHistoryRepository = kpiHistoryRepository;
         this.benchmarkRunRepository = benchmarkRunRepository;
         this.notificationDispatcher = notificationDispatcher;
+        this.benchmarkService = benchmarkService;
     }
 
     @Override
@@ -76,7 +84,7 @@ public class AlertEvaluationServiceImpl implements AlertEvaluationService {
         List<AlertConfig> alerts = alertConfigRepository.findActiveAlertsForKpi(benchmarkId, kpiName);
 
         for (AlertConfig alert : alerts) {
-            if (checkCondition(alert, value)) {
+            if (checkAlertCondition(alert, value)) {
                 triggeredAlerts.add(alert);
                 triggerAlert(alert, kpiName, value);
             }
@@ -139,12 +147,13 @@ public class AlertEvaluationServiceImpl implements AlertEvaluationService {
             return;
         }
 
-        if (checkCondition(alert, kpiHistory.getValue())) {
+        if (checkAlertCondition(alert, kpiHistory.getValue())) {
             triggerAlert(alert, kpiHistory.getKpiName(), kpiHistory.getValue());
         }
     }
 
-    private boolean checkCondition(AlertConfig alert, double value) {
+    @Override
+    public boolean checkAlertCondition(AlertConfig alert, double value) {
         AlertCondition condition = alert.getCondition();
         double threshold = alert.getThreshold();
 
@@ -166,5 +175,77 @@ public class AlertEvaluationServiceImpl implements AlertEvaluationService {
 
         // Dispatch notification
         notificationDispatcher.dispatch(alert, kpiName, value);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Agent> findAgentsWithNonAlertingKpiBySkill(String skillNameOrId) {
+        if (skillNameOrId == null || skillNameOrId.isBlank()) {
+            return new ArrayList<>();
+        }
+
+        logger.info("Fetching agents with non-alerting KPIs for skill: {}", skillNameOrId);
+
+        List<Benchmark> benchmarks = benchmarkService.findBySkill(skillNameOrId);
+
+        if (benchmarks.isEmpty()) {
+            logger.info("No benchmarks found for skill: {}", skillNameOrId);
+            return new ArrayList<>();
+        }
+
+        List<Agent> nonAlertingAgents = new ArrayList<>();
+
+        for (Benchmark benchmark : benchmarks) {
+            String benchmarkId = benchmark.getId();
+
+            // Get all active alert configs for this benchmark
+            List<AlertConfig> alertConfigs = alertConfigRepository.findByBenchmarkIdAndEnabled(benchmarkId, true);
+
+            // Get all agents evaluated by this benchmark
+            for (Agent agent : benchmark.getEvaluates()) {
+                // Get the latest benchmark run for this agent and benchmark
+                List<BenchmarkRun> runs = benchmarkRunRepository
+                        .findByBenchmarkIdAndAgentIdOrderByStartedAtDesc(benchmarkId, agent.getId());
+
+                if (runs.isEmpty()) {
+                    // No runs, consider agent as non-alerting (no data to alert on)
+                    if (!nonAlertingAgents.contains(agent)) {
+                        nonAlertingAgents.add(agent);
+                    }
+                    continue;
+                }
+
+                BenchmarkRun latestRun = runs.get(0);
+                List<BenchmarkResult> results = latestRun.getResults();
+
+                boolean hasAlert = false;
+
+                // Check each result's KPI values against alert configs
+                for (BenchmarkResult result : results) {
+                    Map<String, Double> kpiValues = result.getKpiValues();
+
+                    for (AlertConfig alertConfig : alertConfigs) {
+                        String kpiName = alertConfig.getKpiName();
+                        Double kpiValue = kpiValues.get(kpiName);
+
+                        if (kpiValue != null && checkAlertCondition(alertConfig, kpiValue)) {
+                            hasAlert = true;
+                            break;
+                        }
+                    }
+
+                    if (hasAlert) {
+                        break;
+                    }
+                }
+
+                if (!hasAlert && !nonAlertingAgents.contains(agent)) {
+                    nonAlertingAgents.add(agent);
+                }
+            }
+        }
+
+        logger.info("Found {} agents with non-alerting KPIs for skill: {}", nonAlertingAgents.size(), skillNameOrId);
+        return nonAlertingAgents;
     }
 }

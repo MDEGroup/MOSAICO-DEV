@@ -122,7 +122,10 @@ class BenchmarkDemoRunner implements CommandLineRunner {
         
 
         // Register custom metrics for the DSL parser
-        kpiParser.registerMetricKeys(Set.of("ROUGE1_F", "ROUGEL_F", "COSINE_PRED_GOLD", "COSINE_PRED_SOURCE", "LEN_RATIO"));
+        kpiParser.registerMetricKeys(Set.of(
+            "ROUGE1_F", "ROUGEL_F", "COSINE_PRED_GOLD", "COSINE_PRED_SOURCE", "LEN_RATIO",
+            "PRECISION", "RECALL", "F1_SCORE"
+        ));
 
         // Step 1: Create Agent entities
         step1_CreateAgentEntities();
@@ -352,10 +355,12 @@ class BenchmarkDemoRunner implements CommandLineRunner {
         print("  └─ Evaluated agents: " + benchmark.getEvaluates().size());
 
         print("\nDefined KPI Formulas:");
-        print("  ├─ Overall Quality: WEIGHTED_SUM(ROUGE:0.4, BLEU:0.3, ACCURACY:0.3)");
+        print("  ├─ Overall Quality: WEIGHTED_SUM(ROUGE:0.25, BLEU:0.20, ACCURACY:0.15, PRECISION:0.15, RECALL:0.10, F1_SCORE:0.15)");
         print("  ├─ Text Similarity: AVERAGE(ROUGE, BLEU)");
-        print("  ├─ Min Performance: MIN(ROUGE, BLEU, ACCURACY)");
-        print("  └─ Quality Threshold: THRESHOLD(ROUGE, 0.3)");
+        print("  ├─ Classification Score: AVERAGE(PRECISION, RECALL, F1_SCORE)");
+        print("  ├─ Balanced F1: WEIGHTED_SUM(PRECISION:0.3, RECALL:0.3, F1_SCORE:0.4)");
+        print("  ├─ Min Performance: MIN(ROUGE, BLEU, ACCURACY, F1_SCORE)");
+        print("  └─ Quality Threshold: THRESHOLD(F1_SCORE, 0.4)");
 
         printEndStep();
     }
@@ -464,11 +469,25 @@ class BenchmarkDemoRunner implements CommandLineRunner {
             default -> 0.30 + rand.nextDouble() * 0.1;
         };
 
+        // Text similarity metrics
         metrics.put("ROUGE", baseRouge);
         metrics.put("ROUGE1_F", baseRouge + rand.nextDouble() * 0.05);
         metrics.put("ROUGEL_F", baseRouge - rand.nextDouble() * 0.03);
         metrics.put("BLEU", baseRouge * (0.8 + rand.nextDouble() * 0.2));
+
+        // Classification metrics
+        double basePrecision = 0.5 + rand.nextDouble() * 0.35;
+        double baseRecall = 0.45 + rand.nextDouble() * 0.35;
         metrics.put("ACCURACY", 0.5 + rand.nextDouble() * 0.3);
+        metrics.put("PRECISION", basePrecision);
+        metrics.put("RECALL", baseRecall);
+        // F1 = 2 * (precision * recall) / (precision + recall)
+        double f1Score = (basePrecision + baseRecall > 0)
+            ? (2 * basePrecision * baseRecall) / (basePrecision + baseRecall)
+            : 0.0;
+        metrics.put("F1_SCORE", f1Score);
+
+        // Semantic similarity metrics
         metrics.put("COSINE_PRED_GOLD", 0.4 + rand.nextDouble() * 0.35);
         metrics.put("COSINE_PRED_SOURCE", 0.3 + rand.nextDouble() * 0.4);
         metrics.put("LEN_RATIO", 0.8 + rand.nextDouble() * 0.4);
@@ -512,12 +531,14 @@ class BenchmarkDemoRunner implements CommandLineRunner {
     private void step5_CalculateKPIs() {
         printStep(5, "KPI CALCULATION VIA DSL");
 
-        // Define KPI formulas
+        // Define KPI formulas including new metrics (PRECISION, RECALL, F1_SCORE)
         Map<String, String> kpiFormulas = new LinkedHashMap<>();
-        kpiFormulas.put("Overall Quality", "WEIGHTED_SUM(ROUGE:0.4, BLEU:0.3, ACCURACY:0.3)");
+        kpiFormulas.put("Overall Quality", "WEIGHTED_SUM(ROUGE:0.25, BLEU:0.20, ACCURACY:0.15, PRECISION:0.15, RECALL:0.10, F1_SCORE:0.15)");
         kpiFormulas.put("Text Similarity", "AVERAGE(ROUGE, BLEU)");
-        kpiFormulas.put("Min Performance", "MIN(ROUGE, BLEU, ACCURACY)");
-        kpiFormulas.put("Quality Threshold", "THRESHOLD(ROUGE, 0.3)");
+        kpiFormulas.put("Classification Score", "AVERAGE(PRECISION, RECALL, F1_SCORE)");
+        kpiFormulas.put("Balanced F1", "WEIGHTED_SUM(PRECISION:0.3, RECALL:0.3, F1_SCORE:0.4)");
+        kpiFormulas.put("Min Performance", "MIN(ROUGE, BLEU, ACCURACY, F1_SCORE)");
+        kpiFormulas.put("Quality Threshold", "THRESHOLD(F1_SCORE, 0.4)");
 
         print("\nKPI Formulas to evaluate:");
         kpiFormulas.forEach((name, formula) -> print("  ├─ " + name + ": " + formula));
@@ -639,9 +660,12 @@ class BenchmarkDemoRunner implements CommandLineRunner {
         allMetrics.addAll(deterministic.aggregatedMetrics.keySet());
 
         print("\nMETRICS:");
+        Set<String> displayMetrics = Set.of(
+            "ROUGE", "BLEU", "ACCURACY", "PRECISION", "RECALL", "F1_SCORE",
+            "ROUGE1_F", "COSINE_PRED_GOLD"
+        );
         for (String metric : allMetrics) {
-            if (metric.equals("ROUGE") || metric.equals("BLEU") || metric.equals("ACCURACY") ||
-                metric.equals("ROUGE1_F") || metric.equals("COSINE_PRED_GOLD")) {
+            if (displayMetrics.contains(metric)) {
                 print(String.format("%-35s | %-15s | %-15s | %-15s",
                     metric,
                     formatValue(baseline.aggregatedMetrics.get(metric)),

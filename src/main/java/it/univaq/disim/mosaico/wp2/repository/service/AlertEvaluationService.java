@@ -1,5 +1,6 @@
 package it.univaq.disim.mosaico.wp2.repository.service;
 
+import it.univaq.disim.mosaico.wp2.repository.data.Agent;
 import it.univaq.disim.mosaico.wp2.repository.data.AlertConfig;
 import it.univaq.disim.mosaico.wp2.repository.data.KPIHistory;
 
@@ -55,4 +56,14 @@ public interface AlertEvaluationService {
      * Finds an alert by ID.
      */
     Optional<AlertConfig> findById(String alertId);
+
+    /**
+     * Checks if a KPI value would trigger an alert condition.
+     */
+    boolean checkAlertCondition(AlertConfig alert, double value);
+
+    /**
+     * Finds all agents from benchmarks assessing a given skill where KPI values do not trigger alerts.
+     */
+    List<Agent> findAgentsWithNonAlertingKpiBySkill(String skillNameOrId);
 }

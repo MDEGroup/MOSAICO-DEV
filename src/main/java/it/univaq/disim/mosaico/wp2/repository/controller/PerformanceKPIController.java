@@ -1,7 +1,9 @@
 package it.univaq.disim.mosaico.wp2.repository.controller;
 
+import it.univaq.disim.mosaico.wp2.repository.data.Benchmark;
 import it.univaq.disim.mosaico.wp2.repository.data.PerformanceKPI;
 import it.univaq.disim.mosaico.wp2.repository.data.KPISpecification;
+import it.univaq.disim.mosaico.wp2.repository.repository.BenchmarkRepository;
 import it.univaq.disim.mosaico.wp2.repository.repository.PerformanceKPIRepository;
 import it.univaq.disim.mosaico.wp2.repository.dsl.KPIFormulaDslService;
 import it.univaq.disim.mosaico.wp2.repository.dsl.DslParseResult;
@@ -24,11 +26,14 @@ public class PerformanceKPIController {
     private static final Logger logger = LoggerFactory.getLogger(PerformanceKPIController.class);
 
     private final PerformanceKPIRepository performanceKPIRepository;
+    private final BenchmarkRepository benchmarkRepository;
     private final KPIFormulaDslService kpiFormulaDslService;
 
     public PerformanceKPIController(PerformanceKPIRepository performanceKPIRepository,
+                                    BenchmarkRepository benchmarkRepository,
                                     KPIFormulaDslService kpiFormulaDslService) {
         this.performanceKPIRepository = performanceKPIRepository;
+        this.benchmarkRepository = benchmarkRepository;
         this.kpiFormulaDslService = kpiFormulaDslService;
     }
 
@@ -36,8 +41,13 @@ public class PerformanceKPIController {
     public ResponseEntity<PerformanceKPI> createKPI(@RequestBody PerformanceKPIRequest request) {
         logger.info("POST /api/performance-kpis for benchmark: {}", request.benchmarkId());
 
+        Optional<Benchmark> benchmark = benchmarkRepository.findById(request.benchmarkId());
+        if (benchmark.isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+
         PerformanceKPI kpi = new PerformanceKPI();
-        kpi.setBenchmarkId(request.benchmarkId());
+        kpi.setBenchmark(benchmark.get());
         kpi.setDescription(request.description());
 
         KPISpecification specification = new KPISpecification();
@@ -68,7 +78,7 @@ public class PerformanceKPIController {
     @GetMapping("/benchmark/{benchmarkId}")
     public ResponseEntity<List<PerformanceKPI>> getKPIsByBenchmark(@PathVariable String benchmarkId) {
         logger.info("GET /api/performance-kpis/benchmark/{}", benchmarkId);
-        List<PerformanceKPI> kpis = performanceKPIRepository.findByBenchmarkId(benchmarkId);
+        List<PerformanceKPI> kpis = performanceKPIRepository.findByBenchmark_Id(benchmarkId);
         return ResponseEntity.ok(kpis);
     }
 
@@ -81,8 +91,13 @@ public class PerformanceKPIController {
             return ResponseEntity.notFound().build();
         }
 
+        Optional<Benchmark> benchmark = benchmarkRepository.findById(request.benchmarkId());
+        if (benchmark.isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+
         PerformanceKPI kpi = existing.get();
-        kpi.setBenchmarkId(request.benchmarkId());
+        kpi.setBenchmark(benchmark.get());
         kpi.setDescription(request.description());
 
         KPISpecification specification = kpi.getSpecification();

@@ -253,11 +253,13 @@ POST /api/performance-kpis
 
 ### 2.1.1 Create "Overall Quality" KPI (Weighted Sum)
 
+This KPI combines all available metrics (ROUGE, BLEU, ACCURACY, PRECISION, RECALL, F1_SCORE) with different weights.
+
 ```json
 {
   "benchmarkId": "bench-summarization-001",
   "description": "Overall Quality",
-  "dslText": "WEIGHTED_SUM(ROUGE: 0.4, BLEU: 0.3, ACCURACY: 0.3)",
+  "dslText": "WEIGHTED_SUM(ROUGE:0.25, BLEU:0.20, ACCURACY:0.15, PRECISION:0.15, RECALL:0.10, F1_SCORE:0.15)",
   "formulaType": "WEIGHTED_SUM"
 }
 ```
@@ -268,7 +270,7 @@ curl -X POST http://localhost:8080/api/performance-kpis \
   -d '{
     "benchmarkId": "bench-summarization-001",
     "description": "Overall Quality",
-    "dslText": "WEIGHTED_SUM(ROUGE: 0.4, BLEU: 0.3, ACCURACY: 0.3)",
+    "dslText": "WEIGHTED_SUM(ROUGE:0.25, BLEU:0.20, ACCURACY:0.15, PRECISION:0.15, RECALL:0.10, F1_SCORE:0.15)",
     "formulaType": "WEIGHTED_SUM"
   }'
 ```
@@ -295,13 +297,61 @@ curl -X POST http://localhost:8080/api/performance-kpis \
   }'
 ```
 
-### 2.1.3 Create "Min Performance" KPI (Minimum)
+### 2.1.3 Create "Classification Score" KPI (Average of Classification Metrics)
+
+This KPI focuses on classification-style metrics: Precision, Recall, and F1 Score.
+
+```json
+{
+  "benchmarkId": "bench-summarization-001",
+  "description": "Classification Score",
+  "dslText": "AVERAGE(PRECISION, RECALL, F1_SCORE)",
+  "formulaType": "AVERAGE"
+}
+```
+
+```bash
+curl -X POST http://localhost:8080/api/performance-kpis \
+  -H "Content-Type: application/json" \
+  -d '{
+    "benchmarkId": "bench-summarization-001",
+    "description": "Classification Score",
+    "dslText": "AVERAGE(PRECISION, RECALL, F1_SCORE)",
+    "formulaType": "AVERAGE"
+  }'
+```
+
+### 2.1.4 Create "Balanced F1" KPI (Weighted Sum)
+
+This KPI emphasizes the F1 Score while balancing Precision and Recall.
+
+```json
+{
+  "benchmarkId": "bench-summarization-001",
+  "description": "Balanced F1",
+  "dslText": "WEIGHTED_SUM(PRECISION:0.3, RECALL:0.3, F1_SCORE:0.4)",
+  "formulaType": "WEIGHTED_SUM"
+}
+```
+
+```bash
+curl -X POST http://localhost:8080/api/performance-kpis \
+  -H "Content-Type: application/json" \
+  -d '{
+    "benchmarkId": "bench-summarization-001",
+    "description": "Balanced F1",
+    "dslText": "WEIGHTED_SUM(PRECISION:0.3, RECALL:0.3, F1_SCORE:0.4)",
+    "formulaType": "WEIGHTED_SUM"
+  }'
+```
+
+### 2.1.5 Create "Min Performance" KPI (Minimum)
 
 ```json
 {
   "benchmarkId": "bench-summarization-001",
   "description": "Min Performance",
-  "dslText": "MIN(ROUGE, BLEU, ACCURACY)",
+  "dslText": "MIN(ROUGE, BLEU, ACCURACY, F1_SCORE)",
   "formulaType": "MIN"
 }
 ```
@@ -312,18 +362,18 @@ curl -X POST http://localhost:8080/api/performance-kpis \
   -d '{
     "benchmarkId": "bench-summarization-001",
     "description": "Min Performance",
-    "dslText": "MIN(ROUGE, BLEU, ACCURACY)",
+    "dslText": "MIN(ROUGE, BLEU, ACCURACY, F1_SCORE)",
     "formulaType": "MIN"
   }'
 ```
 
-### 2.1.4 Create "Quality Threshold" KPI (Threshold)
+### 2.1.6 Create "Quality Threshold" KPI (Threshold)
 
 ```json
 {
   "benchmarkId": "bench-summarization-001",
   "description": "Quality Threshold",
-  "dslText": "THRESHOLD(ROUGE, 0.3)",
+  "dslText": "THRESHOLD(F1_SCORE, 0.4)",
   "formulaType": "THRESHOLD"
 }
 ```
@@ -334,7 +384,7 @@ curl -X POST http://localhost:8080/api/performance-kpis \
   -d '{
     "benchmarkId": "bench-summarization-001",
     "description": "Quality Threshold",
-    "dslText": "THRESHOLD(ROUGE, 0.3)",
+    "dslText": "THRESHOLD(F1_SCORE, 0.4)",
     "formulaType": "THRESHOLD"
   }'
 ```
@@ -349,7 +399,7 @@ curl -X POST http://localhost:8080/api/performance-kpis \
   "specification": {
     "formulaType": "WEIGHTED_SUM",
     "formulaConfig": null,
-    "dslText": "WEIGHTED_SUM(ROUGE: 0.4, BLEU: 0.3, ACCURACY: 0.3)",
+    "dslText": "WEIGHTED_SUM(ROUGE:0.25, BLEU:0.20, ACCURACY:0.15, PRECISION:0.15, RECALL:0.10, F1_SCORE:0.15)",
     "dslVersion": "1.0",
     "formula": null
   }
@@ -580,8 +630,8 @@ The `BenchmarkDemoPersistenceRunner` automatically executes:
 | **1** | Creates and persists 3 Agents (Baseline, Creative, Deterministic) |
 | **2** | Creates and persists the Benchmark with reference to the `ause_train` dataset |
 | **3** | Retrieves real traces from Langfuse for each agent |
-| **4** | Calculates aggregated metrics (ROUGE, BLEU, ACCURACY, etc.) |
-| **5** | Evaluates KPIs via DSL (Overall Quality, Text Similarity, etc.) |
+| **4** | Calculates aggregated metrics (ROUGE, BLEU, ACCURACY, PRECISION, RECALL, F1_SCORE, etc.) |
+| **5** | Evaluates KPIs via DSL (Overall Quality, Text Similarity, Classification Score, Balanced F1, etc.) |
 | **6** | Executes and persists BenchmarkRuns for each agent |
 | **7** | Generates the final comparative report |
 
@@ -615,12 +665,18 @@ Metric/KPI                          | Baseline        | Creative        | Determ
 
 METRICS:
 ROUGE                               | 0.3842          | 0.3521          | 0.4102
-ROUGE1_F                            | 0.4012          | 0.3689          | 0.4287
+BLEU                                | 0.3256          | 0.2987          | 0.3521
+ACCURACY                            | 0.6512          | 0.5987          | 0.6823
+PRECISION                           | 0.7123          | 0.6542          | 0.7456
+RECALL                              | 0.6845          | 0.6123          | 0.7012
+F1_SCORE                            | 0.6981          | 0.6326          | 0.7228
 ...
 
 KPI:
-Overall Quality                     | 0.4215          | 0.3987          | 0.4532
-Text Similarity                     | 0.3756          | 0.3412          | 0.3987
+Overall Quality                     | 0.4815          | 0.4387          | 0.5132
+Text Similarity                     | 0.3549          | 0.3254          | 0.3812
+Classification Score                | 0.6983          | 0.6330          | 0.7232
+Balanced F1                         | 0.6979          | 0.6327          | 0.7225
 ...
 
 COMPARATIVE ANALYSIS:
@@ -655,20 +711,31 @@ These are the run names configured to retrieve traces from Langfuse:
 
 The system calculates the following metrics for each agent:
 
-### Base Metrics (from Langfuse)
-- `ROUGE` / `ROUGE1_F` / `ROUGEL_F` - Similarity with gold standard
-- `BLEU` - Generation quality
-- `ACCURACY` - General accuracy
+### Base Metrics (from Langfuse or computed by MetricProviders)
+
+#### Text Similarity Metrics
+- `ROUGE` / `ROUGE1_F` / `ROUGEL_F` - Similarity with gold standard using longest common subsequence
+- `BLEU` - Bilingual Evaluation Understudy score for generation quality
+
+#### Classification Metrics
+- `ACCURACY` - Jaccard similarity (intersection/union of tokens)
+- `PRECISION` - Proportion of generated tokens that are relevant (appear in reference)
+- `RECALL` - Proportion of reference tokens captured in generated text
+- `F1_SCORE` - Harmonic mean of Precision and Recall
+
+#### Semantic Similarity Metrics
 - `COSINE_PRED_GOLD` - Cosine similarity prediction vs gold
 - `COSINE_PRED_SOURCE` - Cosine similarity prediction vs source
 - `LEN_RATIO` - Output/input length ratio
 
 ### Calculated KPIs (via DSL)
 ```
-Overall Quality:    WEIGHTED_SUM(ROUGE:0.4, BLEU:0.3, ACCURACY:0.3)
-Text Similarity:    AVERAGE(ROUGE, BLEU)
-Min Performance:    MIN(ROUGE, BLEU, ACCURACY)
-Quality Threshold:  THRESHOLD(ROUGE, 0.3)
+Overall Quality:      WEIGHTED_SUM(ROUGE:0.25, BLEU:0.20, ACCURACY:0.15, PRECISION:0.15, RECALL:0.10, F1_SCORE:0.15)
+Text Similarity:      AVERAGE(ROUGE, BLEU)
+Classification Score: AVERAGE(PRECISION, RECALL, F1_SCORE)
+Balanced F1:          WEIGHTED_SUM(PRECISION:0.3, RECALL:0.3, F1_SCORE:0.4)
+Min Performance:      MIN(ROUGE, BLEU, ACCURACY, F1_SCORE)
+Quality Threshold:    THRESHOLD(F1_SCORE, 0.4)
 ```
 
 ---

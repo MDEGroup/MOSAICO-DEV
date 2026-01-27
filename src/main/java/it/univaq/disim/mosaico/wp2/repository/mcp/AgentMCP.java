@@ -1,8 +1,8 @@
 package it.univaq.disim.mosaico.wp2.repository.mcp;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.Map;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,6 +25,7 @@ import it.univaq.disim.mosaico.wp2.repository.dto.BenchmarkRunSummary;
 import it.univaq.disim.mosaico.wp2.repository.dto.LastBenchmarkRunResponse;
 import it.univaq.disim.mosaico.wp2.repository.repository.BenchmarkRunRepository;
 import it.univaq.disim.mosaico.wp2.repository.service.AgentService;
+import it.univaq.disim.mosaico.wp2.repository.service.AlertEvaluationService;
 import it.univaq.disim.mosaico.wp2.repository.service.BenchmarkService;
 import it.univaq.disim.mosaico.wp2.repository.service.SkillService;
 
@@ -43,16 +44,18 @@ public class AgentMCP {
     private final BenchmarkService benchmarkService;
     private final SkillService skillService;
     private final BenchmarkRunRepository benchmarkRunRepository;
+    private final AlertEvaluationService alertEvaluationService;
     Logger logger = LoggerFactory.getLogger(AgentMCP.class);
 
-    // Constructor injection makes the class easier to test (we can pass a mock
-    // AgentService)
-    public AgentMCP(AgentService agentService, ObjectMapper objectMapper, BenchmarkService benchmarkService, SkillService skillService, BenchmarkRunRepository benchmarkRunRepository) {
+    public AgentMCP(AgentService agentService, ObjectMapper objectMapper, BenchmarkService benchmarkService,
+            SkillService skillService, BenchmarkRunRepository benchmarkRunRepository,
+            AlertEvaluationService alertEvaluationService) {
         this.agentService = agentService;
         this.objectMapper = objectMapper;
         this.benchmarkService = benchmarkService;
         this.skillService = skillService;
         this.benchmarkRunRepository = benchmarkRunRepository;
+        this.alertEvaluationService = alertEvaluationService;
     }
 
     @McpResource(name = "agents", description = "MOSAICO Agents exposed via MCP", uri = "document/agents")
@@ -253,6 +256,46 @@ public class AgentMCP {
             json = objectMapper.writeValueAsString(response);
         } catch (JsonProcessingException e) {
             json = "{}";
+        }
+        return json;
+    }
+
+    @McpTool(name = "BenchmarksBySkillTool", description = "Tool to find all benchmarks that assess a given skill. Accepts skill name or skill ID.")
+    public String getBenchmarksBySkill(@McpToolParam String skillNameOrId) {
+
+        if (skillNameOrId == null || skillNameOrId.isBlank()) {
+            throw new IllegalArgumentException("skillNameOrId must not be empty");
+        }
+        logger.info("Fetching benchmarks for skill: {}", skillNameOrId);
+
+        List<Benchmark> benchmarks = benchmarkService.findBySkill(skillNameOrId);
+        logger.info("Found {} benchmarks for skill: {}", benchmarks.size(), skillNameOrId);
+
+        String json;
+        try {
+            json = objectMapper.writeValueAsString(benchmarks);
+        } catch (JsonProcessingException e) {
+            json = "[]";
+        }
+        return json;
+    }
+
+    @McpTool(name = "AgentsWithNonAlertingKpiBySkillTool", description = "Tool to find all agents from benchmarks assessing a given skill where the KPI values in BenchmarkResults do not trigger any configured alerts. Accepts skill name or skill ID.")
+    public String getAgentsWithNonAlertingKpiBySkill(@McpToolParam String skillNameOrId) {
+
+        if (skillNameOrId == null || skillNameOrId.isBlank()) {
+            throw new IllegalArgumentException("skillNameOrId must not be empty");
+        }
+        logger.info("Fetching agents with non-alerting KPIs for skill: {}", skillNameOrId);
+
+        List<Agent> nonAlertingAgents = alertEvaluationService.findAgentsWithNonAlertingKpiBySkill(skillNameOrId);
+        logger.info("Found {} agents with non-alerting KPIs for skill: {}", nonAlertingAgents.size(), skillNameOrId);
+
+        String json;
+        try {
+            json = objectMapper.writeValueAsString(nonAlertingAgents);
+        } catch (JsonProcessingException e) {
+            json = "[]";
         }
         return json;
     }

@@ -1,5 +1,6 @@
 package it.univaq.disim.mosaico.wp2.repository.data;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -9,8 +10,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import jakarta.persistence.Transient;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -35,12 +36,13 @@ public class Benchmark {
     @JoinTable(name = "benchmark_evaluates", joinColumns = @JoinColumn(name = "benchmark_id"), inverseJoinColumns = @JoinColumn(name = "agent_id"))
     private List<Agent> evaluates = new ArrayList<>();
 
-    @Transient
-    private List<PerformanceKPI> measures;
+    @OneToMany(mappedBy = "benchmark", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<PerformanceKPI> measures = new ArrayList<>();
     private String runName;
 
-    @Transient
-    private List<Skill> assess;
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "benchmark_assess", joinColumns = @JoinColumn(name = "benchmark_id"), inverseJoinColumns = @JoinColumn(name = "skill_id"))
+    private List<Skill> assess = new ArrayList<>();
     
     private String taskDef;
     private String protocolVersion;
@@ -57,9 +59,15 @@ public class Benchmark {
         this.taskDef = taskDef;
         this.protocolVersion = protocolVersion;
         this.evaluates = evaluates == null ? new ArrayList<>() : evaluates;
-        this.measures = measures;
         this.assess = assess;
         this.runName = runName;
+        // Set bidirectional relationship for measures
+        if (measures != null) {
+            for (PerformanceKPI kpi : measures) {
+                kpi.setBenchmark(this);
+                this.measures.add(kpi);
+            }
+        }
     }
 
     public String getId() {
@@ -135,7 +143,23 @@ public class Benchmark {
     }
 
     public void setMeasures(List<PerformanceKPI> measures) {
-        this.measures = measures;
+        this.measures.clear();
+        if (measures != null) {
+            for (PerformanceKPI kpi : measures) {
+                kpi.setBenchmark(this);
+                this.measures.add(kpi);
+            }
+        }
+    }
+
+    public void addMeasure(PerformanceKPI kpi) {
+        kpi.setBenchmark(this);
+        this.measures.add(kpi);
+    }
+
+    public void removeMeasure(PerformanceKPI kpi) {
+        kpi.setBenchmark(null);
+        this.measures.remove(kpi);
     }
 
     public List<Skill> getAssess() {

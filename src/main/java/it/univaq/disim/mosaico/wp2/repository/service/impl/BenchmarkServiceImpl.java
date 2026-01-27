@@ -16,10 +16,12 @@ import it.univaq.disim.mosaico.wp2.repository.data.Metric;
 import it.univaq.disim.mosaico.wp2.repository.data.MetricKey;
 import it.univaq.disim.mosaico.wp2.repository.data.PerformanceKPI;
 import it.univaq.disim.mosaico.wp2.repository.repository.BenchmarkRepository;
+import it.univaq.disim.mosaico.wp2.repository.data.Skill;
 import it.univaq.disim.mosaico.wp2.repository.service.BenchmarkService;
 import it.univaq.disim.mosaico.wp2.repository.service.LangfuseService;
 import it.univaq.disim.mosaico.wp2.repository.service.MetricProvider;
 import it.univaq.disim.mosaico.wp2.repository.service.MetricService;
+import it.univaq.disim.mosaico.wp2.repository.service.SkillService;
 import it.univaq.disim.mosaico.wp2.repository.service.LangfuseService.TraceData;
 
 /**
@@ -39,6 +41,9 @@ public class BenchmarkServiceImpl implements BenchmarkService {
 
     @Autowired
     private MetricProviderRegistry metricProviderRegistry;
+
+    @Autowired
+    private SkillService skillService;
 
     @Override
     public List<Benchmark> findAll() {
@@ -273,5 +278,21 @@ public class BenchmarkServiceImpl implements BenchmarkService {
         }
 
         return metricValues;
+    }
+
+    @Override
+    public List<Benchmark> findBySkill(String skillNameOrId) {
+        if (skillNameOrId == null || skillNameOrId.isBlank()) {
+            return new ArrayList<>();
+        }
+
+        // First try to find by ID
+        Optional<Skill> skillById = skillService.findById(skillNameOrId);
+        if (skillById.isPresent()) {
+            return benchmarkRepository.findByAssess_Id(skillNameOrId);
+        }
+
+        // Try to find by name
+        return benchmarkRepository.findBySkillName(skillNameOrId);
     }
 }

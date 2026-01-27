@@ -180,7 +180,7 @@ public class BenchmarkOrchestratorImpl implements BenchmarkOrchestrator {
 
     private void computeAndPersistKPIs(BenchmarkRun run, Benchmark benchmark, Agent agent) {
         // Load KPIs from database instead of using @Transient field
-        List<PerformanceKPI> kpis = performanceKPIRepository.findByBenchmarkId(benchmark.getId());
+        List<PerformanceKPI> kpis = performanceKPIRepository.findByBenchmark_Id(benchmark.getId());
         if (kpis == null || kpis.isEmpty()) {
             logger.debug("No KPIs configured for benchmark {}", benchmark.getId());
             return;

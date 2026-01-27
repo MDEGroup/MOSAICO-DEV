@@ -22,4 +22,9 @@ public interface BenchmarkService {
     List<Metric> computeBenchmarkMetrics(Benchmark benchmark, Agent agent);
     PerformanceKPI computeKPIs(Benchmark benchmark, Agent agent);
     List<Metric> computeBenchmarkMetrics(Benchmark benchmark, Agent agent, List<MetricProvider> metricProviders);
+
+    /**
+     * Finds all benchmarks that assess a given skill by ID or name.
+     */
+    List<Benchmark> findBySkill(String skillNameOrId);
 }
