@@ -26,10 +26,10 @@ public class BenchmarkRunService {
     /**
      * Creates a new {@link BenchmarkRun} for the provided benchmark and agent.
      */
-    public BenchmarkRun createRun(Benchmark benchmark, Agent agent) {
+    public BenchmarkRun createRun(Benchmark benchmark, Agent agent, String langfuseRunName) {
         BenchmarkRun run = new BenchmarkRun(benchmark.getId(), agent.getId(), TriggerType.MANUAL);
         run.setId("run-" + UUID.randomUUID().toString().substring(0, 8));
-        run.setLangfuseRunName(benchmark.getRunName());
+        run.setLangfuseRunName(langfuseRunName);
         return run;
     }
 

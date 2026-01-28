@@ -73,17 +73,19 @@ class LangfuseMetricProviderIntegrationTest {
         testBenchmark = new Benchmark();
         testBenchmark.setId(UUID.randomUUID().toString());
 
-        // Using actual dataset name and run name from Langfuse UI
+        // Using actual dataset name from Langfuse UI
         testBenchmark.setDatasetRef("ause_train");  // Dataset name from Langfuse
-        testBenchmark.setRunName("run test - 2025-12-05T10:03:41.398117Z");  // Run name from Langfuse
 
         testBenchmark.setEvaluates(Arrays.asList(testAgent));
     }
 
+    // Run name stored separately (now lives in BenchmarkRun.langfuseRunName)
+    private static final String TEST_LANGFUSE_RUN_NAME = "run test - 2025-12-05T10:03:41.398117Z";
+
     @Test
     void testComputeMetricsFromLangfuseRun() {
         // Act: Compute metrics from Langfuse dataset run
-        List<Metric> metrics = benchmarkService.computeBenchmarkMetrics(testBenchmark, testAgent);
+        List<Metric> metrics = benchmarkService.computeBenchmarkMetrics(testBenchmark, testAgent, TEST_LANGFUSE_RUN_NAME);
 
         // Assert: Metrics were computed
         assertNotNull(metrics, "Metrics list should not be null");
@@ -91,7 +93,7 @@ class LangfuseMetricProviderIntegrationTest {
         // Print diagnostic information
         log.info("\n=== Langfuse Integration Test Results ===");
         log.info("Dataset: {}", testBenchmark.getDatasetRef());
-        log.info("Run: {}", testBenchmark.getRunName());
+        log.info("Run: {}", TEST_LANGFUSE_RUN_NAME);
         log.info("Metrics computed: {}", metrics.size());
 
         if (metrics.isEmpty()) {
@@ -124,7 +126,7 @@ class LangfuseMetricProviderIntegrationTest {
     @Test
     void testComputeKPIWithAverageFormula() {
         // First check if we have any traces
-        List<Metric> metrics = benchmarkService.computeBenchmarkMetrics(testBenchmark, testAgent);
+        List<Metric> metrics = benchmarkService.computeBenchmarkMetrics(testBenchmark, testAgent, TEST_LANGFUSE_RUN_NAME);
 
         if (metrics.isEmpty()) {
             log.warn("\n⚠️ Skipping KPI test - no traces available from Langfuse");
@@ -145,7 +147,7 @@ class LangfuseMetricProviderIntegrationTest {
         testBenchmark.setMeasures(Arrays.asList(kpi));
 
         // Act: Compute KPI
-        PerformanceKPI result = benchmarkService.computeKPIs(testBenchmark, testAgent);
+        PerformanceKPI result = benchmarkService.computeKPIs(testBenchmark, testAgent, TEST_LANGFUSE_RUN_NAME);
 
         // Assert: KPI was computed
         assertNotNull(result, "KPI result should not be null");
@@ -160,7 +162,7 @@ class LangfuseMetricProviderIntegrationTest {
     @Test
     void testComputeKPIWithWeightedFormula() {
         // First check if we have any traces
-        List<Metric> metrics = benchmarkService.computeBenchmarkMetrics(testBenchmark, testAgent);
+        List<Metric> metrics = benchmarkService.computeBenchmarkMetrics(testBenchmark, testAgent, TEST_LANGFUSE_RUN_NAME);
 
         if (metrics.isEmpty()) {
             log.warn("\n⚠️ Skipping weighted KPI test - no traces available from Langfuse");
@@ -185,7 +187,7 @@ class LangfuseMetricProviderIntegrationTest {
         testBenchmark.setMeasures(Arrays.asList(kpi));
 
         // Act: Compute KPI
-        PerformanceKPI result = benchmarkService.computeKPIs(testBenchmark, testAgent);
+        PerformanceKPI result = benchmarkService.computeKPIs(testBenchmark, testAgent, TEST_LANGFUSE_RUN_NAME);
 
         // Assert: KPI was computed
         assertNotNull(result, "KPI result should not be null");
@@ -201,7 +203,7 @@ class LangfuseMetricProviderIntegrationTest {
         // Even without Langfuse, we can test the registry itself
 
         // Act: Compute metrics (will use all registered providers)
-        List<Metric> metrics = benchmarkService.computeBenchmarkMetrics(testBenchmark, testAgent);
+        List<Metric> metrics = benchmarkService.computeBenchmarkMetrics(testBenchmark, testAgent, TEST_LANGFUSE_RUN_NAME);
 
         // Assert: Should have metrics from both registered providers
         // (BlueMetricProvider and RougeMetricProvider)
@@ -233,7 +235,6 @@ class LangfuseMetricProviderIntegrationTest {
         // 2. Create benchmark
         Benchmark benchmark = new Benchmark();
         benchmark.setDatasetRef(datasetId);
-        benchmark.setRunName(runId);
         benchmark.setEvaluates(Arrays.asList(agent));
 
         // 3. Define KPI
@@ -247,11 +248,11 @@ class LangfuseMetricProviderIntegrationTest {
 
         benchmark.setMeasures(Arrays.asList(kpi));
 
-        // 4. Compute metrics
-        List<Metric> metrics = benchmarkService.computeBenchmarkMetrics(benchmark, agent);
+        // 4. Compute metrics (runId is now passed as langfuseRunName parameter)
+        List<Metric> metrics = benchmarkService.computeBenchmarkMetrics(benchmark, agent, runId);
 
         // 5. Compute KPI
-        PerformanceKPI result = benchmarkService.computeKPIs(benchmark, agent);
+        PerformanceKPI result = benchmarkService.computeKPIs(benchmark, agent, runId);
 
         // 6. Return results
         Map<String, Object> results = new HashMap<>();

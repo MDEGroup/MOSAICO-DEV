@@ -119,10 +119,15 @@ public class BenchmarkDemoPersistenceRunner implements CommandLineRunner {
 
         List<Agent> agents = step1_CreateAndPersistAgents();
         Benchmark benchmark = step2_CreateAndPersistBenchmark(agents);
+        Map<String, String> agentRunMapping = Map.of(
+            "agent-baseline", BASELINE_RUN,
+            "agent-variant1-creative", VARIANT1_RUN,
+            "agent-variant2-deterministic", VARIANT2_RUN
+        );
         Map<String, List<TraceData>> tracesByAgent = step3_FetchLangfuseData(agents, benchmark);
         Map<String, Map<String, Double>> aggregatedMetrics = step4_ComputeMetrics(agents, tracesByAgent);
         Map<String, Map<String, Double>> kpiValues = step5_CalculateKPIs(agents, aggregatedMetrics);
-        step6_ExecuteAndPersistRuns(benchmark, agents, tracesByAgent, aggregatedMetrics, kpiValues);
+        step6_ExecuteAndPersistRuns(benchmark, agents, tracesByAgent, aggregatedMetrics, kpiValues, agentRunMapping);
         step7_CompareAgentsAndReport(benchmark, agents, aggregatedMetrics, kpiValues);
 
         printHeader("DEMO COMPLETATA - DATI PERSISTITI");
@@ -299,7 +304,8 @@ public class BenchmarkDemoPersistenceRunner implements CommandLineRunner {
             List<Agent> agents,
             Map<String, List<TraceData>> tracesByAgent,
             Map<String, Map<String, Double>> aggregatedMetrics,
-            Map<String, Map<String, Double>> kpiValues) {
+            Map<String, Map<String, Double>> kpiValues,
+            Map<String, String> agentRunMapping) {
 
         printStep(6, "ESECUZIONE BENCHMARK RUN CON PERSISTENZA");
 
@@ -308,7 +314,8 @@ public class BenchmarkDemoPersistenceRunner implements CommandLineRunner {
             print("BENCHMARK RUN per: " + agent.getName());
             print(MINI_SEP);
 
-            BenchmarkRun run = benchmarkRunService.createRun(benchmark, agent);
+            String langfuseRunName = agentRunMapping.get(agent.getId());
+            BenchmarkRun run = benchmarkRunService.createRun(benchmark, agent, langfuseRunName);
             run.setId("run-" + UUID.randomUUID().toString().substring(0, 8));
             run = benchmarkRunRepository.save(run);
 

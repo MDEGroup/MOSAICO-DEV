@@ -38,7 +38,6 @@ public class Benchmark {
 
     @OneToMany(mappedBy = "benchmark", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<PerformanceKPI> measures = new ArrayList<>();
-    private String runName;
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "benchmark_assess", joinColumns = @JoinColumn(name = "benchmark_id"), inverseJoinColumns = @JoinColumn(name = "skill_id"))
@@ -50,8 +49,7 @@ public class Benchmark {
        
 
     public Benchmark(String id, String metadata, String features, String datasetRef, String taskDef,
-            String protocolVersion, List<Agent> evaluates, List<PerformanceKPI> measures, List<Skill> assess,
-            String runName) {
+            String protocolVersion, List<Agent> evaluates, List<PerformanceKPI> measures, List<Skill> assess) {
         this.id = (id == null) ? UUID.randomUUID().toString() : id;
         this.metadata = metadata;
         this.features = features;
@@ -60,7 +58,6 @@ public class Benchmark {
         this.protocolVersion = protocolVersion;
         this.evaluates = evaluates == null ? new ArrayList<>() : evaluates;
         this.assess = assess;
-        this.runName = runName;
         // Set bidirectional relationship for measures
         if (measures != null) {
             for (PerformanceKPI kpi : measures) {
@@ -128,14 +125,6 @@ public class Benchmark {
 
     public void setEvaluates(List<Agent> evaluates) {
         this.evaluates = evaluates;
-    }
-
-    public String getRunName() {
-        return runName;
-    }
-
-    public void setRunName(String runName) {
-        this.runName = runName;
     }
 
     public List<PerformanceKPI> getMeasures() {

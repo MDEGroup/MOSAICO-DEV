@@ -19,9 +19,9 @@ public interface BenchmarkService {
     Benchmark findByDatasetRef(String datasetRef);
     Benchmark findByProtocolVersion(String protocolVersion);
     List<Benchmark> findByEvaluates_Id(String agentId);
-    List<Metric> computeBenchmarkMetrics(Benchmark benchmark, Agent agent);
-    PerformanceKPI computeKPIs(Benchmark benchmark, Agent agent);
-    List<Metric> computeBenchmarkMetrics(Benchmark benchmark, Agent agent, List<MetricProvider> metricProviders);
+    List<Metric> computeBenchmarkMetrics(Benchmark benchmark, Agent agent, String langfuseRunName);
+    PerformanceKPI computeKPIs(Benchmark benchmark, Agent agent, String langfuseRunName);
+    List<Metric> computeBenchmarkMetrics(Benchmark benchmark, Agent agent, String langfuseRunName, List<MetricProvider> metricProviders);
 
     /**
      * Finds all benchmarks that assess a given skill by ID or name.

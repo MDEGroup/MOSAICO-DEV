@@ -54,9 +54,9 @@ class BenchmarkServiceImplTest {
         agent.setLlangfusePublicKey("pk-lf-41f76ff4-f423-4b8c-a3b7-87c5b3012015");
         agent.setLlangfuseSecretKey("sk-lf-bd30b103-9a1b-43a0-88f3-742fbe657dee");
         Benchmark storedBenchmark = new Benchmark();
-                
+
         storedBenchmark.setDatasetRef("ause_train");
-        storedBenchmark.setRunName("run test - 2025-12-05T08:48:15.353757Z");
+        String langfuseRunName = "run test - 2025-12-05T08:48:15.353757Z";
 
         when(benchmarkRepository.findByEvaluates_Id("agent-1"))
                 .thenReturn(List.of(storedBenchmark));
@@ -72,7 +72,7 @@ class BenchmarkServiceImplTest {
         // when(metricService.computeBleuScoreMetric("reference text", "generated text"))
         //         .thenReturn(new Metric());
 
-        benchmarkService.computeBenchmarkMetrics(storedBenchmark, agent);
+        benchmarkService.computeBenchmarkMetrics(storedBenchmark, agent, langfuseRunName);
 
         verify(benchmarkRepository).findByEvaluates_Id("agent-1");
         // verify(langfuseService).getRunBenchmarkTraces(agent, "ause_train", "run test - 2025-12-05T08:48:15.353757Z");

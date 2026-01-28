@@ -85,7 +85,6 @@ class BenchmarkOrchestratorImplTest {
         testBenchmark = new Benchmark();
         testBenchmark.setId("benchmark-123");
         testBenchmark.setDatasetRef("ause");
-        testBenchmark.setRunName("benchmark-run-001");
 
         testAgent = new Agent();
         testAgent.setId("agent-456");

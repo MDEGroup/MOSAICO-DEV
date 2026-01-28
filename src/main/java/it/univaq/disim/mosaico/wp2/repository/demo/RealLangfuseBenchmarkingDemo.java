@@ -573,13 +573,20 @@ class BenchmarkDemoRunner implements CommandLineRunner {
     private void step6_ExecuteBenchmarkRun() {
         printStep(6, "COMPLETE BENCHMARK RUN EXECUTION");
 
+        Map<String, String> agentRunMapping = Map.of(
+            "agent-baseline", BASELINE_RUN,
+            "agent-variant1-creative", VARIANT1_RUN,
+            "agent-variant2-deterministic", VARIANT2_RUN
+        );
+
         for (AgentBenchmarkResult agentResult : agentResults.values()) {
             print("\n" + MINI_SEP);
             print("BENCHMARK RUN for: " + agentResult.agent.getName());
             print(MINI_SEP);
 
             // Create BenchmarkRun
-            BenchmarkRun run = benchmarkRunService.createRun(benchmark, agentResult.agent);
+            String langfuseRunName = agentRunMapping.get(agentResult.agent.getId());
+            BenchmarkRun run = benchmarkRunService.createRun(benchmark, agentResult.agent, langfuseRunName);
             agentResult.benchmarkRun = run;
 
             print("\n1. BenchmarkRun Creation:");

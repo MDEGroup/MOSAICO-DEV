@@ -93,7 +93,6 @@ public class BenchmarkingSystemDemo {
         benchmark.setId("bench-001");
         benchmark.setMetadata("{\"name\": \"Customer Support Quality\", \"version\": \"1.0\"}");
         benchmark.setDatasetRef("dataset-customer-queries");
-        benchmark.setRunName("cs-quality-run");
         benchmark.setTaskDef("Valuta qualità risposte supporto clienti");
         benchmark.setFeatures("accuracy,completeness,response_time");
         benchmark.setProtocolVersion("1.0");
@@ -102,7 +101,6 @@ public class BenchmarkingSystemDemo {
         print("   Benchmark creato:");
         print("   ├─ ID: " + benchmark.getId());
         print("   ├─ Dataset: " + benchmark.getDatasetRef());
-        print("   ├─ Run Name: " + benchmark.getRunName());
         print("   ├─ Task Def: " + benchmark.getTaskDef());
         print("   ├─ Features: " + benchmark.getFeatures());
         print("   └─ Agents collegati: " + benchmark.getEvaluates().size());

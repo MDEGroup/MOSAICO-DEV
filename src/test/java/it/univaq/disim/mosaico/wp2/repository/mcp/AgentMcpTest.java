@@ -18,6 +18,7 @@ import it.univaq.disim.mosaico.wp2.repository.data.Agent;
 import it.univaq.disim.mosaico.wp2.repository.data.Provider;
 import it.univaq.disim.mosaico.wp2.repository.repository.BenchmarkRunRepository;
 import it.univaq.disim.mosaico.wp2.repository.service.AgentService;
+import it.univaq.disim.mosaico.wp2.repository.service.AlertEvaluationService;
 import it.univaq.disim.mosaico.wp2.repository.service.BenchmarkService;
 import it.univaq.disim.mosaico.wp2.repository.service.SkillService;
 
@@ -34,7 +35,10 @@ class AgentMcpTest {
         AgentService agentService = mock(it.univaq.disim.mosaico.wp2.repository.service.AgentService.class);
         BenchmarkService benchmarkService = mock(it.univaq.disim.mosaico.wp2.repository.service.BenchmarkService.class);
         SkillService skillService = mock(it.univaq.disim.mosaico.wp2.repository.service.SkillService.class);
+        AlertEvaluationService alertEvaluationService = mock((it.univaq.disim.mosaico.wp2.repository.service.AlertEvaluationService.class));
+        BenchmarkRunRepository benchmarkRunRepository = mock(BenchmarkRunRepository.class);
         ObjectMapper mapper = new ObjectMapper();
+        AgentMCP agentMCP = new AgentMCP(agentService, mapper, benchmarkService, skillService, benchmarkRunRepository, alertEvaluationService);
 
         // prepare test data
         Provider testProvider = new it.univaq.disim.mosaico.wp2.repository.data.Provider("OpenAI", "AI company providing language models", "https://openai.com"
@@ -59,8 +63,10 @@ class AgentMcpTest {
         a1.setId("agent1");
         when(agentService.findAll()).thenReturn(List.of(a1));
 
-        AgentMCP agentMCP = new AgentMCP(agentService, mapper, benchmarkService, skillService, mock(BenchmarkRunRepository.class));
 
+        //   public AgentMCP(AgentService agentService, ObjectMapper objectMapper, BenchmarkService benchmarkService,
+            //SkillService skillService, BenchmarkRunRepository benchmarkRunRepository,
+            //AlertEvaluationService alertEvaluationService) {
         ReadResourceResult res = agentMCP.listAllAgents();
         assertThat(res).isNotNull();
         List<ResourceContents> contents = res.contents();
@@ -74,7 +80,6 @@ class AgentMcpTest {
 
     @Test
     void getAgent_returnsReadResourceResultWithAgentJson() throws Exception {
-        var agentService = mock(it.univaq.disim.mosaico.wp2.repository.service.AgentService.class);
         ObjectMapper mapper = new ObjectMapper();
         it.univaq.disim.mosaico.wp2.repository.data.Provider testProvider = new it.univaq.disim.mosaico.wp2.repository.data.Provider("OpenAI", "AI company providing language models", "https://openai.com"
         );
@@ -96,9 +101,14 @@ class AgentMcpTest {
             List.of(), List.of(), List.of(), List.of(), List.of()
         );
         a1.setId("agent1");
+        AgentService agentService = mock(it.univaq.disim.mosaico.wp2.repository.service.AgentService.class);
         when(agentService.findById("agent1")).thenReturn(java.util.Optional.of(a1));
-
-        AgentMCP agentMCP = new AgentMCP(agentService, mapper, mock(BenchmarkService.class), mock(SkillService.class), mock(BenchmarkRunRepository.class));
+        BenchmarkService benchmarkService = mock(it.univaq.disim.mosaico.wp2.repository.service.BenchmarkService.class);
+        SkillService skillService = mock(it.univaq.disim.mosaico.wp2.repository.service.SkillService.class);
+        AlertEvaluationService alertEvaluationService = mock((it.univaq.disim.mosaico.wp2.repository.service.AlertEvaluationService.class));
+        BenchmarkRunRepository benchmarkRunRepository = mock(BenchmarkRunRepository.class);
+        AgentMCP agentMCP = new AgentMCP(agentService, mapper, benchmarkService, skillService, benchmarkRunRepository, alertEvaluationService);
+        //AgentMCP agentMCP = new AgentMCP(agentService, mapper, mock(BenchmarkService.class), mock(SkillService.class), mock(BenchmarkRunRepository.class));
 
         ReadResourceResult res = agentMCP.getAgent("agent1");
         assertThat(res).isNotNull();

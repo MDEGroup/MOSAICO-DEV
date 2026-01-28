@@ -87,10 +87,11 @@ public class BenchmarkServiceImpl implements BenchmarkService {
      *
      * @param benchmark The benchmark to evaluate
      * @param agent The agent being evaluated
+     * @param langfuseRunName The Langfuse run name to fetch traces from
      * @return List of computed metrics
      */
     @Override
-    public List<Metric> computeBenchmarkMetrics(Benchmark benchmark, Agent agent) {
+    public List<Metric> computeBenchmarkMetrics(Benchmark benchmark, Agent agent, String langfuseRunName) {
         if (benchmark == null || agent == null) {
             throw new IllegalArgumentException("Benchmark and agent cannot be null");
         }
@@ -102,7 +103,7 @@ public class BenchmarkServiceImpl implements BenchmarkService {
             List<TraceData> traces = langfuseService.fetchTracesFromRun(
                 agent,
                 benchmark.getDatasetRef(),
-                benchmark.getRunName()
+                langfuseRunName
             );
 
             // Apply all registered metric providers to each trace
@@ -155,22 +156,21 @@ public class BenchmarkServiceImpl implements BenchmarkService {
      * This method is useful when you want to compute only specific metrics
      * rather than all available ones.
      *
-     * @deprecated Use computeBenchmarkMetrics(Benchmark, Agent) instead
      * @param benchmark The benchmark to evaluate
      * @param agent The agent being evaluated
+     * @param langfuseRunName The Langfuse run name to fetch traces from
      * @param metricProviders List of specific providers to use
      * @return List of computed metrics
      */
-    @Deprecated
     @Override
-    public List<Metric> computeBenchmarkMetrics(Benchmark benchmark, Agent agent, List<MetricProvider> metricProviders) {
+    public List<Metric> computeBenchmarkMetrics(Benchmark benchmark, Agent agent, String langfuseRunName, List<MetricProvider> metricProviders) {
         if (benchmark == null || agent == null) {
             throw new IllegalArgumentException("Benchmark and agent cannot be null");
         }
 
         if (metricProviders == null || metricProviders.isEmpty()) {
             // If no specific providers given, use all registered providers
-            return computeBenchmarkMetrics(benchmark, agent);
+            return computeBenchmarkMetrics(benchmark, agent, langfuseRunName);
         }
 
         List<Metric> metrics = new ArrayList<>();
@@ -179,7 +179,7 @@ public class BenchmarkServiceImpl implements BenchmarkService {
             List<TraceData> traces = langfuseService.fetchTracesFromRun(
                 agent,
                 benchmark.getDatasetRef(),
-                benchmark.getRunName()
+                langfuseRunName
             );
 
             for (TraceData trace : traces) {
@@ -206,10 +206,11 @@ public class BenchmarkServiceImpl implements BenchmarkService {
      *
      * @param benchmark The benchmark containing KPI specifications
      * @param agent The agent being evaluated
+     * @param langfuseRunName The Langfuse run name to fetch traces from
      * @return The computed PerformanceKPI with evaluated values
      */
     @Override
-    public PerformanceKPI computeKPIs(Benchmark benchmark, Agent agent) {
+    public PerformanceKPI computeKPIs(Benchmark benchmark, Agent agent, String langfuseRunName) {
         if (benchmark == null || agent == null) {
             throw new IllegalArgumentException("Benchmark and agent cannot be null");
         }
@@ -219,7 +220,7 @@ public class BenchmarkServiceImpl implements BenchmarkService {
         }
 
         // Compute all metrics first
-        List<Metric> computedMetrics = computeBenchmarkMetrics(benchmark, agent);
+        List<Metric> computedMetrics = computeBenchmarkMetrics(benchmark, agent, langfuseRunName);
 
         // For each PerformanceKPI in the benchmark, evaluate its formula
         // Note: Typically a benchmark would have one main KPI, but we return the first one

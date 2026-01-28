@@ -243,10 +243,7 @@ public class BenchmarkOrchestratorImpl implements BenchmarkOrchestrator {
     private String resolveLangfuseRunName(BenchmarkRun run, Benchmark benchmark) {
         String runName = run.getLangfuseRunName();
         if (runName == null || runName.isBlank()) {
-            runName = benchmark.getRunName();
-        }
-        if (runName == null || runName.isBlank()) {
-            throw new IllegalStateException("No Langfuse run name configured for benchmark " + benchmark.getId());
+            throw new IllegalStateException("No Langfuse run name configured for benchmark run " + run.getId());
         }
         return runName;
     }
