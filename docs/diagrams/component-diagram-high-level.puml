@@ -1,0 +1,78 @@
+@startuml
+package "MOSAICO Repository Components" {
+
+  [AI Agent Repository]
+  [Metadata and Taxonomy]
+  [KPI and Quality Models]
+  [Benchmarking Engine]
+  [Search and Recommendation API]
+
+  [Langfuse Telemetry\n(Execution Traces and Metrics)]
+}
+
+[AI Agent Repository] --> [Metadata and Taxonomy]
+[AI Agent Repository] --> [Benchmarking Engine]
+[Benchmarking Engine] --> [KPI and Quality Models]
+
+[Benchmarking Engine] --> [Langfuse Telemetry\n(Execution Traces and Metrics)]
+[AI Agent Repository] --> [Langfuse Telemetry\n(Execution Traces and Metrics)]
+
+[Search and Recommendation API] --> [AI Agent Repository]
+[Search and Recommendation API] --> [KPI and Quality Models]
+
+@enduml
+@startuml
+package "MOSAICO Repository" {
+  [AI Agent Repository]
+  [Benchmarking Engine]
+  [Search and Recommendation API]
+}
+
+package "Observability" {
+  [Langfuse Telemetry]
+}
+
+[AI Agent Repository] --> [Benchmarking Engine]
+[Benchmarking Engine] --> [Langfuse Telemetry]
+[AI Agent Repository] --> [Langfuse Telemetry]
+[Search and Recommendation API] --> [AI Agent Repository]
+
+@enduml
+@startuml
+class AIAgent {
+  id
+  name
+  capabilities
+}
+
+class Metadata {
+  inputs
+  outputs
+  supportedArtifacts
+}
+
+class KPIProfile {
+  accuracy
+  latency
+  robustness
+}
+
+class BenchmarkResult {
+  dataset
+  score
+}
+
+AIAgent --> Metadata
+AIAgent --> KPIProfile
+AIAgent --> BenchmarkResult
+@enduml
+@startuml
+[Benchmark Dataset]
+[Benchmark Runner]
+[Evaluation Metrics]
+[Results Store]
+
+[Benchmark Dataset] --> [Benchmark Runner]
+[Benchmark Runner] --> [Evaluation Metrics]
+[Evaluation Metrics] --> [Results Store]
+@enduml
